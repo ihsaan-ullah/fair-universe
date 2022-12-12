@@ -149,7 +149,7 @@ class DataGenerator:
 
         # column names
         columns = ["x{}".format(i+1) for i in range(0, self.settings["problem_dimension"])]
-        columns.append("label")
+        columns.append("y")
 
 
         #-----------------------------------------------
@@ -178,19 +178,24 @@ class DataGenerator:
 
         # stack labels with data points
         # stack labels with data points
-        background_labels = np.repeat(SIGNAL_LABEL, background_data.shape[0]).reshape((-1,1))
+        background_labels = np.repeat(BACKGROUND_LABEL, background_data.shape[0]).reshape((-1,1))
         background = np.hstack((background_data, background_labels))
 
         # create background df
         background_df = pd.DataFrame(background, columns = columns)
 
         #-----------------------------------------------
-        # Combine Signal and Background in a DataFrame with classes
+        # Combine Signal and Background in a DataFrame
         #-----------------------------------------------
         
+        # combine dataframe
         self.generated_dataframe = pd.concat([signal_df, background_df])
-        
 
+        # suffle dataframe
+        self.generated_dataframe = self.generated_dataframe.sample(frac=1).reset_index(drop=True)
+
+
+        
         self.logger.success("Data Generated!")
         
 
@@ -206,115 +211,25 @@ class DataGenerator:
         return self.generated_dataframe
     
     def show_statistics(self):
+
+        #-----------------------------------------------
+        # Check Data Generated
+        #-----------------------------------------------
+        if self.checker.data_is_not_generated(self.generated_dataframe):
+            self.logger.error("Data is not generated. First call `generate_data` function!")
+            return
+
+
         print("#===============================#")
         print("# Data Statistics")
         print("#===============================#")
-        # print("Signal datapoints :", signal_train_df.shape[0])
-        # print("Background datapoints :", background_train_df.shape[0])
-        # print("---------------")
-        # print("Total  datapoints :", signal_train_df.shape[0]+background_train_df.shape[0])
-        # print("---------------")
+        print("Signal datapoints :", self.generated_dataframe[self.generated_dataframe.y == SIGNAL_LABEL].shape[0])
+        print("Background datapoints :", self.generated_dataframe[self.generated_dataframe.y == BACKGROUND_LABEL].shape[0])
+        print("---------------")
+        print("Total  datapoints :", self.generated_dataframe.shape[0])
+        print("---------------")
         print("Total Classes = ", 2)
         print("Signal label :", SIGNAL_LABEL)
         print("Background label :", BACKGROUND_LABEL)
         print("---------------")
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-    def get_dataa(
-        self, 
-        combine_train_distributions=True,
-        print_statistics = False
-        ):
-        """
-        This function generates signal and background data and organize it in dataframes
-        """
-
-        #-----------------------------------------------
-        # Get signal and background points
-        #-----------------------------------------------
-        signal_train = self.signal_train.get_points(self.signal_train_events)
-        signal_test = self.signal_test.get_points(self.signal_test_events)
-        background_train = self.background_train.get_points(self.background_train_events)
-        background_test = self.background_test.get_points(self.background_test_events)
-
-
-        #-----------------------------------------------
-        # Combie signal train and test with signal class
-        #-----------------------------------------------
-        S_train = np.stack((signal_train, np.repeat(self.SIGNAL_LABEL, signal_train.shape)),axis=1)
-        S_test = np.stack((signal_test, np.repeat(self.SIGNAL_LABEL, signal_test.shape)),axis=1)
-
-        #-----------------------------------------------
-        # Combie background train and test with signal class
-        #-----------------------------------------------
-        B_train = np.stack((background_train, np.repeat(self.BACKGROUND_LABEL, background_train.shape)),axis=1)
-        B_test = np.stack((background_test, np.repeat(self.BACKGROUND_LABEL, background_test.shape)),axis=1)
-    
-
-        #-----------------------------------------------
-        # Create signal train and test dataframes
-        #-----------------------------------------------
-        signal_train_df = pd.DataFrame(S_train, columns =['x', 'y'])
-        signal_test_df = pd.DataFrame(S_test, columns =['x', 'y'])
-        
-        #-----------------------------------------------
-        # Create background train and test dataframes
-        #-----------------------------------------------
-        background_train_df = pd.DataFrame(B_train, columns =['x', 'y'])
-        background_test_df = pd.DataFrame(B_test, columns =['x', 'y'])
-
-
-        #-----------------------------------------------
-        # Print data statistics
-        #-----------------------------------------------
-        if print_statistics:
-            self.get_data_statistics(
-                signal_train_df,
-                signal_test_df,
-                background_train_df,
-                background_test_df
-            )
-
-            
-        
-        if combine_train_distributions:
-
-            # combine train in one df and test in another
-            df_train = pd.concat([signal_train_df, background_train_df])
-            df_test = pd.concat([signal_test_df, background_test_df])
-
-            # shuffle both dfs
-            df_train = df_train.sample(frac=1).reset_index(drop=True)
-            df_test = df_test.sample(frac=1).reset_index(drop=True)
-
-
-            return (
-                df_train,
-                df_test
-            )
-        else:
-
-            return (
-                signal_train_df,
-                signal_test_df,
-                background_train_df,
-                background_test_df
-            )
-
-
-
-
-
-  

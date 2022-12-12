@@ -34,14 +34,12 @@ class Gaussian:
         """
 
         # initialize vector with required dimension
-        points = np.ones((self.problem_dimension, self.number_of_events))
+        points = np.zeros((self.number_of_events, self.problem_dimension))
         
         # loop over problem dimension to generate each dimension
         for i in range(0, self.problem_dimension):
-            points[:i] = np.array(np.random.normal(self.mu[i],self.sigma[i], self.number_of_events))
+            points[:, i] = np.array(np.random.normal(self.mu[i],self.sigma[i], self.number_of_events))
         
-        # transpose generated array to get required dimension
-        points = np.transpose(points)
 
         return points
 
@@ -76,14 +74,12 @@ class Poisson:
         """
 
         # initialize vector with required dimension
-        points = np.ones((self.problem_dimension, self.number_of_events))
+        points = np.zeros((self.number_of_events, self.problem_dimension))
         
         # loop over problem dimension to generate each dimension
         for i in range(0, self.problem_dimension):
-            points[:i] = np.array(np.random.poisson(self.lambdaa[i], self.number_of_events))
+            points[:, i] = np.array(np.random.poisson(self.lambdaa[i], self.number_of_events))
         
-        # transpose generated array to get required dimension
-        points = np.transpose(points)
 
         return points
 
@@ -116,14 +112,11 @@ class Exponential:
         """
 
         # initialize vector with required dimension
-        points = np.ones((self.problem_dimension, self.number_of_events))
+        points = np.zeros((self.number_of_events, self.problem_dimension))
         
         # loop over problem dimension to generate each dimension
         for i in range(0, self.problem_dimension):
-            points[:i] = np.array(np.random.exponential(self.lambdaa[i], self.number_of_events))
+            points[:, i] = np.array(np.random.exponential(self.lambdaa[i], self.number_of_events))
         
-        # transpose generated array to get required dimension
-        points = np.transpose(points)
-
         return points
         

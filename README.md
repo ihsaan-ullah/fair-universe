@@ -25,7 +25,7 @@ data_gen.load_systematics()
 data_gen.generate_data()
 
 # get data as a dataframe
-data_gen.get_data()
+df = data_gen.get_data()
 
 # show statistics of data
 data_gen.show_statistics()
