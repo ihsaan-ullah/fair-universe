@@ -135,12 +135,12 @@ The following documentation describes the components and working of the whole pi
 }
 ```
 
-## Errors
-`errors.py` consists of a class which is responsible for showing errors and warnings.
+## Logger
+`logger.py` consists of a class which is responsible for showing warning, error and success messages.
 
 
-## Checks
-`checks.py` consists of a class which is responsible for checking data members at each step of data generation.
+## Checker
+`checker.py` consists of a class which is responsible for checking data members at each step of data generation.
 
 
 ## Data Generation
