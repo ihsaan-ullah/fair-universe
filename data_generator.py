@@ -1,14 +1,18 @@
 #================================
-# Imports
+# External Imports
 #================================
 import os
 import json
 import numpy as np
 import pandas as pd
 
+#================================
+# Internal Imports
+#================================
 from distributions import Gaussian, Exponential, Poisson
 from systematics import Ben, Translation, Scaling
 from errors import Errors
+from checks import Checks
 from constants import (
     DISTRIBUTION_GAUSSIAN, 
     DISTRIBUTION_EXPONENTIAL, 
@@ -19,7 +23,6 @@ from constants import (
     SIGNAL_LABEL,
     BACKGROUND_LABEL,
     JSON_FILE
-
 )
 
 
@@ -33,9 +36,10 @@ class DataGenerator:
         #-----------------------------------------------
         # Initialize data members
         #-----------------------------------------------
-        params_distributions = None 
-        params_systematics = None 
-        generated_dataframe = None
+        self.settings = None
+        self.params_distributions = {} 
+        self.params_systematics = None 
+        self.generated_dataframe = None
 
         
         #-----------------------------------------------
@@ -43,7 +47,10 @@ class DataGenerator:
         #-----------------------------------------------
         self.e = Errors()
 
-
+        #-----------------------------------------------
+        # Initialize checks class
+        #-----------------------------------------------
+        self.c = Checks()
 
     def load_settings(self):
 
@@ -60,53 +67,115 @@ class DataGenerator:
     def load_distributions(self):
 
         #-----------------------------------------------
+        # Check settings loaded
+        #-----------------------------------------------
+        if self.c.settings_is_not_loaded(self.settings):
+            self.e.error("{} is not loaded. First call `load_settings` function!".format(JSON_FILE))
+            return
+        
+
+        #-----------------------------------------------
         # Setting signal distribution
         #-----------------------------------------------
         if self.settings["signal_distribution"]["name"] == DISTRIBUTION_GAUSSIAN:
-                self.signal_distribution = Gaussian(self.settings["signal_distribution"])
+                signal_distribution = Gaussian(self.settings["signal_distribution"])
         elif self.settings["signal_distribution"]["name"] == DISTRIBUTION_POISSON:
-                self.signal_distribution = Poisson(self.settings["signal_distribution"])
+                signal_distribution = Poisson(self.settings["signal_distribution"])
         else:
                 self.e.error("Invalid Signal Distribution in {}".format(JSON_FILE))
+                return
 
         #-----------------------------------------------
         # Setting background distribution
         #-----------------------------------------------
         if self.settings["background_distribution"]["name"] == DISTRIBUTION_GAUSSIAN:
-                self.signal_distribution = Gaussian(self.settings["background_distribution"])
+                background_distribution = Gaussian(self.settings["background_distribution"])
         elif self.settings["background_distribution"]["name"] == DISTRIBUTION_EXPONENTIAL:
-                self.signal_distribution = Exponential(self.settings["background_distribution"])
+                background_distribution = Exponential(self.settings["background_distribution"])
         else:
                 self.e.error("Invalid Background Distribution in {}".format(JSON_FILE))
+                return 
 
+        self.params_distributions["signal"] = signal_distribution
+        self.params_distributions["background"] = background_distribution
+        
     def load_systematics(self):
-        pass
+
+        #-----------------------------------------------
+        # Check settings loaded
+        #-----------------------------------------------
+        if self.c.settings_is_not_loaded(self.settings):
+            self.e.error("{} is not loaded. First call `load_settings` function!".format(JSON_FILE))
+            return
+
+        #-----------------------------------------------
+        # Setting systematics
+        #-----------------------------------------------
+        if self.settings["systematics"]["name"] == SYSTEMATIC_BEN:
+            self.params_systematics = Ben(self.settings["systematics"])
+        elif self.settings["systematics"]["name"] == SYSTEMATIC_TRANSLATION:
+            self.params_systematics = Translation(self.settings["systematics"])
+        elif self.settings["systematics"]["name"] == SYSTEMATIC_SCALING:
+            self.params_systematics = Scaling(self.settings["systematics"])
+        else:
+            self.e.error("Invalid Systematics in {}".format(JSON_FILE))
+            return 
 
     def generate_data(self):
-        pass
+
+
+        #-----------------------------------------------
+        # Check distributions loaded
+        #-----------------------------------------------
+        if self.c.distributions_are_not_loaded:
+            self.e.error("Distributions are not loaded. First call `load_distributions` function!")
+            return
+
+        #-----------------------------------------------
+        # Check systematics loaded
+        #-----------------------------------------------
+        if self.c.systematics_are_not_loaded:
+            self.e.error("Systematics are not loaded. First call `load_systematics` function!")
+            return
+        
 
     def get_data(self):
-        pass 
+
+        #-----------------------------------------------
+        # Check Data Generated
+        #-----------------------------------------------
+        if self.c.data_is_not_generated(self.generated_dataframe):
+            self.e.error("Data is not generated. First call `generate_data` function!")
+            return
+
+        return self.generated_dataframe
     
     def show_statistics(self):
         print("#===============================#")
         print("# Data Statistics")
         print("#===============================#")
-        # print("Signal Train datapoints :", signal_train_df.shape[0])
-        # print("Signal Test datapoints :", signal_test_df.shape[0])
-        # print("Background Train datapoints :", background_train_df.shape[0])
-        # print("Background Test datapoints :", background_test_df.shape[0])
+        # print("Signal datapoints :", signal_train_df.shape[0])
+        # print("Background datapoints :", background_train_df.shape[0])
         # print("---------------")
-        # print("Total Signal datapoints :", signal_train_df.shape[0]+signal_test_df.shape[0])
-        # print("Total Background datapoints :", background_train_df.shape[0]+background_test_df.shape[0])
-        # print("---------------")
-        # print("Total Train datapoints :", signal_train_df.shape[0]+background_train_df.shape[0])
-        # print("Total Test datapoints :", signal_test_df.shape[0]+background_test_df.shape[0])
+        # print("Total  datapoints :", signal_train_df.shape[0]+background_train_df.shape[0])
         # print("---------------")
         print("Total Classes = ", 2)
         print("Signal label :", SIGNAL_LABEL)
         print("Background label :", BACKGROUND_LABEL)
         print("---------------")
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     def get_dataa(
         self, 
