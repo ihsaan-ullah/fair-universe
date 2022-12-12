@@ -4,6 +4,7 @@ This repository shows how data is generated for the toy problem
 
 ## Settings
 `settings.json` file consists of all the settings required for data generation:
+
 **1- signal distribution**
 ```json
 "signal_distribution": {
@@ -37,6 +38,7 @@ This repository shows how data is generated for the toy problem
 
 ## Distributions
 `distributions.py` file contains separate classes for different distributions to be used for signal or background. Currently supported distributions are:
+
 **1- Gaussian**
 ```json
 {
@@ -65,6 +67,7 @@ This repository shows how data is generated for the toy problem
 
 ## Systematics
 `systematics.py` file consists of classes for different systematics to be added to the data to introduce bias in the data. Currently supported systematics are:
+
 **1- Ben's systematics (for 2D problem only)**
 ```json
 {
