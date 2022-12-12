@@ -1,0 +1,19 @@
+{
+    "signal_distribution": {
+        "name": "Gaussian",
+        "mu" : 3,
+        "sigma" : 0.8,
+        "number_of_events" : 1000
+    },
+    "background_distribution": {
+        "name": "Exponential",
+        "lambda" : 3,
+        "number_of_events" : 1000
+    },
+    "problem_dimension" : 2,
+    "systematics" : {
+        "name" : "ben",
+        "allowed_dimension" : 2,
+        "number_of_nuissance_values" : 2
+    }
+}
