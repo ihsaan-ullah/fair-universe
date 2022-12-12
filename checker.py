@@ -1,9 +1,7 @@
 #================================
-# Checks Class
+# Checker Class
 #================================
-class Checks:
-    def __init__(self):
-        pass
+class Checker:
 
     def settings_is_not_loaded(self, settings):
         return (settings is None)

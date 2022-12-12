@@ -11,8 +11,8 @@ import pandas as pd
 #================================
 from distributions import Gaussian, Exponential, Poisson
 from systematics import Ben, Translation, Scaling
-from errors import Errors
-from checks import Checks
+from logger import Logger
+from checker import Checker
 from constants import (
     DISTRIBUTION_GAUSSIAN, 
     DISTRIBUTION_EXPONENTIAL, 
@@ -43,14 +43,14 @@ class DataGenerator:
 
         
         #-----------------------------------------------
-        # Initialize errors class
+        # Initialize logger class
         #-----------------------------------------------
-        self.e = Errors()
+        self.logger = Logger()
 
         #-----------------------------------------------
         # Initialize checks class
         #-----------------------------------------------
-        self.c = Checks()
+        self.checker = Checker()
 
     def load_settings(self):
 
@@ -58,7 +58,7 @@ class DataGenerator:
         # Load JSON settings file
         #-----------------------------------------------
         if not os.path.exists(JSON_FILE):
-            self.e.error("{} file does not exist!".format(JSON_FILE))
+            self.logger.error("{} file does not exist!".format(JSON_FILE))
             return 
         f = open(JSON_FILE)
         self.settings = json.load(f)
@@ -69,8 +69,8 @@ class DataGenerator:
         #-----------------------------------------------
         # Check settings loaded
         #-----------------------------------------------
-        if self.c.settings_is_not_loaded(self.settings):
-            self.e.error("{} is not loaded. First call `load_settings` function!".format(JSON_FILE))
+        if self.checker.settings_is_not_loaded(self.settings):
+            self.logger.error("{} is not loaded. First call `load_settings` function!".format(JSON_FILE))
             return
         
 
@@ -82,7 +82,7 @@ class DataGenerator:
         elif self.settings["signal_distribution"]["name"] == DISTRIBUTION_POISSON:
                 signal_distribution = Poisson(self.settings["signal_distribution"])
         else:
-                self.e.error("Invalid Signal Distribution in {}".format(JSON_FILE))
+                self.logger.error("Invalid Signal Distribution in {}".format(JSON_FILE))
                 return
 
         #-----------------------------------------------
@@ -93,7 +93,7 @@ class DataGenerator:
         elif self.settings["background_distribution"]["name"] == DISTRIBUTION_EXPONENTIAL:
                 background_distribution = Exponential(self.settings["background_distribution"])
         else:
-                self.e.error("Invalid Background Distribution in {}".format(JSON_FILE))
+                self.logger.error("Invalid Background Distribution in {}".format(JSON_FILE))
                 return 
 
         self.params_distributions["signal"] = signal_distribution
@@ -104,8 +104,8 @@ class DataGenerator:
         #-----------------------------------------------
         # Check settings loaded
         #-----------------------------------------------
-        if self.c.settings_is_not_loaded(self.settings):
-            self.e.error("{} is not loaded. First call `load_settings` function!".format(JSON_FILE))
+        if self.checker.settings_is_not_loaded(self.settings):
+            self.logger.error("{} is not loaded. First call `load_settings` function!".format(JSON_FILE))
             return
 
         #-----------------------------------------------
@@ -118,7 +118,7 @@ class DataGenerator:
         elif self.settings["systematics"]["name"] == SYSTEMATIC_SCALING:
             self.params_systematics = Scaling(self.settings["systematics"])
         else:
-            self.e.error("Invalid Systematics in {}".format(JSON_FILE))
+            self.logger.error("Invalid Systematics in {}".format(JSON_FILE))
             return 
 
     def generate_data(self):
@@ -127,16 +127,29 @@ class DataGenerator:
         #-----------------------------------------------
         # Check distributions loaded
         #-----------------------------------------------
-        if self.c.distributions_are_not_loaded:
-            self.e.error("Distributions are not loaded. First call `load_distributions` function!")
+        if self.checker.distributions_are_not_loaded:
+            self.logger.error("Distributions are not loaded. First call `load_distributions` function!")
             return
 
         #-----------------------------------------------
         # Check systematics loaded
         #-----------------------------------------------
-        if self.c.systematics_are_not_loaded:
-            self.e.error("Systematics are not loaded. First call `load_systematics` function!")
+        if self.checker.systematics_are_not_loaded:
+            self.logger.error("Systematics are not loaded. First call `load_systematics` function!")
             return
+
+        #-----------------------------------------------
+        # Generate Signal Data
+        #-----------------------------------------------
+
+        #-----------------------------------------------
+        # Generate Background Data
+        #-----------------------------------------------
+
+        #-----------------------------------------------
+        # Combine Signa and Background in a DataFrame
+        #-----------------------------------------------
+        
         
 
     def get_data(self):
@@ -144,8 +157,8 @@ class DataGenerator:
         #-----------------------------------------------
         # Check Data Generated
         #-----------------------------------------------
-        if self.c.data_is_not_generated(self.generated_dataframe):
-            self.e.error("Data is not generated. First call `generate_data` function!")
+        if self.checker.data_is_not_generated(self.generated_dataframe):
+            self.logger.error("Data is not generated. First call `generate_data` function!")
             return
 
         return self.generated_dataframe
