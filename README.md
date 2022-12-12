@@ -95,23 +95,23 @@ This repository shows how data is generated for the toy problem
 ## Data Generation
 `data_generatior.py` file is the entry point to generate data with systematics. This file consists of ***DataGenerator*** class with the following methods and functionalities:
 
-**1- Load settings** (`load_settings`)
+**1- Load settings** (`load_settings`)  
 Loads `settings.json` file 
 
-**2- Load distributions** (`load_distributions`)
+**2- Load distributions** (`load_distributions`)  
 sets up *signal* and *background* distributions from settings
 
-**3- Load systematics** (`load_systematics`)
+**3- Load systematics** (`load_systematics`)  
 sets up systematics from settings to be applied to data generaton
 
-**4- Generate data** (`generate_data`)
+**4- Generate data** (`generate_data`)  
 generates data according to the settings (distributions and systematics)
 
-**5- Get data** (`get_data`)
+**5- Get data** (`get_data`)  
 returns the generated data as *Pandas DataFrame*
 
-**6- Show statistics** (`show_statistics`)
+**6- Show statistics** (`show_statistics`)  
 shows statistics of the data: data dimension, number of examples, number of classes, class labels etc.
 
-**7- Visualize data** (`visulaize_data`)
+**7- Visualize data** (`visulaize_data`)   
 visulaizes the generated data
