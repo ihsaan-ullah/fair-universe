@@ -10,7 +10,7 @@ class Ben:
     def __init__(self, systematics):
 
         # name: name of the systematic 
-        self.name == systematics["name"]
+        self.name = systematics["name"]
 
         # allowed_dimension : dimension of data required
         self.allowed_dimension = systematics["allowed_dimension"]
@@ -26,7 +26,7 @@ class Translation:
     def __init__(self, systematics):
 
         # name: name of the systematic 
-        self.name == systematics["name"]
+        self.name = systematics["name"]
 
         # allowed_dimension : dimension of data required
         self.allowed_dimension = systematics["allowed_dimension"]
@@ -39,7 +39,7 @@ class Scaling:
     def __init__(self, systematics):
 
         # name: name of the systematic 
-        self.name == systematics["name"]
+        self.name = systematics["name"]
 
         # allowed_dimension : dimension of data required
         self.allowed_dimension = systematics["allowed_dimension"]

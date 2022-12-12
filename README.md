@@ -34,11 +34,6 @@ data_gen.show_statistics()
 data_gen.visulaize_data()
 
 ```
-
-or run `run.py` file 
-```bash
-python run.py
-```
 ***
 
 The following documentation describes the components and working of the whole pipleine of data generation. 
@@ -115,7 +110,7 @@ The following documentation describes the components and working of the whole pi
 **1- Ben's systematics (for 2D problem only)**
 ```json
 {
-    "name" : "ben",
+    "name" : "Ben",
     "allowed_dimension" : 2,
     "number_of_nuissance_values" : 2
 }
@@ -123,14 +118,14 @@ The following documentation describes the components and working of the whole pi
 **2- Translation**
 ```json
 {
-    "name" : "translation",
+    "name" : "Translation",
     "allowed_dimension" : -1
 }
 ```
 **3- Scaling**
 ```json
 {
-    "name" : "scaling",
+    "name" : "Scaling",
     "allowed_dimension" : -1
 }
 ```

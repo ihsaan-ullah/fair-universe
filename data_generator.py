@@ -64,6 +64,8 @@ class DataGenerator:
         self.settings = json.load(f)
         f.close()
 
+        self.logger.success("Settings JSON File Loaded!")
+
     def load_distributions(self):
 
         #-----------------------------------------------
@@ -74,13 +76,15 @@ class DataGenerator:
             return
         
 
+        problem_dimension = self.settings["problem_dimension"]
+
         #-----------------------------------------------
         # Setting signal distribution
         #-----------------------------------------------
         if self.settings["signal_distribution"]["name"] == DISTRIBUTION_GAUSSIAN:
-                signal_distribution = Gaussian(self.settings["signal_distribution"])
+                signal_distribution = Gaussian(self.settings["signal_distribution"], problem_dimension)
         elif self.settings["signal_distribution"]["name"] == DISTRIBUTION_POISSON:
-                signal_distribution = Poisson(self.settings["signal_distribution"])
+                signal_distribution = Poisson(self.settings["signal_distribution"], problem_dimension)
         else:
                 self.logger.error("Invalid Signal Distribution in {}".format(JSON_FILE))
                 return
@@ -89,15 +93,18 @@ class DataGenerator:
         # Setting background distribution
         #-----------------------------------------------
         if self.settings["background_distribution"]["name"] == DISTRIBUTION_GAUSSIAN:
-                background_distribution = Gaussian(self.settings["background_distribution"])
+                background_distribution = Gaussian(self.settings["background_distribution"], problem_dimension)
         elif self.settings["background_distribution"]["name"] == DISTRIBUTION_EXPONENTIAL:
-                background_distribution = Exponential(self.settings["background_distribution"])
+                background_distribution = Exponential(self.settings["background_distribution"], problem_dimension)
         else:
                 self.logger.error("Invalid Background Distribution in {}".format(JSON_FILE))
                 return 
 
         self.params_distributions["signal"] = signal_distribution
         self.params_distributions["background"] = background_distribution
+
+        self.logger.success("Distributions Loaded!")
+
         
     def load_systematics(self):
 
@@ -121,35 +128,70 @@ class DataGenerator:
             self.logger.error("Invalid Systematics in {}".format(JSON_FILE))
             return 
 
-    def generate_data(self):
+        self.logger.success("Systematics Loaded!")
 
+    def generate_data(self):
 
         #-----------------------------------------------
         # Check distributions loaded
         #-----------------------------------------------
-        if self.checker.distributions_are_not_loaded:
+        if self.checker.distributions_are_not_loaded(self.params_distributions):
             self.logger.error("Distributions are not loaded. First call `load_distributions` function!")
             return
 
         #-----------------------------------------------
         # Check systematics loaded
         #-----------------------------------------------
-        if self.checker.systematics_are_not_loaded:
+        if self.checker.systematics_are_not_loaded(self.params_systematics):
             self.logger.error("Systematics are not loaded. First call `load_systematics` function!")
             return
+
+
+        # column names
+        columns = ["x{}".format(i+1) for i in range(0, self.settings["problem_dimension"])]
+        columns.append("label")
+
 
         #-----------------------------------------------
         # Generate Signal Data
         #-----------------------------------------------
 
+        # get data points
+        signal_data = self.params_distributions["signal"].generate_points()
+
+        
+        # stack labels with data points
+        signal_labels = np.repeat(SIGNAL_LABEL, signal_data.shape[0]).reshape((-1,1))
+        signal = np.hstack((signal_data, signal_labels))
+   
+
+        # create signal df
+        signal_df = pd.DataFrame(signal, columns = columns)
+       
+       
         #-----------------------------------------------
         # Generate Background Data
         #-----------------------------------------------
 
+        # get data points
+        background_data = self.params_distributions["background"].generate_points()
+
+        # stack labels with data points
+        # stack labels with data points
+        background_labels = np.repeat(SIGNAL_LABEL, background_data.shape[0]).reshape((-1,1))
+        background = np.hstack((background_data, background_labels))
+
+        # create background df
+        background_df = pd.DataFrame(background, columns = columns)
+
         #-----------------------------------------------
-        # Combine Signa and Background in a DataFrame
+        # Combine Signal and Background in a DataFrame with classes
         #-----------------------------------------------
         
+        self.generated_dataframe = pd.concat([signal_df, background_df])
+        
+
+        self.logger.success("Data Generated!")
         
 
     def get_data(self):
@@ -244,6 +286,8 @@ class DataGenerator:
                 background_train_df,
                 background_test_df
             )
+
+            
         
         if combine_train_distributions:
 
