@@ -139,6 +139,10 @@ The following documentation describes the components and working of the whole pi
 `errors.py` consists of a class which is responsible for showing errors and warnings.
 
 
+## Checks
+`checks.py` consists of a class which is responsible for checking data members at each step of data generation.
+
+
 ## Data Generation
 `data_generatior.py` file is the entry point to generate data with systematics. This file consists of ***DataGenerator*** class with the following methods and functionalities:
 
