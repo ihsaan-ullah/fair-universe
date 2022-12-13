@@ -5,6 +5,7 @@ import os
 import json
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 
 #================================
 # Internal Imports
@@ -135,7 +136,7 @@ class DataGenerator:
 
         self.logger.success("Systematics Loaded!")
 
-    def generate_data_with_systematics(self):
+    def generate_data(self, apply_systematics=True):
 
         #-----------------------------------------------
         # Check distributions loaded
@@ -174,14 +175,15 @@ class DataGenerator:
         # Apply Systematics
         #-----------------------------------------------
 
-        print(signal_data[:3])
-        # signal points
-        signal_data = self.params_systematics.apply_systematics(self.problem_dimension, signal_data)
-        print(signal_data[:3])
-        # background points
-        background_data = self.params_systematics.apply_systematics(self.problem_dimension, background_data)
+        if apply_systematics:
 
-        self.logger.success("Systemtics Applied!")
+            # signal points
+            signal_data = self.params_systematics.apply_systematics(self.problem_dimension, signal_data)
+    
+            # background points
+            background_data = self.params_systematics.apply_systematics(self.problem_dimension, background_data)
+
+            self.logger.success("Systemtics Applied!")
 
         #-----------------------------------------------
         # Generate labels
@@ -215,11 +217,6 @@ class DataGenerator:
 
         # suffle dataframe
         self.generated_dataframe = self.generated_dataframe.sample(frac=1).reset_index(drop=True)
-
-
-        
-        
-        
 
     def get_data(self):
 
@@ -281,6 +278,32 @@ class DataGenerator:
         print("#===============================#")
         print(self.settings["systematics"])
         print("---------------")
+
+    def visualize_data(self):
+        #-----------------------------------------------
+        # Check Data Generated
+        #-----------------------------------------------
+        if self.checker.data_is_not_generated(self.generated_dataframe):
+            self.logger.error("Data is not generated. First call `generate_data` function!")
+            exit()
+
+        if self.problem_dimension != 2:
+            self.logger.error("Visualization not implemented for dimension other than 2")
+            exit()
+
+
+        signal_points = self.generated_dataframe[self.generated_dataframe['y'] == SIGNAL_LABEL]
+        background_points = self.generated_dataframe[self.generated_dataframe['y'] == BACKGROUND_LABEL]
+        
+        figure = plt.figure(figsize=(8,5))
+        plt.scatter(signal_points['x1'], signal_points['x2'], color = 'green', alpha=0.5, label="Signal")
+        plt.scatter(background_points['x1'], background_points['x2'], color = 'red', alpha=0.5, label="Background")
+        plt.xlabel("feature 1")
+        plt.ylabel("feature 2")
+        plt.title("Signal and Background points")
+        plt.legend()
+        plt.show()
+
 
     def save_data(self,):
 

@@ -8,11 +8,11 @@
     },
     "background_distribution": {
         "name": "Exponential",
-        "lambda" : [2,3]
+        "lambda" : [2,1]
     },
     "systematics" : {
         "name" : "Scaling",
         "allowed_dimension" : -1,
-        "scaling_vector" : [5,2]
+        "scaling_vector" : [1,1]
     }
 }

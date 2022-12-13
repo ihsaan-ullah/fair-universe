@@ -22,7 +22,7 @@ data_gen.load_distributions()
 data_gen.load_systematics()
 
 # generate data using distributions and systematics
-data_gen.generate_data()
+data_gen.generate_data(apply_systematics=True)
 
 # get data as a dataframe
 df = data_gen.get_data()
@@ -37,7 +37,7 @@ data_gen.show_distribution_parameters()
 data_gen.show_systematics_parameters()
 
 # visualize data
-data_gen.visulaize_data()
+data_gen.visualize_data()
 
 # save data as csv
 data_gen.save_data()
