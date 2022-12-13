@@ -22,7 +22,8 @@ from constants import (
     SYSTEMATIC_SCALING,
     SIGNAL_LABEL,
     BACKGROUND_LABEL,
-    JSON_FILE
+    JSON_FILE,
+    CSV_FILE
 )
 
 
@@ -40,6 +41,9 @@ class DataGenerator:
         self.params_distributions = {} 
         self.params_systematics = None 
         self.generated_dataframe = None
+
+        self.problem_dimension = None
+        self.number_of_events = None
 
         
         #-----------------------------------------------
@@ -64,6 +68,10 @@ class DataGenerator:
         self.settings = json.load(f)
         f.close()
 
+
+        self.problem_dimension = self.settings["problem_dimension"]
+        self.number_of_events = self.settings["number_of_events"]
+
         self.logger.success("Settings JSON File Loaded!")
 
     def load_distributions(self):
@@ -76,15 +84,13 @@ class DataGenerator:
             return
         
 
-        problem_dimension = self.settings["problem_dimension"]
-
         #-----------------------------------------------
         # Setting signal distribution
         #-----------------------------------------------
         if self.settings["signal_distribution"]["name"] == DISTRIBUTION_GAUSSIAN:
-                signal_distribution = Gaussian(self.settings["signal_distribution"], problem_dimension)
+                signal_distribution = Gaussian(self.settings["signal_distribution"])
         elif self.settings["signal_distribution"]["name"] == DISTRIBUTION_POISSON:
-                signal_distribution = Poisson(self.settings["signal_distribution"], problem_dimension)
+                signal_distribution = Poisson(self.settings["signal_distribution"])
         else:
                 self.logger.error("Invalid Signal Distribution in {}".format(JSON_FILE))
                 return
@@ -93,9 +99,9 @@ class DataGenerator:
         # Setting background distribution
         #-----------------------------------------------
         if self.settings["background_distribution"]["name"] == DISTRIBUTION_GAUSSIAN:
-                background_distribution = Gaussian(self.settings["background_distribution"], problem_dimension)
+                background_distribution = Gaussian(self.settings["background_distribution"])
         elif self.settings["background_distribution"]["name"] == DISTRIBUTION_EXPONENTIAL:
-                background_distribution = Exponential(self.settings["background_distribution"], problem_dimension)
+                background_distribution = Exponential(self.settings["background_distribution"])
         else:
                 self.logger.error("Invalid Background Distribution in {}".format(JSON_FILE))
                 return 
@@ -157,7 +163,7 @@ class DataGenerator:
         #-----------------------------------------------
 
         # get data points
-        signal_data = self.params_distributions["signal"].generate_points()
+        signal_data = self.params_distributions["signal"].generate_points(self.number_of_events, self.problem_dimension)
 
         
         # stack labels with data points
@@ -174,7 +180,7 @@ class DataGenerator:
         #-----------------------------------------------
 
         # get data points
-        background_data = self.params_distributions["background"].generate_points()
+        background_data = self.params_distributions["background"].generate_points(self.number_of_events, self.problem_dimension)
 
         # stack labels with data points
         # stack labels with data points
@@ -233,3 +239,16 @@ class DataGenerator:
         print("Background label :", BACKGROUND_LABEL)
         print("---------------")
 
+    def save_data(self,):
+
+        #-----------------------------------------------
+        # Check Data Generated
+        #-----------------------------------------------
+        if self.checker.data_is_not_generated(self.generated_dataframe):
+            self.logger.error("Data is not generated. First call `generate_data` function!")
+            return
+
+        self.generated_dataframe.to_csv(CSV_FILE, index=False)
+
+
+        self.logger.success("Data Saved as CSV to {}".format(CSV_FILE))

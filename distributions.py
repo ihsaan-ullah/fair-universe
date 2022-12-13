@@ -2,43 +2,51 @@
 # Imports
 #================================
 import numpy as np
-from logger import Logger
+
+
+#================================
+#  Distribution Class
+#================================
+class Distribution:
+
+    def __init__(self, name=None, mu=None, sigma=None, lambdaa=None):
+        
+        # init parameters
+        self.name = name 
+        self.mu = mu 
+        self.sigma = sigma 
+        self.lambdaa = lambdaa
 
 #================================
 # Gaussian Distribution Class
 #================================
-class Gaussian:
-    def __init__(self, distribution, problem_dimension):
+class Gaussian(Distribution):
+    def __init__(self, distribution):
 
-        # name: name of the distribution 
-        self.name = distribution["name"]
+        """
+        name: name of the distribution
+        mu : 𝜇 parameter of gaussian distribution
+        sigma : 𝜎 parameter of gaussian distribution
+        """
 
-        # mu : 𝜇 parameter of gaussian distribution
-        self.mu = distribution["mu"]
+        super().__init__(
+            name = distribution["name"],
+            mu =  distribution["mu"],
+            sigma = distribution["sigma"]
+        )
 
-        # sigma : 𝜎 parameter of gaussian distribution
-        self.sigma = distribution["sigma"]
 
-        # number_of_events : number of datapoints to be generated
-        self.number_of_events = distribution["number_of_events"]
-
-        # problem_dimension: dimension of generated data
-        self.problem_dimension = problem_dimension
-
-        # logger object
-        self.logger = Logger()
-
-    def generate_points(self):
+    def generate_points(self, number_of_events, problem_dimension):
         """
         This function generates datapoints using Gaussian distribution
         """
 
         # initialize vector with required dimension
-        points = np.zeros((self.number_of_events, self.problem_dimension))
+        points = np.zeros((number_of_events, problem_dimension))
         
         # loop over problem dimension to generate each dimension
-        for i in range(0, self.problem_dimension):
-            points[:, i] = np.array(np.random.normal(self.mu[i],self.sigma[i], self.number_of_events))
+        for i in range(0, problem_dimension):
+            points[:, i] = np.array(np.random.normal(self.mu[i],self.sigma[i], number_of_events))
         
 
         return points
@@ -48,37 +56,25 @@ class Gaussian:
 #================================
 # Poisson Distribution Class
 #================================
-class Poisson:
+class Poisson(Distribution):
     
-    def __init__(self, distribution, problem_dimension):
-
-        # name: name of the distribution 
-        self.name = distribution["name"]
-
-        # lambdaa : 𝜆 parameter of poisson distribution
-        self.lambdaa = distribution["lambda"]
-
-        # number_of_events : number of datapoints to be generated
-        self.number_of_events = distribution["number_of_events"]
-
-        # problem_dimension: dimension of generated data
-        self.problem_dimension = problem_dimension
-
-        # logger object
-        self.logger = Logger()
-
+    def __init__(self, distribution):
+        super().__init__(
+            name = distribution["name"], 
+            lambdaa = distribution["lambda"]
+        )
         
-    def generate_points(self):
+    def generate_points(self, number_of_events, problem_dimension):
         """
         This function generates datapoints using Poisson distribution
         """
 
         # initialize vector with required dimension
-        points = np.zeros((self.number_of_events, self.problem_dimension))
+        points = np.zeros((number_of_events, problem_dimension))
         
         # loop over problem dimension to generate each dimension
-        for i in range(0, self.problem_dimension):
-            points[:, i] = np.array(np.random.poisson(self.lambdaa[i], self.number_of_events))
+        for i in range(0, problem_dimension):
+            points[:, i] = np.array(np.random.poisson(self.lambdaa[i], number_of_events))
         
 
         return points
@@ -88,35 +84,26 @@ class Poisson:
 #================================
 # Exponential Distribution Class
 #================================
-class Exponential:
-    def __init__(self, distribution, problem_dimension):
+class Exponential(Distribution):
 
-        # name: name of the distribution 
-        self.name = distribution["name"]
+    def __init__(self, distribution):
+        super().__init__(
+            name = distribution["name"], 
+            lambdaa = distribution["lambda"]
+        )
 
-        # lambdaa : 𝜆 parameter of exponential distribution
-        self.lambdaa = distribution["lambda"]
 
-        # number_of_events : number of datapoints to be generated
-        self.number_of_events = distribution["number_of_events"]
-
-        # problem_dimension: dimension of generated data
-        self.problem_dimension = problem_dimension
-
-        # logger object
-        self.logger = Logger()
-
-    def generate_points(self):
+    def generate_points(self, number_of_events, problem_dimension):
         """
         This function generates datapoints using Exponential distribution
         """
 
         # initialize vector with required dimension
-        points = np.zeros((self.number_of_events, self.problem_dimension))
+        points = np.zeros((number_of_events, problem_dimension))
         
         # loop over problem dimension to generate each dimension
-        for i in range(0, self.problem_dimension):
-            points[:, i] = np.array(np.random.exponential(self.lambdaa[i], self.number_of_events))
+        for i in range(0, problem_dimension):
+            points[:, i] = np.array(np.random.exponential(self.lambdaa[i], number_of_events))
         
         return points
         

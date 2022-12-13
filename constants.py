@@ -18,6 +18,7 @@ SYSTEMATIC_SCALING = "Scaling"
 # Set file names
 #-----------------------------------------------
 JSON_FILE = 'settings.json'
+CSV_FILE = 'fair-universe-data.csv'
 
 
 #-----------------------------------------------

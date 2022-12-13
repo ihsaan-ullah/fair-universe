@@ -161,3 +161,7 @@ shows statistics of the data: data dimension, number of examples, number of clas
 
 **7- Visualize data** (`visulaize_data`)   
 visulaizes the generated data
+
+
+## Save Data 
+`save_data` saves the generated data in a csv file.
