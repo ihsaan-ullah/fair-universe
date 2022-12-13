@@ -53,32 +53,36 @@ The following documentation describes the components and working of the whole pi
 ## Settings
 `settings.json` file consists of all the settings required for data generation:
 
-**1- signal distribution**
+**1- Dimension of problem**
+```json
+"problem_dimension" : 2
+```
+
+**2- Number of Events**
+```json
+"number_of_events" : 000
+```
+
+**3- signal distribution**
 ```json
 "signal_distribution": {
     "name": "Gaussian",
     "mu" : 3,
-    "sigma" : 0.8,
-    "number_of_events" : 1000
+    "sigma" : 0.8
 }
 ```
-**2- background distribution**
+**4- background distribution**
 ```json
 "background_distribution": {
     "name": "Exponential",
-    "lambda" : 3,
-    "number_of_events" : 1000
+    "lambda" : 3
 }
 ```
 
-**3- Dimension of problem**
-```json
-"problem_dimension" : 2
-```
-**4- systematics**
+**5- systematics**
 ```json
 "systematics" : {
-"name" : "ben",
+"name" : "Ben",
 "allowed_dimension" : 2,
 "number_of_nuissance_values" : 2
 }
@@ -92,24 +96,21 @@ The following documentation describes the components and working of the whole pi
 {
     "name": "Gaussian",
     "mu" : 3,
-    "sigma" : 0.8,
-    "number_of_events" : 1000
+    "sigma" : 0.8
 }
 ```
 **2- Exponential**
 ```json
 {
     "name": "Exponential",
-    "lambda" : 3,
-    "number_of_events" : 1000
+    "lambda" : 3
 }
 ```
 **3- Poisson**
 ```json
 {
     "name": "Poisson",
-    "lambda" : 500,
-    "number_of_events" : 1000
+    "lambda" : 500
 }
 ```
 
@@ -168,9 +169,14 @@ returns the generated data as *Pandas DataFrame*
 **6- Show statistics** (`show_statistics`)  
 shows statistics of the data: data dimension, number of examples, number of classes, class labels etc.
 
-**7- Visualize data** (`visulaize_data`)   
+**7- Show distribution parameters** (`show_distribution_parameters`)  
+shows signal and background distributions parameters
+
+**8- Show systematics parameters** (`show_systematics_parameters`)  
+shows systematics parameters parameters
+
+**9- Visualize data** (`visulaize_data`)   
 visulaizes the generated data
 
-
-## Save Data 
-`save_data` saves the generated data in a csv file.
+**10- Save data** (`save_data`)  
+saves the generated data in a csv file.
