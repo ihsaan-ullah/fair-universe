@@ -60,7 +60,7 @@ The following documentation describes the components and working of the whole pi
 
 **2- Number of Events**
 ```json
-"number_of_events" : 000
+"number_of_events" : 1000
 ```
 
 **3- signal distribution**
@@ -163,7 +163,7 @@ sets up *signal* and *background* distributions from settings
 sets up systematics from settings to be applied to data generaton
 
 **4- Generate data** (`generate_data`)  
-generates data according to the settings (distributions and systematics)
+generates data according to the settings (distributions and systematics) with option to choose if systematics should be applied or not.
 
 **5- Get data** (`get_data`)  
 returns the generated data as *Pandas DataFrame*
