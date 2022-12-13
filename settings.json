@@ -11,7 +11,8 @@
         "lambda" : [2,3]
     },
     "systematics" : {
-        "name" : "Translation",
-        "allowed_dimension" : -1
+        "name" : "Scaling",
+        "allowed_dimension" : -1,
+        "scaling_vector" : [5,2]
     }
 }

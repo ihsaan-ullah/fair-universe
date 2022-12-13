@@ -2,6 +2,7 @@
 # Imports
 #================================
 import numpy as np
+from logger import Logger
 
 
 #================================
@@ -20,6 +21,8 @@ class Systematics:
         # init parameters
         self.name = name
         self.allowed_dimension = allowed_dimension
+
+        self.logger = Logger()
         
 
 
@@ -36,6 +39,13 @@ class Ben(Systematics):
 
         self.number_of_nuissance_values = systematics["number_of_nuissance_values"]
 
+    def apply_systematics(self, problem_dimension, points):
+        
+        if problem_dimension != self.allowed_dimension:
+            self.logger.error("problem_dimension and allowed_dimension must be same for this systematics!")
+            exit() 
+
+        print("Implementation in progress")
 
 
 #================================
@@ -48,6 +58,16 @@ class Translation(Systematics):
             name = systematics["name"],
             allowed_dimension = systematics["allowed_dimension"]
         )
+        self.translation_vector = np.array(systematics["translation_vector"])
+        
+
+    def apply_systematics(self, problem_dimension, points):
+        
+        if len(self.translation_vector) != problem_dimension:
+            self.logger.error("translation_vector has invalid length!")
+            exit()
+        return (points + self.translation_vector)
+
 
 
 #================================
@@ -60,3 +80,12 @@ class Scaling(Systematics):
             name = systematics["name"],
             allowed_dimension = systematics["allowed_dimension"]
         )
+        self.scaling_vector = np.array(systematics["scaling_vector"])
+
+    def apply_systematics(self, problem_dimension, points):
+        
+        if len(self.scaling_vector) != problem_dimension:
+            self.logger.error("scaling_vector has invalid length!")
+            exit()
+
+        return (points * self.scaling_vector)

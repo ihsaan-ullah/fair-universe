@@ -130,6 +130,7 @@ The following documentation describes the components and working of the whole pi
 {
     "name" : "Translation",
     "allowed_dimension" : -1
+    "translation_vector" : [5,2]
 }
 ```
 **3- Scaling**
@@ -137,6 +138,7 @@ The following documentation describes the components and working of the whole pi
 {
     "name" : "Scaling",
     "allowed_dimension" : -1
+    "scaling_vector" : [5,2]
 }
 ```
 

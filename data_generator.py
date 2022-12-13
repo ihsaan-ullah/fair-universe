@@ -63,7 +63,7 @@ class DataGenerator:
         #-----------------------------------------------
         if not os.path.exists(JSON_FILE):
             self.logger.error("{} file does not exist!".format(JSON_FILE))
-            return 
+            exit() 
         f = open(JSON_FILE)
         self.settings = json.load(f)
         f.close()
@@ -81,7 +81,7 @@ class DataGenerator:
         #-----------------------------------------------
         if self.checker.settings_is_not_loaded(self.settings):
             self.logger.error("{} is not loaded. First call `load_settings` function!".format(JSON_FILE))
-            return
+            exit()
         
 
         #-----------------------------------------------
@@ -93,7 +93,7 @@ class DataGenerator:
                 signal_distribution = Poisson(self.settings["signal_distribution"])
         else:
                 self.logger.error("Invalid Signal Distribution in {}".format(JSON_FILE))
-                return
+                exit()
 
         #-----------------------------------------------
         # Setting background distribution
@@ -104,14 +104,13 @@ class DataGenerator:
                 background_distribution = Exponential(self.settings["background_distribution"])
         else:
                 self.logger.error("Invalid Background Distribution in {}".format(JSON_FILE))
-                return 
+                exit()
 
         self.params_distributions["signal"] = signal_distribution
         self.params_distributions["background"] = background_distribution
 
         self.logger.success("Distributions Loaded!")
-
-        
+     
     def load_systematics(self):
 
         #-----------------------------------------------
@@ -119,7 +118,7 @@ class DataGenerator:
         #-----------------------------------------------
         if self.checker.settings_is_not_loaded(self.settings):
             self.logger.error("{} is not loaded. First call `load_settings` function!".format(JSON_FILE))
-            return
+            exit()
 
         #-----------------------------------------------
         # Setting systematics
@@ -132,25 +131,25 @@ class DataGenerator:
             self.params_systematics = Scaling(self.settings["systematics"])
         else:
             self.logger.error("Invalid Systematics in {}".format(JSON_FILE))
-            return 
+            exit()
 
         self.logger.success("Systematics Loaded!")
 
-    def generate_data(self):
+    def generate_data_with_systematics(self):
 
         #-----------------------------------------------
         # Check distributions loaded
         #-----------------------------------------------
         if self.checker.distributions_are_not_loaded(self.params_distributions):
             self.logger.error("Distributions are not loaded. First call `load_distributions` function!")
-            return
+            exit()
 
         #-----------------------------------------------
         # Check systematics loaded
         #-----------------------------------------------
         if self.checker.systematics_are_not_loaded(self.params_systematics):
             self.logger.error("Systematics are not loaded. First call `load_systematics` function!")
-            return
+            exit()
 
 
         # column names
@@ -159,34 +158,51 @@ class DataGenerator:
 
 
         #-----------------------------------------------
-        # Generate Signal Data
+        # Generate Data
+        #-----------------------------------------------
+        
+        # get signal datapoints
+        signal_data = self.params_distributions["signal"].generate_points(self.number_of_events, self.problem_dimension)
+        
+        # get background datapoints
+        background_data = self.params_distributions["background"].generate_points(self.number_of_events, self.problem_dimension)
+
+        self.logger.success("Data Generated!")
+
+
+        #-----------------------------------------------
+        # Apply Systematics
         #-----------------------------------------------
 
-        # get data points
-        signal_data = self.params_distributions["signal"].generate_points(self.number_of_events, self.problem_dimension)
+        print(signal_data[:3])
+        # signal points
+        signal_data = self.params_systematics.apply_systematics(self.problem_dimension, signal_data)
+        print(signal_data[:3])
+        # background points
+        background_data = self.params_systematics.apply_systematics(self.problem_dimension, background_data)
 
-        
-        # stack labels with data points
+        self.logger.success("Systemtics Applied!")
+
+        #-----------------------------------------------
+        # Generate labels
+        #-----------------------------------------------
+
+        # stack signal labels with data points
         signal_labels = np.repeat(SIGNAL_LABEL, signal_data.shape[0]).reshape((-1,1))
         signal = np.hstack((signal_data, signal_labels))
-   
+
+        # stack background labels with data points
+        background_labels = np.repeat(BACKGROUND_LABEL, background_data.shape[0]).reshape((-1,1))
+        background = np.hstack((background_data, background_labels))
+
+
+        #-----------------------------------------------
+        # Create DataFrame from Data
+        #-----------------------------------------------
 
         # create signal df
         signal_df = pd.DataFrame(signal, columns = columns)
        
-       
-        #-----------------------------------------------
-        # Generate Background Data
-        #-----------------------------------------------
-
-        # get data points
-        background_data = self.params_distributions["background"].generate_points(self.number_of_events, self.problem_dimension)
-
-        # stack labels with data points
-        # stack labels with data points
-        background_labels = np.repeat(BACKGROUND_LABEL, background_data.shape[0]).reshape((-1,1))
-        background = np.hstack((background_data, background_labels))
-
         # create background df
         background_df = pd.DataFrame(background, columns = columns)
 
@@ -202,7 +218,7 @@ class DataGenerator:
 
 
         
-        self.logger.success("Data Generated!")
+        
         
 
     def get_data(self):
@@ -212,7 +228,7 @@ class DataGenerator:
         #-----------------------------------------------
         if self.checker.data_is_not_generated(self.generated_dataframe):
             self.logger.error("Data is not generated. First call `generate_data` function!")
-            return
+            exit()
 
         return self.generated_dataframe
     
@@ -223,7 +239,7 @@ class DataGenerator:
         #-----------------------------------------------
         if self.checker.data_is_not_generated(self.generated_dataframe):
             self.logger.error("Data is not generated. First call `generate_data` function!")
-            return
+            exit()
 
 
         print("#===============================#")
@@ -246,7 +262,7 @@ class DataGenerator:
         #-----------------------------------------------
         if self.checker.distributions_are_not_loaded(self.params_distributions):
             self.logger.error("Distributions are not loaded. First call `load_distributions` function!")
-            return
+            exit()
 
 
         print("#===============================#")
@@ -273,9 +289,8 @@ class DataGenerator:
         #-----------------------------------------------
         if self.checker.data_is_not_generated(self.generated_dataframe):
             self.logger.error("Data is not generated. First call `generate_data` function!")
-            return
+            exit()
 
         self.generated_dataframe.to_csv(CSV_FILE, index=False)
 
-
-        self.logger.success("Data Saved as CSV to {}".format(CSV_FILE))
+        self.logger.success("Data Saved as CSV in {}".format(CSV_FILE))
