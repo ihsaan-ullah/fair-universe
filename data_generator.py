@@ -239,6 +239,33 @@ class DataGenerator:
         print("Background label :", BACKGROUND_LABEL)
         print("---------------")
 
+    def show_distribution_parameters(self):
+
+        #-----------------------------------------------
+        # Check distributions loaded
+        #-----------------------------------------------
+        if self.checker.distributions_are_not_loaded(self.params_distributions):
+            self.logger.error("Distributions are not loaded. First call `load_distributions` function!")
+            return
+
+
+        print("#===============================#")
+        print("# Distribution Parameters")
+        print("#===============================#")
+        print("Signal Distribution :")
+        print(self.settings["signal_distribution"])
+        print("---------------")
+        print("Background Distribution :")
+        print(self.settings["background_distribution"])
+        print("---------------")
+
+    def show_systematics_parameters(self):
+        print("#===============================#")
+        print("# Systematics Parameters")
+        print("#===============================#")
+        print(self.settings["systematics"])
+        print("---------------")
+
     def save_data(self,):
 
         #-----------------------------------------------

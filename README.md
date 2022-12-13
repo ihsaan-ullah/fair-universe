@@ -30,8 +30,17 @@ df = data_gen.get_data()
 # show statistics of data
 data_gen.show_statistics()
 
+# show distribution parameters
+data_gen.show_distribution_parameters()
+
+# show distribution parameters
+data_gen.show_systematics_parameters()
+
 # visualize data
 data_gen.visulaize_data()
+
+# save data as csv
+data_gen.save_data()
 
 ```
 ***

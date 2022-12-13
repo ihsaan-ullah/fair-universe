@@ -9,7 +9,7 @@ import numpy as np
 #================================
 class Systematics:
     
-    def __init__(self, name=None, allowed_dimension=None, number_of_nuissance_values=None):
+    def __init__(self, name=None, allowed_dimension=None):
         
         """
         name: name of the systematic 
@@ -20,7 +20,7 @@ class Systematics:
         # init parameters
         self.name = name
         self.allowed_dimension = allowed_dimension
-        self.number_of_nuissance_values = number_of_nuissance_values
+        
 
 
 #================================
@@ -31,9 +31,10 @@ class Ben(Systematics):
 
         super().__init__(
             name = systematics["name"],
-            allowed_dimension = systematics["allowed_dimension"],
-            number_of_nuissance_values = systematics["number_of_nuissance_values"]
+            allowed_dimension = systematics["allowed_dimension"]
         )
+
+        self.number_of_nuissance_values = systematics["number_of_nuissance_values"]
 
 
 
