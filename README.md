@@ -39,6 +39,12 @@ data_gen.show_systematics_parameters()
 # visualize data
 data_gen.visualize_data()
 
+# visualize data distribution (1D histogram)
+data_gen.visualize_distributions_1d()
+
+# visualize data distribution (2D histogram)
+data_gen.visualize_distributions_2d()
+
 # save data as csv
 data_gen.save_data()
 
@@ -180,5 +186,8 @@ shows systematics parameters parameters
 **9- Visualize data** (`visulaize_data`)   
 visulaizes the generated data
 
-**10- Save data** (`save_data`)  
+**10- Visualize distributions** (`visualize_distributions`)   
+visulaizes the histogram of generated data
+
+**11- Save data** (`save_data`)  
 saves the generated data in a csv file.

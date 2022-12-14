@@ -287,6 +287,9 @@ class DataGenerator:
             self.logger.error("Data is not generated. First call `generate_data` function!")
             exit()
 
+        #-----------------------------------------------
+        # Check Problem Dimension
+        #-----------------------------------------------
         if self.problem_dimension != 2:
             self.logger.error("Visualization not implemented for dimension other than 2")
             exit()
@@ -304,6 +307,79 @@ class DataGenerator:
         plt.legend()
         plt.show()
 
+    def visualize_distributions_1d(self):
+
+        #-----------------------------------------------
+        # Check Data Generated
+        #-----------------------------------------------
+        if self.checker.data_is_not_generated(self.generated_dataframe):
+            self.logger.error("Data is not generated. First call `generate_data` function!")
+            exit()
+
+        #-----------------------------------------------
+        # Check Problem Dimension
+        #-----------------------------------------------
+        if self.problem_dimension != 2:
+            self.logger.error("Visualization not implemented for dimension other than 2")
+            exit()
+
+        
+        signal_points = self.generated_dataframe[self.generated_dataframe['y'] == SIGNAL_LABEL]
+        background_points = self.generated_dataframe[self.generated_dataframe['y'] == BACKGROUND_LABEL]
+        
+        fig, axs = plt.subplots(2, 2, figsize =(12, 10), tight_layout = True)
+
+        axs[0][0].hist(signal_points['x1'], bins=10)
+        axs[0][0].set_xlabel("feature 1")
+        axs[0][0].set_ylabel("density")
+        axs[0][0].set_title("Signal Density Feature 1")
+        axs[0][1].hist(signal_points['x2'], bins=10)
+        axs[0][1].set_xlabel("feature 2")
+        axs[0][1].set_ylabel("density")
+        axs[0][1].set_title("Signal Density Feature 2")
+        
+        axs[1][0].hist(background_points['x1'], bins=10)
+        axs[1][0].set_xlabel("feature 1")
+        axs[1][0].set_ylabel("density")
+        axs[1][0].set_title("Background Density Feature 1")
+        axs[1][1].hist(background_points['x2'], bins=10)
+        axs[1][1].set_xlabel("feature 2")
+        axs[1][1].set_ylabel("density")
+        axs[1][1].set_title("Background Density Feature 1")
+
+        plt.show()
+
+    def visualize_distributions_2d(self):
+
+        #-----------------------------------------------
+        # Check Data Generated
+        #-----------------------------------------------
+        if self.checker.data_is_not_generated(self.generated_dataframe):
+            self.logger.error("Data is not generated. First call `generate_data` function!")
+            exit()
+
+        #-----------------------------------------------
+        # Check Problem Dimension
+        #-----------------------------------------------
+        if self.problem_dimension != 2:
+            self.logger.error("Visualization not implemented for dimension other than 2")
+            exit()
+
+        
+        signal_points = self.generated_dataframe[self.generated_dataframe['y'] == SIGNAL_LABEL]
+        background_points = self.generated_dataframe[self.generated_dataframe['y'] == BACKGROUND_LABEL]
+        
+        figure = plt.figure(figsize=(8,5))
+        plt.hist2d(signal_points["x1"], signal_points["x2"])
+        plt.title("Signal Histogram 2D")
+        plt.show()
+
+        figure = plt.figure(figsize=(8,5))
+        plt.hist2d(background_points["x1"], background_points["x2"])
+        plt.title("Background Histogram 2D")
+        plt.show()
+
+        
 
     def save_data(self,):
 
