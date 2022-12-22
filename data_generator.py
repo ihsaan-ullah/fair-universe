@@ -6,19 +6,22 @@ import json
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from matplotlib import cm 
+import scipy.stats as st
+import seaborn as sns
 
 #================================
 # Internal Imports
 #================================
 from distributions import Gaussian, Exponential, Poisson
-from systematics import Ben, Translation, Scaling
+from systematics import Ben_New, Translation, Scaling
 from logger import Logger
 from checker import Checker
 from constants import (
     DISTRIBUTION_GAUSSIAN, 
     DISTRIBUTION_EXPONENTIAL, 
     DISTRIBUTION_POISSON,
-    SYSTEMATIC_BEN,
+    SYSTEMATIC_BEN_NEW,
     SYSTEMATIC_TRANSLATION,
     SYSTEMATIC_SCALING,
     SIGNAL_LABEL,
@@ -44,8 +47,10 @@ class DataGenerator:
         self.generated_dataframe = None
 
         self.problem_dimension = None
-        self.number_of_events = None
-
+        self.ps, self.pb = None, None 
+        self.total_number_of_events = None
+        self.number_of_background_events = None 
+        self.number_of_signal_events = None
         
         #-----------------------------------------------
         # Initialize logger class
@@ -71,7 +76,13 @@ class DataGenerator:
 
 
         self.problem_dimension = self.settings["problem_dimension"]
-        self.number_of_events = self.settings["number_of_events"]
+        self.total_number_of_events = self.settings["total_number_of_events"]
+
+        self.ps = self.settings["probability_class_signal"]
+        self.pb = self.settings["probability_class_background"]
+
+        self.number_of_signal_events = int(self.total_number_of_events*self.ps)
+        self.number_of_background_events = int(self.total_number_of_events*self.pb)
 
         self.logger.success("Settings JSON File Loaded!")
 
@@ -124,8 +135,8 @@ class DataGenerator:
         #-----------------------------------------------
         # Setting systematics
         #-----------------------------------------------
-        if self.settings["systematics"]["name"] == SYSTEMATIC_BEN:
-            self.params_systematics = Ben(self.settings["systematics"])
+        if self.settings["systematics"]["name"] == SYSTEMATIC_BEN_NEW:
+            self.params_systematics = Ben_New(self.settings["systematics"])
         elif self.settings["systematics"]["name"] == SYSTEMATIC_TRANSLATION:
             self.params_systematics = Translation(self.settings["systematics"])
         elif self.settings["systematics"]["name"] == SYSTEMATIC_SCALING:
@@ -163,10 +174,10 @@ class DataGenerator:
         #-----------------------------------------------
         
         # get signal datapoints
-        signal_data = self.params_distributions["signal"].generate_points(self.number_of_events, self.problem_dimension)
+        signal_data = self.params_distributions["signal"].generate_points(self.number_of_signal_events, self.problem_dimension)
         
         # get background datapoints
-        background_data = self.params_distributions["background"].generate_points(self.number_of_events, self.problem_dimension)
+        background_data = self.params_distributions["background"].generate_points(self.number_of_background_events, self.problem_dimension)
 
         self.logger.success("Data Generated!")
 
@@ -299,8 +310,8 @@ class DataGenerator:
         background_points = self.generated_dataframe[self.generated_dataframe['y'] == BACKGROUND_LABEL]
         
         figure = plt.figure(figsize=(8,5))
-        plt.scatter(signal_points['x1'], signal_points['x2'], color = 'green', alpha=0.5, label="Signal")
-        plt.scatter(background_points['x1'], background_points['x2'], color = 'red', alpha=0.5, label="Background")
+        plt.scatter(signal_points['x1'], signal_points['x2'], color = 'red', alpha=0.5, label="Signal")
+        plt.scatter(background_points['x1'], background_points['x2'], color = 'green', alpha=0.5, label="Background")
         plt.xlabel("feature 1")
         plt.ylabel("feature 2")
         plt.title("Signal and Background points")
@@ -379,7 +390,79 @@ class DataGenerator:
         plt.title("Background Histogram 2D")
         plt.show()
 
+    def visualize_data_with_contour_2d(self):
+
+        #-----------------------------------------------
+        # Check Data Generated
+        #-----------------------------------------------
+        if self.checker.data_is_not_generated(self.generated_dataframe):
+            self.logger.error("Data is not generated. First call `generate_data` function!")
+            exit()
+
+        #-----------------------------------------------
+        # Check Problem Dimension
+        #-----------------------------------------------
+        if self.problem_dimension != 2:
+            self.logger.error("Visualization not implemented for dimension other than 2")
+            exit()
+
         
+        signal_points = self.generated_dataframe[self.generated_dataframe['y'] == SIGNAL_LABEL].drop('y', axis=1)
+        background_points = self.generated_dataframe[self.generated_dataframe['y'] == BACKGROUND_LABEL].drop('y', axis=1)
+        
+
+        figure = plt.figure(figsize=(10,8))
+        
+        plt.scatter(signal_points['x1'], signal_points['x2'], color = 'red', alpha=0.7, label="Signal")
+        plt.scatter(background_points['x1'], background_points['x2'], color = 'green', alpha=0.7, label="Background")
+     
+
+        # Signal contours
+        xx,yy,f,levels = self._get_contours(
+            x=signal_points["x1"], 
+            y=signal_points["x2"],
+            xmin= np.min(signal_points["x1"]),
+            xmax= np.max(signal_points["x1"]),
+            ymin= np.min(signal_points["x2"]),
+            ymax= np.max(signal_points["x2"])
+            
+        )
+        plt.contourf(xx, yy, f, levels, cmap=cm.Reds, alpha=0.4)
+
+        # backgrund contours
+        xx,yy,f,levels = self._get_contours(
+            x=background_points["x1"], 
+            y=background_points["x2"],
+            xmin= np.min(background_points["x1"]),
+            xmax= np.max(background_points["x1"]),
+            ymin= np.min(background_points["x2"]),
+            ymax= np.max(background_points["x2"])
+            
+        )
+        plt.contourf(xx, yy, f, levels, cmap=cm.Greens, alpha=0.4)
+
+
+        
+        plt.xlabel("feature 1")
+        plt.ylabel("feature 2")
+        plt.title("Signal and Background points")
+        plt.legend()
+        plt.show()
+
+
+    def _get_contours(self, x, y, xmin, xmax, ymin, ymax):
+
+        
+        xx, yy = np.mgrid[xmin:xmax:100j, ymin:ymax:100j]
+        positions = np.vstack([xx.ravel(), yy.ravel()])
+        values = np.vstack([x, y])
+        kernel = st.gaussian_kde(values)
+        f = np.reshape(kernel(positions).T, xx.shape)
+        step = 0.02
+        m = np.amax(f)
+        levels = np.arange(0.0, m, step) + step
+
+        return xx, yy, f, levels
 
     def save_data(self,):
 

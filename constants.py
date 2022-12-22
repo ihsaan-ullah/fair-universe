@@ -9,7 +9,7 @@ DISTRIBUTION_POISSON = "Poisson"
 #-----------------------------------------------
 # Set Systematics
 #-----------------------------------------------
-SYSTEMATIC_BEN = "Ben"
+SYSTEMATIC_BEN_NEW = "Ben_New"
 SYSTEMATIC_TRANSLATION = "Translation"
 SYSTEMATIC_SCALING = "Scaling"
 

@@ -29,7 +29,7 @@ class Systematics:
 #================================
 # Benjamin  
 #================================
-class Ben(Systematics):
+class Ben_New(Systematics):
     def __init__(self, systematics):
 
         super().__init__(
@@ -37,7 +37,8 @@ class Ben(Systematics):
             allowed_dimension = systematics["allowed_dimension"]
         )
 
-        self.number_of_nuissance_values = systematics["number_of_nuissance_values"]
+        self.sigma_bias = systematics["sigma_bias"]
+        self.mu_bias = systematics["mu_bias"]
 
     def apply_systematics(self, problem_dimension, points):
         
