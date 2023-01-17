@@ -1,8 +1,8 @@
 {
     "problem_dimension" : 2,
     "total_number_of_events" : 1000,
-    "probability_class_signal" : 0.1, 
-    "probability_class_background" : 0.9, 
+    "probability_class_signal" : 0.2, 
+    "probability_class_background" : 0.8, 
     "signal_distribution": {
         "name": "Gaussian",
         "mu" : [2,2],
@@ -15,7 +15,7 @@
     },
     "systematics" : {
         "name" : "Ben_New",
-        "allowed_dimension" : -1,
+        "allowed_dimension" : 2,
         "sigma_bias" : [1,1],
         "mu_bias" : [1,1]
     }

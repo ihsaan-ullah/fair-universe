@@ -21,7 +21,6 @@ class Systematics:
         # init parameters
         self.name = name
         self.allowed_dimension = allowed_dimension
-
         self.logger = Logger()
         
 
@@ -46,7 +45,16 @@ class Ben_New(Systematics):
             self.logger.error("problem_dimension and allowed_dimension must be same for this systematics!")
             exit() 
 
-        print("Implementation in progress")
+        # apply translation 
+        updated_points = (points + self.mu_bias)
+
+        # apply scaling 
+        updated_points = (updated_points * self.sigma_bias)
+
+        return updated_points
+        
+         
+
 
 
 #================================

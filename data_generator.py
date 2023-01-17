@@ -8,7 +8,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib import cm 
 import scipy.stats as st
-import seaborn as sns
 
 #================================
 # Internal Imports
@@ -448,7 +447,6 @@ class DataGenerator:
         plt.title("Signal and Background points")
         plt.legend()
         plt.show()
-
 
     def _get_contours(self, x, y, xmin, xmax, ymin, ymax):
 
