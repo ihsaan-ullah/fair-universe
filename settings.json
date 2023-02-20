@@ -6,12 +6,14 @@
     "signal_distribution": {
         "name": "Gaussian",
         "mu" : [2,2],
-        "sigma" : [1, 1]
+        "sigma" : [1, 1],
+        "cut" : [[2,4], []]
     },
     "background_distribution": {
         "name": "Gaussian",
         "mu" : [6,6],
-        "sigma" : [1, 1]
+        "sigma" : [1, 1],
+        "cut" : [[6,8], []]
     },
     "systematics" : {
         "name" : "Ben_New",
