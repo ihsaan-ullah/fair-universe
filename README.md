@@ -73,24 +73,28 @@ The following documentation describes the components and working of the whole pi
 ```json
 "signal_distribution": {
     "name": "Gaussian",
-    "mu" : 3,
-    "sigma" : 0.8
-}
+    "mu" : [2,2],
+    "sigma" : [1, 1],
+    "cut" : [[2,4], []]
+},
 ```
 **4- background distribution**
 ```json
 "background_distribution": {
-    "name": "Exponential",
-    "lambda" : 3
-}
+    "name": "Gaussian",
+    "mu" : [6,6],
+    "sigma" : [1, 1],
+    "cut" : [[6,8], []]
+},
 ```
 
 **5- systematics**
 ```json
 "systematics" : {
-"name" : "Ben",
-"allowed_dimension" : 2,
-"number_of_nuissance_values" : 2
+    "name" : "Ben_New",
+    "allowed_dimension" : 2,
+    "sigma_bias" : [1,1],
+    "mu_bias" : [1,1]
 }
 ```
 
@@ -101,22 +105,25 @@ The following documentation describes the components and working of the whole pi
 ```json
 {
     "name": "Gaussian",
-    "mu" : 3,
-    "sigma" : 0.8
+    "mu" : [2,2],
+    "sigma" : [1, 1],
+    "cut" : [[2,4], []]
 }
 ```
 **2- Exponential**
 ```json
 {
     "name": "Exponential",
-    "lambda" : 3
+    "lambda" : [3,3],
+    "cut" : [[], []]
 }
 ```
 **3- Poisson**
 ```json
 {
-    "name": "Poisson",
-    "lambda" : 500
+    "name": "Exponential",
+    "lambda" : [500,500],
+    "cut" : [[], []]
 }
 ```
 
@@ -126,9 +133,10 @@ The following documentation describes the components and working of the whole pi
 **1- Ben's systematics (for 2D problem only)**
 ```json
 {
-    "name" : "Ben",
+    "name" : "Ben_New",
     "allowed_dimension" : 2,
-    "number_of_nuissance_values" : 2
+    "sigma_bias" : [1,1],
+    "mu_bias" : [1,1]
 }
 ```
 **2- Translation**
