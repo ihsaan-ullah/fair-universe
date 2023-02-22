@@ -14,6 +14,8 @@ The datasets conist of some points (or events) features:
 
 The `y` column shows the class of the point : either 1 for signal or 0 for background. 
 
+<img src="https://raw.githubusercontent.com/ihsaan-ullah/fair-universe/master/Competition_Bundle/pages/train_test_plots.png" width=800 > 
+
 In training data, signal and background clusters are generated with Gaussian distribution. In test data, there is a "distribution shift": the center of both clusters may be slightly translated and the variance of the Gaussian distributions may be modified too. But you do not know by how much.
 	
 ***
