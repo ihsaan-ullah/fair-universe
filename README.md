@@ -1,4 +1,4 @@
-# Fair Universe Rep
+# Fair Universe Repository
 
 This repository consists of :
 - Fair Universe Data Generator
