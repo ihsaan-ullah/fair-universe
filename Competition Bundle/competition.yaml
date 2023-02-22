@@ -1,0 +1,89 @@
+# FAIR-UNIVERSE competition yaml file
+# Created by: Ihsan Ullah
+# Created on: Dec 01, 2022
+
+version: 2
+title: Fair Universe Competition V1
+description: Fair-Universe Competition version 1 with toy problem 
+image: logo.png
+has_registration: True   
+force_submission_to_leaderboard: True   # If false, participants must submit manually, do not change
+disallow_leaderboard_modifying: True    # If true, submissions cannot be changed
+enable_detailed_results: True           # True if html file written
+enable_forum: True                      # Forum active
+docker_image: ihsaanullah/codalab-legacy:gpu
+end_date: null                          # Never ends
+
+terms: pages/terms.md
+pages:  
+  - title: Overview
+    file: pages/overview.md
+  - title: Evaluation
+    file: pages/evaluation.md
+  - title: Terms
+    file: pages/terms.md
+  - title: Data
+    file: pages/data.md
+  - title: Getting Started
+    file: pages/getting_started.md
+
+phases:
+  - index: 0
+    name: Phase 1
+    description: Feedback Phase
+    start: 2023-01-01
+    end: 2023-12-31
+    color: green   
+    tasks:
+      - 0
+  - index: 1
+    name: Phase 2
+    description: Final Phase
+    start: 2024-01-01
+    end: 2024-12-31
+    color: purple   
+    tasks:
+      - 1
+
+tasks:
+  - index: 0
+    name: Task Phase 1
+    description: Signal vs Background Classificaiton
+    input_data: input_data/
+    reference_data: reference_data/  
+    scoring_program: scoring_program/
+    ingestion_program: ingestion_program/
+  - index: 1
+    name: Task Phase 2
+    description: Signal vs Background Classificaiton
+    input_data: input_data/
+    reference_data: reference_data/  
+    scoring_program: scoring_program/
+    ingestion_program: ingestion_program/
+
+
+leaderboards:
+  - index: 0 
+    title: Results
+    key: main
+    submission_rule: "Force_Last"
+    columns:
+      - index: 0
+        title: average score
+        key: auc
+        sorting: desc
+      - index: 1
+        title: dataset 1
+        key: auc_1
+        sorting: desc
+      - index: 2
+        title: dataset 2
+        key: auc_2
+        sorting: desc
+      - index: 3
+        title: dataset 3
+        key: auc_3
+        sorting: desc
+
+
+

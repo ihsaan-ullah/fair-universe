@@ -1,0 +1,9 @@
+Nuisance is diagonal translation. That is, if z is the nuisance value, then each coordinate of each point is incremented by z.
+
+train_1 : z=1
+train_2 : z=1.4
+train_3 : z=1.8
+
+test_1 : z=1.2
+test_2 : z=1.6
+test_3 : z=2.2
