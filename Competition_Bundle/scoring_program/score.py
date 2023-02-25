@@ -1,9 +1,8 @@
 #------------------------------------------
 # Imports
 #------------------------------------------
-import sys
 import os
-import json
+from sys import argv
 import numpy as np
 
 
@@ -11,141 +10,113 @@ import numpy as np
 #------------------------------------------
 # Import Metric
 #------------------------------------------
-from metric import auc_metric
-
-
-#------------------------------------------
-# constants
-#------------------------------------------
-data_name = "fair_universe"
-
-#------------------------------------------
-# directories
-#------------------------------------------
-# Directory read predictions and solutions from
-input_dir = '/app/input' 
-
-# Directory to output computed score into
-output_dir = '/app/output/'
-
-# reference data (test labels)
-reference_dir = os.path.join(input_dir, 'ref')  # Ground truth data
-
-# submitted/predicted lables
-prediction_dir = os.path.join(input_dir, 'res')
-
-# score file to write score into
-score_file = os.path.join(output_dir, 'scores.json') 
+from metric import auc_metric, bac_metric
 
 
 
 #------------------------------------------
-# Read Predictions
+# Default Directories
 #------------------------------------------
-def read_prediction():
-    prediction_files = [
-        os.path.join(prediction_dir,'test_1.predictions'),
-        os.path.join(prediction_dir,'test_2.predictions'),
-        os.path.join(prediction_dir,'test_3.predictions')
-    ]
+if len(argv) == 1:
+    # root directory
+    root_dir = "../"
     
-    predicted_scores = []
-    for prediction_file in prediction_files:
+    # Directory read predictions and solutions from
+    input_dir = root_dir + "input_data"
 
-        # Check if file exists
-        if not os.path.isfile(prediction_file):
-            print("[-] " + prediction_file +" file not found!")
-            return
+    # Directory to output computed score into
+    output_dir = root_dir + "scoring_output"
 
-        f = open(prediction_file, "r")
-    
-        predicted_score = f.read().splitlines()
-        predicted_score = np.array(predicted_score,dtype=float)
+    # reference data (test labels)
+    reference_dir = os.path.join(input_dir, "test", "labels")
 
-        predicted_scores.append(predicted_score)
-    return predicted_scores
+    # submitted/predicted lables
+    prediction_dir = root_dir + "sample_result_submission"
 
+    # score file to write score into
+    score_file = os.path.join(output_dir, 'scores.json')
+
+else:
 #------------------------------------------
-# Read Solutions
+# Codabench Directories
 #------------------------------------------
-def read_solution():
+    # Directory read predictions and solutions from
+    input_dir = '/app/input' 
 
-    solution_files = [
-        os.path.join(reference_dir, 'test_1.labels'),
-        os.path.join(reference_dir, 'test_2.labels'),
-        os.path.join(reference_dir, 'test_3.labels')
-    ]
+    # Directory to output computed score into
+    output_dir = '/app/output/'
 
-    test_labels = []
-    for solution_file in solution_files:
+    # reference data (test labels)
+    reference_dir = os.path.join(input_dir, 'ref')  # Ground truth data
 
-        # Check if file exists
-        if not os.path.isfile(solution_file):
-            print('[-] Test solution file not found!')
-            return
+    # submitted/predicted lables
+    prediction_dir = os.path.join(input_dir, 'res')
 
-        f = open(solution_file, "r")
-        
-        test_label = f.read().splitlines()
-        test_label = np.array(test_label,dtype=float)
+    # score file to write score into
+    score_file = os.path.join(output_dir, 'scores.json') 
 
-        test_labels.append(test_label)
-    return test_labels
+if __name__ == '__main__':
 
-def save_score(scores):
-
-    scores = {
-        "auc_1": scores[0],
-        "auc_2": scores[1],
-        "auc_3": scores[2],
-        "auc":  np.mean(scores)
-    }
-    with open(score_file, 'w') as f_score:
-        f_score.write(json.dumps(scores))
-        f_score.close()
-
-def print_pretty(text):
-    print("-------------------")
-    print("#---",text)
-    print("-------------------")
+    print("############################################")
+    print("### Scoring Program")
+    print("############################################")
 
 
-    
-def main():
+
+
+    from solution import read_pred_sol, write_score
 
 
     #------------------------------------------
     # Read predictions and solutions
     #------------------------------------------
-    print_pretty('Reading predictions')
-    predictions = read_prediction()
-
-    print_pretty('Reading solutions')
-    solutions = read_solution()
-
+    print("[*] Reading predictions and solutions")
+    predictions, solutions, scores = read_pred_sol(prediction_dir, reference_dir)
 
 
     #------------------------------------------
     # Compute Scores
     #------------------------------------------
-    print_pretty('Computing scores')
-    auc_scores = []
+    print("[*] Computing AUC and BAC scores")
+
+    scores_dict = {}
+    auc_scores, bac_scores = [], []
+
     for index, _ in enumerate(predictions):
-        auc_score = auc_metric(solutions[index], predictions[index])
-        print("AUC Score for Prediction " + str(index+1)+" :"  , auc_score)
+        print("\nTest set {}".format(index+1))
+        print("-----------")
+        auc_score = auc_metric(solutions[index], scores[index])
+        bac_score = bac_metric(solutions[index], predictions[index])
+        print("AUC: {}\nBAC: {}".format(auc_score, bac_score))
+
+        # keys for scores dict
+        auc_key = "auc_" + str(index+1)
+        bac_key = "bac_" + str(index+1)
+
+        # adding scores to dict
+        scores_dict[auc_key] = auc_score
+        scores_dict[bac_key] = bac_score
+
+        # adding scores to list
         auc_scores.append(auc_score)
+        bac_scores.append(bac_score)
+
+    scores_dict["auc"] = np.mean(auc_scores)
+    scores_dict["bac"] = np.mean(bac_scores)
+
+    print("\n-----------")
+    print("Average AUC : {}".format(np.mean(auc_scores)))
+    print("Average BAC : {}".format(np.mean(bac_scores)))
+    print("-----------\n")
 
     #------------------------------------------
     # Write Score
     #------------------------------------------
-    print_pretty('Saving Score')
-    save_score(auc_scores)
-        
-    
-    
+    print("[*] Saving Score")
+    write_score(score_file, scores_dict)
 
 
 
-
-if __name__ == '__main__':
-    main()
+    print("\n----------------------------------------------")
+    print("[+] Scoring Program executed successfully!")
+    print("----------------------------------------------\n\n")

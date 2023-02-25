@@ -1,26 +1,23 @@
 import pickle
+import numpy as np  
 from os.path import isfile
-from sklearn.naive_bayes import GaussianNB
+
 
 
 #------------------------------
-# Naive Bayes Baseline Model
+# Dubm Baseline Model
 #------------------------------
 class Model:
+
     def __init__(self):
-        self.model_name = "Normal"
-        self.clf = GaussianNB()
-        self.is_trained=False
+        self.model_name = "Dumb"
 
     def fit(self, X, y):
-        self.clf.fit(X, y)
-        self.is_trained=True
+        pass
 
     def predict(self, X):
-        return self.clf.predict(X)
+        return np.zeros(X.shape[0])
 
-    def predict_score(self, X):
-        return self.clf.predict_proba(X)[:, 1]
     def save(self, path="./"):
         pickle.dump(self.clf, open(path + '_model.pickle', "wb"))
 

@@ -1,135 +1,65 @@
 #------------------------------------------
 # Imports
 #------------------------------------------
-import sys
+from sys import argv, path
 import os
 import numpy as np
 import pandas as pd 
 import time
 
 
-#------------------------------------------
-# Directories
-#------------------------------------------
-# Input data directory to read training data from
-input_dir = '/app/input_data/' 
-
-# Output data directory to write predictions to
-output_dir = '/app/output/'    
-
-# Program directory
-program_dir = '/app/program'
-
-# Directory to read submitted submissions from
-submission_dir = '/app/ingested_program'
-
-sys.path.append(output_dir)
-sys.path.append(program_dir)
-sys.path.append(submission_dir)
-
 
 
 #------------------------------------------
-# Read Train Data
+# Default Directories
 #------------------------------------------
-def get_training_data():
-
-    train_dir = os.path.join(input_dir, 'train')
+if len(argv) == 1:
+    # root directory
+    root_dir = "../"
+    # Input data directory to read training data from
+    input_dir = root_dir + "sample_data"
+    # Output data directory to write predictions to
+    output_dir = root_dir + "sample_result_submission"
+    # Program directory
+    program_dir = root_dir + "ingestion_program"
+    # Directory to read submitted submissions from
+    submission_dir = root_dir + "sample_code_submission"
+#------------------------------------------
+# Codabench Directories
+#------------------------------------------
+else:
+    # Input data directory to read training data from
+    input_dir = '/app/input_data/' 
+    # Output data directory to write predictions to
+    output_dir = '/app/output/' 
+    # Program directory 
+    program_dir = '/app/program'
+    # Directory to read submitted submissions from
+    submission_dir = '/app/ingested_program'
     
-    # train data
-    train_data_files = [
-        os.path.join(train_dir, "train_1.csv"),
-        os.path.join(train_dir, "train_2.csv"),
-        os.path.join(train_dir, "train_3.csv")
-    ]
-
-    # train labels
-    train_solution_files = [
-        os.path.join(train_dir, "train_1.labels"),
-        os.path.join(train_dir, "train_2.labels"),
-        os.path.join(train_dir, "train_3.labels")
-    ]
-
-    X_trains , y_trains = [], []
-    for index, file in enumerate(train_data_files):
+       
     
-        train_data_file = train_data_files[index]
-        train_solution_file = train_solution_files[index]
-    
-        # Read Train data
-        X_train = pd.read_csv(train_data_file)
-
-        # Read Train solution
-        f = open(train_solution_file, "r")
-        y_train = f.read().splitlines()
-        y_train = np.array(y_train,dtype=float)
-
-        X_trains.append(X_train)
-        y_trains.append(y_train)
-
-    return X_trains, y_trains
-
-#------------------------------------------
-# Read Test Data
-#------------------------------------------
-def get_prediction_data():
-
-    test_dir = os.path.join(input_dir, 'test')
-
-    # test data
-    test_data_files = [
-        os.path.join(test_dir, "test_1.csv"),
-        os.path.join(test_dir, "test_2.csv"),
-        os.path.join(test_dir, "test_3.csv")
-    ]
-
-    X_tests = []
-    for test_data_file in test_data_files:
-        # Read Test data
-        X_test = pd.read_csv(test_data_file)
-
-        X_tests.append(X_test)
+path.append(output_dir)
+path.append(program_dir)
+path.append(submission_dir)
 
 
+if __name__ == '__main__':
 
-    return X_tests
-
-#------------------------------------------
-# Save Predictions
-#------------------------------------------
-def save_prediction(file_name, predictions):
-
-    prediction_file = os.path.join(output_dir, file_name)
-
-    # predictions = prediction_prob[:,1]
-
-    with open(prediction_file, 'w') as f:
-        for ind, lbl in enumerate(predictions):
-            str_label = str(int(lbl))
-            if ind < len(predictions)-1:
-                f.write(str_label + "\n")
-            else:
-                f.write(str_label)
-
-    
-def print_pretty(text):
-    print("-------------------")
-    print("#---",text)
-    print("-------------------")
-
-#------------------------------------------
-# Run the pipeline 
-# > Load 
-# > Trein 
-# > Predict 
-# > Save
-#------------------------------------------
-def main():
+    print("############################################")
+    print("### Ingestion Program")
+    print("############################################")
 
     #------------------------------------------
     # Start Timer
     #------------------------------------------
     start = time.time()
+
+    #------------------------------------------
+    # Read Data
+    #------------------------------------------
+    from data_io import load_data, write, show_data_statistics
+    train_sets, test_sets = load_data(input_dir)
 
 
     #------------------------------------------
@@ -137,48 +67,64 @@ def main():
     #------------------------------------------
     from model import Model
    
-    #------------------------------------------
-    # Read Data
-    #------------------------------------------
-    print_pretty('Reading Data')
-    X_trains, y_trains = get_training_data()
-    X_tests = get_prediction_data()
+    for index, _ in enumerate(train_sets):
+        
+        
+        print("\n[*] Dataset :", index+1)
+        print("-----------")
 
-    for index, _ in enumerate(X_trains):
-
-        print("Dataset :", index+1)
 
         #------------------------------------------
         # Load Model
         #------------------------------------------
-        print_pretty('Starting Learning')
+        print("[*] Loading Model")
         m = Model()
 
         #------------------------------------------
         # Train Model
         #------------------------------------------
-        print_pretty('Training Model')
-        m.fit(X_trains[index], y_trains[index])
+        print("[*] Training Model")
+        m.fit(train_sets[index]["data"], train_sets[index]["labels"])
 
         #------------------------------------------
         # Make Predictions
         #------------------------------------------
-        print_pretty('Making Prediction')
-        prediction = m.predict(X_tests[index])
+        print("[*] Making Predictions")
+        predictions = m.predict(test_sets[index]["data"])
+        scores = m.predict_score(test_sets[index]["data"])
 
         #------------------------------------------
-        # Save  Predictions
+        # Save Predictions
         #------------------------------------------
-        print_pretty('Saving Prediction')
+        print("[*] Saving Predictions")
         prediction_file_name = "test_"+str(index+1)+".predictions"
-        save_prediction(prediction_file_name, prediction)
+        prediction_file_path = os.path.join(output_dir, prediction_file_name)
+        write(prediction_file_path, predictions)
+
+        #------------------------------------------
+        # Save Scores
+        #------------------------------------------
+        print("[*] Saving Scores")
+        score_file_name = "test_"+str(index+1)+".scores"
+        score_file_path = os.path.join(output_dir, score_file_name)
+        write(score_file_path, scores)
+
 
 
     #------------------------------------------
     # Show Ingestion Time
     #------------------------------------------
     duration = time.time() - start
-    print_pretty(f'Total duration: {duration}')
+    print("\n---------------------------------")
+    print(f'[*] Total duration: {duration}')
+    print("---------------------------------")
 
-if __name__ == '__main__':
-    main()
+
+    print("\n----------------------------------------------")
+    print("[+] Ingestions Program executed successfully!")
+    print("----------------------------------------------\n\n")
+
+
+    
+
+

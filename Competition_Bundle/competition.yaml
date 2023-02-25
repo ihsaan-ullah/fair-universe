@@ -69,20 +69,36 @@ leaderboards:
     submission_rule: "Force_Last"
     columns:
       - index: 0
-        title: average score
+        title: average auc
         key: auc
         sorting: desc
       - index: 1
-        title: dataset 1
-        key: auc_1
+        title: average bac
+        key: bac
         sorting: desc
       - index: 2
-        title: dataset 2
-        key: auc_2
+        title: auc 1
+        key: auc_1
         sorting: desc
       - index: 3
-        title: dataset 3
+        title: auc 2
+        key: auc_2
+        sorting: desc
+      - index: 4
+        title: auc 3
         key: auc_3
+        sorting: desc
+      - index: 5
+        title: bac 1
+        key: bac_1
+        sorting: desc
+      - index: 6
+        title: bac 2
+        key: bac_2
+        sorting: desc
+      - index: 7
+        title: bac 3
+        key: bac_3
         sorting: desc
 
 
