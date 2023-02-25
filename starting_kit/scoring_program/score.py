@@ -19,7 +19,7 @@ from metric import auc_metric, bac_metric
 #------------------------------------------
 if len(argv) == 1:
     # root directory
-    root_dir = "../"
+    root_dir = "./"
     
     # Directory read predictions and solutions from
     input_dir = root_dir + "input_data"

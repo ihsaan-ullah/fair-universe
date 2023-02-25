@@ -18,6 +18,9 @@ class Model:
     def predict(self, X):
         return np.zeros(X.shape[0])
 
+    def predict_score(self, X):
+        return np.zeros(X.shape[0])
+    
     def save(self, path="./"):
         pickle.dump(self.clf, open(path + '_model.pickle', "wb"))
 

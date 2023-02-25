@@ -58,6 +58,11 @@ def load_data (data_dir) :
     else:
         print("[+] test data dir found")
 
+    if not os.path.exists(test_labels_dir):
+        print("[!] test labels dir : ", test_labels_dir, " not found")
+    else:
+        print("[+] test labels dir found")
+
 
     
 
@@ -87,20 +92,28 @@ def load_data (data_dir) :
         train_data_file = "train_"+str(i+1)+".csv"
         test_data_file = "test_"+str(i+1)+".csv"
         train_labels_file = "train_"+str(i+1)+".labels"
+        test_labels_file = "test_"+str(i+1)+".labels"
 
         train_data_file_path = os.path.join(train_data_dir, train_data_file)
         test_data_file_path = os.path.join(test_data_dir, test_data_file)
         train_labels_file_path = os.path.join(train_labels_dir, train_labels_file)
-
+        test_labels_file_path = os.path.join(test_labels_dir, test_labels_file)
+        
         
         train_sets.append({
             "data" : read_data_file(train_data_file_path),
             "labels" : read_labels_file(train_labels_file_path)
         })
-        
-        test_sets.append({
-            "data" : read_data_file(test_data_file_path),
-        })
+
+        if os.path.exists(test_labels_file_path):
+            test_sets.append({
+                "data" : read_data_file(test_data_file_path),
+                "labels" : read_labels_file(test_labels_file_path),
+            })
+        else:
+            test_sets.append({
+                "data" : read_data_file(test_data_file_path),
+            })
     
     print("---------------------------------")
     print("[+] Train and Test data loaded!")

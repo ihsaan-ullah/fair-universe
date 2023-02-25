@@ -21,6 +21,7 @@ class Model:
 
     def predict_score(self, X):
         return self.clf.predict_proba(X)[:, 1]
+    
     def save(self, path="./"):
         pickle.dump(self.clf, open(path + '_model.pickle', "wb"))
 

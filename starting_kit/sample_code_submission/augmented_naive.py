@@ -42,7 +42,8 @@ class Model:
 
         # combine real and augemnted data
         X = pd.concat([X_train , augmented_data])
-        Y = pd.concat([Y_train , Y_train])
+
+        Y = np.append(Y_train , Y_train)
 
         # shuffle data
         X, Y = shuffle(X, Y, random_state=0)
@@ -54,6 +55,9 @@ class Model:
 
     def predict(self, X):
         return self.clf.predict(X)
+
+    def predict_score(self, X):
+        return self.clf.predict_proba(X)[:, 1]
 
     def save(self, path="./"):
         pickle.dump(self.clf, open(path + '_model.pickle', "wb"))
