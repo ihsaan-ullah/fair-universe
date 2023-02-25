@@ -120,7 +120,7 @@ def main():
     print_pretty('Reading predictions')
     predictions = read_prediction()
 
-    print_pretty('Reading predictions')
+    print_pretty('Reading solutions')
     solutions = read_solution()
 
 

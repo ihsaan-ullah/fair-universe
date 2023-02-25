@@ -97,11 +97,11 @@ def get_prediction_data():
 #------------------------------------------
 # Save Predictions
 #------------------------------------------
-def save_prediction(file_name, prediction_prob):
+def save_prediction(file_name, predictions):
 
     prediction_file = os.path.join(output_dir, file_name)
 
-    predictions = prediction_prob[:,1]
+    # predictions = prediction_prob[:,1]
 
     with open(prediction_file, 'w') as f:
         for ind, lbl in enumerate(predictions):
@@ -164,14 +164,14 @@ def main():
         # Make Predictions
         #------------------------------------------
         print_pretty('Making Prediction')
-        prediction_prob = m.predict_score(X_tests[index])
+        prediction = m.predict(X_tests[index])
 
         #------------------------------------------
         # Save  Predictions
         #------------------------------------------
         print_pretty('Saving Prediction')
         prediction_file_name = "test_"+str(index+1)+".predictions"
-        save_prediction(prediction_file_name, prediction_prob)
+        save_prediction(prediction_file_name, prediction)
 
 
     #------------------------------------------
