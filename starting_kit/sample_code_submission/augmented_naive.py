@@ -43,7 +43,7 @@ class Model:
         # combine real and augemnted data
         X = pd.concat([X_train , augmented_data])
 
-        Y = np.append(Y_train , Y_train)
+        Y = np.append(Y_train,Y_train)
 
         # shuffle data
         X, Y = shuffle(X, Y, random_state=0)
