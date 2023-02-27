@@ -9,33 +9,18 @@ import time
 
 
 
-
-#------------------------------------------
-# Default Directories
-#------------------------------------------
-if len(argv) == 1:
-    # root directory
-    root_dir = "../"
-    # Input data directory to read training data from
-    input_dir = root_dir + "sample_data"
-    # Output data directory to write predictions to
-    output_dir = root_dir + "sample_result_submission"
-    # Program directory
-    program_dir = root_dir + "ingestion_program"
-    # Directory to read submitted submissions from
-    submission_dir = root_dir + "sample_code_submission"
 #------------------------------------------
 # Codabench Directories
 #------------------------------------------
-else:
-    # Input data directory to read training data from
-    input_dir = '/app/input_data/' 
-    # Output data directory to write predictions to
-    output_dir = '/app/output/' 
-    # Program directory 
-    program_dir = '/app/program'
-    # Directory to read submitted submissions from
-    submission_dir = '/app/ingested_program'
+
+# Input data directory to read training data from
+input_dir = '/app/input_data/' 
+# Output data directory to write predictions to
+output_dir = '/app/output/' 
+# Program directory 
+program_dir = '/app/program'
+# Directory to read submitted submissions from
+submission_dir = '/app/ingested_program'
     
        
     

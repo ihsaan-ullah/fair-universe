@@ -14,46 +14,24 @@ from metric import auc_metric, bac_metric
 
 
 
-#------------------------------------------
-# Default Directories
-#------------------------------------------
-if len(argv) == 1:
-    # root directory
-    root_dir = "../"
-    
-    # Directory read predictions and solutions from
-    input_dir = root_dir + "input_data"
 
-    # Directory to output computed score into
-    output_dir = root_dir + "scoring_output"
-
-    # reference data (test labels)
-    reference_dir = os.path.join(input_dir, "test", "labels")
-
-    # submitted/predicted lables
-    prediction_dir = root_dir + "sample_result_submission"
-
-    # score file to write score into
-    score_file = os.path.join(output_dir, 'scores.json')
-
-else:
 #------------------------------------------
 # Codabench Directories
 #------------------------------------------
-    # Directory read predictions and solutions from
-    input_dir = '/app/input' 
+# Directory read predictions and solutions from
+input_dir = '/app/input' 
 
-    # Directory to output computed score into
-    output_dir = '/app/output/'
+# Directory to output computed score into
+output_dir = '/app/output/'
 
-    # reference data (test labels)
-    reference_dir = os.path.join(input_dir, 'ref')  # Ground truth data
+# reference data (test labels)
+reference_dir = os.path.join(input_dir, 'ref')  # Ground truth data
 
-    # submitted/predicted lables
-    prediction_dir = os.path.join(input_dir, 'res')
+# submitted/predicted lables
+prediction_dir = os.path.join(input_dir, 'res')
 
-    # score file to write score into
-    score_file = os.path.join(output_dir, 'scores.json') 
+# score file to write score into
+score_file = os.path.join(output_dir, 'scores.json') 
 
 if __name__ == '__main__':
 

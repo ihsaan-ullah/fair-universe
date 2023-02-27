@@ -3,7 +3,7 @@
 # Created on: Dec 01, 2022
 
 version: 2
-title: Fair Universe Competition V1
+title: Fair Universe - V1
 description: Fair-Universe Competition version 1 with toy problem 
 image: logo.png
 has_registration: True   

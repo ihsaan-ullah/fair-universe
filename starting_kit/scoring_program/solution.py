@@ -17,20 +17,23 @@ def read_pred_sol(prediction_dir, solution_dir):
 
     
     # predicion + score, solution files
-    prediction_files = [f for f in os.listdir(prediction_dir) if not f.startswith('.')]
-    solution_files = [f for f in os.listdir(solution_dir) if not f.startswith('.')]
+    prediction_files = [f for f in os.listdir(prediction_dir) if f.endswith('.predictions')]
+    score_files = [f for f in os.listdir(prediction_dir) if f.endswith('.scores')]
+    solution_files = [f for f in os.listdir(solution_dir) if f.endswith('.labels')]
 
 
-    print(solution_files)
-    print(prediction_files)
 
+
+
+    print("[*] Predictions files : {}".format(prediction_files))
+    print("[*] Score files : {}".format(score_files))
+    print("[*] Solutions files : {}".format(solution_files))
 
     # check if files exist
-    if len(prediction_files) != 2*len(solution_files):
+    if len(prediction_files) != len(score_files) != len(solution_files):
         print("[-] Number of test labels,  prediction, and socre files do not match!")
-        print("[*] Predictions + score files : {}".format(len(prediction_files)))
-        print("[*] Solutions files : {}".format(len(solution_files)))
         return
+
     
     total_files = len(solution_files)
 
