@@ -1,27 +1,59 @@
 #---------------------------
 # Imports
 #---------------------------
-import random
 import numpy as np
+import pandas as pd
 from sklearn.utils import shuffle
+from copy import deepcopy
 
 
 #---------------------------
 # Get augmented data
 #---------------------------
-def get_augmented_data(X_train, X_test):
-        
-        alpha = random.choice([0.1,0.6,0.9,1.6,2.1,3.4,4.6,5.9])
+def get_augmented_data(train_set, test_set):
 
-        train_mean = np.mean(X_train).values
-        test_mean = np.mean(X_test).values
+        
+        
+        random_state = 42
+        train_mean = np.mean(train_set["data"]).values
+        test_mean = np.mean(test_set["data"]).values
+
+        size = 1000
 
         # Esitmate z0
         z0 = train_mean - test_mean
 
-        # transform z0 by alpha
-        z0 = np.array(z0) * alpha
+        train_data_augmented, train_labels_augmented = [], []
+        for i in range(0, 5):
+                # randomly choose an alpha
 
-        X_train_augmented = X_train + z0
+                alphas = np.repeat(np.random.uniform(-2.0, 2.0, size=size).reshape(-1,1), 2, axis=1 )
 
-        return X_train_augmented
+                # transform z0 by alpha
+                z0 = z0 * alphas
+
+                np.random.RandomState(random_state)
+                train_df = deepcopy(train_set["data"])
+                train_df["labels"] = train_set["labels"]
+
+                df_sampled = train_df.sample(n=size, random_state=random_state, replace=True)
+                data_sampled = df_sampled.drop("labels", axis=1)
+                labels_sampled = df_sampled["labels"].values
+                # data_sampled = train_set["data"].sample(n=size, random_state=random_state, replace=True)
+                # labels_sampled = np.random.choice(train_set["labels"], size)
+
+                train_data_augmented.append(data_sampled + z0)
+                train_labels_augmented.append(labels_sampled)
+
+ 
+
+        augmented_data = pd.concat(train_data_augmented)
+        augmented_labels = np.concatenate(train_labels_augmented)
+
+        augmented_data = shuffle(augmented_data, random_state=random_state)
+        augmented_labels =shuffle(augmented_labels, random_state=random_state)
+
+        return {
+                "data" : augmented_data,
+                "labels" : augmented_labels
+        }

@@ -22,7 +22,7 @@ if len(argv) == 1:
     root_dir = "./"
     
     # Directory read predictions and solutions from
-    input_dir = root_dir + "input_data"
+    input_dir = root_dir + "sample_data"
 
     # Directory to output computed score into
     output_dir = root_dir + "scoring_output"

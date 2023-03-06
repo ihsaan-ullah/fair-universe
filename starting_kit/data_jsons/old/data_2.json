@@ -1,0 +1,26 @@
+{
+    "case" : 2,
+    "problem_dimension" : 2,
+    "total_number_of_events" : 2000,
+    "probability_class_signal" : 0.1, 
+    "probability_class_background" : 0.9, 
+    "signal_distribution": {
+        "name": "Gaussian",
+        "mu" : [4,4],
+        "sigma" : [1, 1],
+        "cut" : [[], []]
+    },
+    "background_distribution": {
+        "name": "Gaussian",
+        "mu" : [0,0],
+        "sigma" : [3, 3],
+        "cut" : [[], []]
+    },
+    "systematics" : {
+        "name" : "Translation",
+        "allowed_dimension" : -1,
+        "translation_vector" : [0,-2]
+    },
+    "train_comment": "direction of separation diagonal \n(both $x_1$ and $x_2$ are informative)",
+    "test_comment": "direction of separation and\n translation neither aligned nor perpendicular"
+}
