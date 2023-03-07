@@ -1,5 +1,6 @@
 # Fair Universe Repository
 
 This repository consists of :
-- Fair Universe Data Generator
-- Fair Universe Codabench Bundle
+- Data Generator
+- Codabench Bundle
+- Starting Kit
