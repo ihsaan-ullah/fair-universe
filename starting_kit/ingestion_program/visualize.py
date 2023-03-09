@@ -6,8 +6,47 @@ from math import cos,sin,radians
 
 from matplotlib.colors import ListedColormap
 
+
+
+def visualize_clock(settings):
+
+
+    fig = plt.figure(constrained_layout=True, figsize=(9, 6))
+    axs = fig.subplots(2, 3, sharex=True)
+
+    
+    for i, ax  in enumerate(axs.flat):
+
+        setting = settings[i]
+
+        L = setting["L"]
+        bg_mu = np.array(setting["background_mu"])
+        theta = setting["theta"]
+        sg_mu = bg_mu + np.array([L * cos(radians(theta)), L * sin(radians(theta))])
+
+        z = setting["z"]
+        case = setting["case"]
+    
+        ax.set_xlim([-8,8])
+        ax.set_ylim([-8,8])
+        b_c = np.multiply(bg_mu, 2)
+        s_c = np.multiply(sg_mu, 2)
+        z_c = np.multiply(z, 2)
+
+        ax.plot(b_c[0], b_c[1], 'bo', markersize=20)
+        ax.plot([b_c[0], s_c[0]], [b_c[1], s_c[1]], linestyle='-.', color="k", label="separation direction")
+        ax.plot(s_c[0], s_c[1], 'ro', )
+        ax.plot([b_c[0]-0.25, z_c[0]-0.25], [b_c[1]-0.25, z_c[1]-0.25], linestyle='-.', color="r", label="translation_direction")
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.legend()
+        ax.set_title("Case - {}".format(case))
+    
+    plt.show()
+
+
 #------------------------------------
-# Visualize Drawings
+# Visualize Data
 #------------------------------------
 def visualize_data(settings, train_set, test_set):
 
@@ -21,58 +60,72 @@ def visualize_data(settings, train_set, test_set):
     theta = settings["theta"]
     sg_mu = bg_mu + np.array([L * cos(radians(theta)), L * sin(radians(theta))])
 
-
-    # z_amplitude = settings["z_amplitude"]
-    # alpha = settings["alpha"]
-    # z = np.multiply([cos(radians(alpha)), sin(radians(alpha))], z_amplitude)
-
     z = settings["z"]
     case = settings["case"]
 
     
 
 
-    fig = plt.figure(constrained_layout=True, figsize=(10, 6))
-    axs = fig.subplots(1, 2, sharex=True)
+    fig = plt.figure(constrained_layout=True, figsize=(12, 5))
+    axs = fig.subplots(1, 3, sharex=True)
 
+
+    # Clock
+    
+    axs[0].set_xlim([-8,8])
+    axs[0].set_ylim([-8,8])
+    b_c = np.multiply(bg_mu, 2)
+    s_c = np.multiply(sg_mu, 2)
+    z_c = np.multiply(z, 2)
+
+    axs[0].plot(b_c[0], b_c[1], 'bo', markersize=20)
+    axs[0].plot([b_c[0], s_c[0]], [b_c[1], s_c[1]], linestyle='-.', color="k", label="separation direction")
+    axs[0].plot(s_c[0], s_c[1], 'ro', )
+    axs[0].plot([b_c[0]-0.25, z_c[0]-0.25], [b_c[1]-0.25, z_c[1]-0.25], linestyle='-.', color="r", label="translation_direction")
+    axs[0].set_xticks([])
+    axs[0].set_yticks([])
+    axs[0].legend()
+    axs[0].set_title("Case - {}".format(case))
+    
+  
     # Train set
     signal_mask = train_set["labels"] == 1
     background_mask = train_set["labels"] == 0
-    axs[0].scatter(train_set["data"][background_mask]["x1"],train_set["data"][background_mask]["x2"], s=10,c="b", alpha=0.7, label="Background")
-    axs[0].scatter(train_set["data"][signal_mask]["x1"], train_set["data"][signal_mask]["x2"], s=10, c="r", alpha=0.7, label="Signal")
-    axs[0].set_xlabel("x1")
-    axs[0].set_ylabel("x2")
-    axs[0].set_xlim([-8,8])
-    axs[0].set_ylim([-8,8])
-    axs[0].axhline(y=0, color='g', linestyle='-.')
-    axs[0].axvline(x=0, color='g', linestyle='-.')
-    axs[0].plot(bg_mu[0], bg_mu[1], marker="x", markersize=10, color="k", label="bg center")
-    axs[0].plot(sg_mu[0], sg_mu[1], marker="x", markersize=10, color="k", label="sg center")
-    axs[0].plot([bg_mu[0],sg_mu[0]],[bg_mu[1], sg_mu[1]], "--+", markersize=10, color="k", label="separation direction")
-    axs[0].legend()
-    axs[0].set_title("Train set\n" +train_comment)
+    axs[1].scatter(train_set["data"][background_mask]["x1"],train_set["data"][background_mask]["x2"], s=10,c="b", alpha=0.7, label="Background")
+    axs[1].scatter(train_set["data"][signal_mask]["x1"], train_set["data"][signal_mask]["x2"], s=10, c="r", alpha=0.7, label="Signal")
+    axs[1].set_xlabel("x1")
+    axs[1].set_ylabel("x2")
+    axs[1].set_xlim([-8,8])
+    axs[1].set_ylim([-8,8])
+    axs[1].axhline(y=0, color='g', linestyle='-.')
+    axs[1].axvline(x=0, color='g', linestyle='-.')
+    axs[1].plot(bg_mu[0], bg_mu[1], marker="x", markersize=10, color="k", label="bg center")
+    axs[1].plot(sg_mu[0], sg_mu[1], marker="x", markersize=10, color="k", label="sg center")
+    axs[1].plot([bg_mu[0],sg_mu[0]],[bg_mu[1], sg_mu[1]], "--+", markersize=10, color="k", label="separation direction")
+    axs[1].legend()
+    axs[1].set_title("Train set\n" +train_comment)
 
     # Test set
     signal_mask = test_set["labels"] == 1
     background_mask = test_set["labels"] == 0
-    axs[1].scatter(test_set["data"][background_mask]["x1"],test_set["data"][background_mask]["x2"], s=10, c="b", alpha=0.7, label="Background")
-    axs[1].scatter(test_set["data"][signal_mask]["x1"], test_set["data"][signal_mask]["x2"], s=10, c="r", alpha=0.7, label="Signal")
+    axs[2].scatter(test_set["data"][background_mask]["x1"],test_set["data"][background_mask]["x2"], s=10, c="b", alpha=0.7, label="Background")
+    axs[2].scatter(test_set["data"][signal_mask]["x1"], test_set["data"][signal_mask]["x2"], s=10, c="r", alpha=0.7, label="Signal")
     
-    axs[1].set_xlabel("x1")
-    axs[1].set_ylabel("x2")
-    axs[1].set_ylim([-8,8])
-    axs[1].set_ylim([-8,8])
-    axs[1].axhline(y=0, color='g', linestyle='-.')
-    axs[1].axvline(x=0, color='g', linestyle='-.')
-    axs[1].plot(bg_mu[0]+z[0], bg_mu[1]+z[1], marker="x", markersize=10, color="k", label="bg center")
-    axs[1].plot(sg_mu[0]+z[0], sg_mu[1]+z[1], marker="x", markersize=10, color="k", label="sg center")
-    axs[1].plot([bg_mu[0]+z[0],sg_mu[0]+z[0]],[bg_mu[1]+z[1], sg_mu[1]+z[1]], "--+", markersize=10, color="k", label="separation direction")
+    axs[2].set_xlabel("x1")
+    axs[2].set_ylabel("x2")
+    axs[2].set_ylim([-8,8])
+    axs[2].set_ylim([-8,8])
+    axs[2].axhline(y=0, color='g', linestyle='-.')
+    axs[2].axvline(x=0, color='g', linestyle='-.')
+    axs[2].plot(bg_mu[0]+z[0], bg_mu[1]+z[1], marker="x", markersize=10, color="k", label="bg center")
+    axs[2].plot(sg_mu[0]+z[0], sg_mu[1]+z[1], marker="x", markersize=10, color="k", label="sg center")
+    axs[2].plot([bg_mu[0]+z[0],sg_mu[0]+z[0]],[bg_mu[1]+z[1], sg_mu[1]+z[1]], "--+", markersize=10, color="k", label="separation direction")
     
 
     if z[0] == 0:
-        axs[1].axvline(x=0.25, color='r', linestyle='-.', label="translation direction")
+        axs[2].axvline(x=0.25, color='r', linestyle='-.', label="translation direction")
     elif z[1] == 0:
-        axs[1].axhline(y=0.25, color='r', linestyle='-.', label="translation direction")
+        axs[2].axhline(y=0.25, color='r', linestyle='-.', label="translation direction")
     else:
         slope = 0
 
@@ -85,9 +138,9 @@ def visualize_data(settings, train_set, test_set):
         else:
             slope = -1
 
-        axs[1].axline((z[0], z[1]), slope=slope, linewidth=1, color='r', linestyle='-.', label="translation direction")
-    axs[1].legend()
-    axs[1].set_title("Test set\nz = {}\n{}".format(z, test_comment))
+        axs[2].axline((z[0], z[1]), slope=slope, linewidth=1, color='r', linestyle='-.', label="translation direction")
+    axs[2].legend()
+    axs[2].set_title("Test set\nz = {}\n{}".format(z, test_comment))
 
     plt.suptitle("Case - {}".format(case))
     plt.show()
@@ -145,7 +198,7 @@ def visualize_data(settings, train_set, test_set):
 #------------------------------------
 # Visualize Augmented Data
 #------------------------------------
-def visualize_augmented_data(settings, train_data, augmented_data):
+def visualize_augmented_data(settings, train_set, augmented_set):
 
     L = settings["L"]
     bg_mu = np.array(settings["background_mu"])
@@ -154,32 +207,61 @@ def visualize_augmented_data(settings, train_data, augmented_data):
     sg_mu = bg_mu + np.array([L * cos(radians(theta)), L * sin(radians(theta))])
 
 
-   
+    z = settings["z"]
     case = settings["case"]
 
 
-    fig = plt.figure(constrained_layout=True, figsize=(10, 5))
-    axs = fig.subplots(1, 2, sharex=True)
+    fig = plt.figure(constrained_layout=True, figsize=(12, 4))
+    axs = fig.subplots(1, 3, sharex=True)
 
-    names = ["Train set", "Augmented set"]
-    for i, train_set in enumerate([train_data,augmented_data]) :
-        signal_mask = train_set["labels"] == 1
-        background_mask = train_set["labels"] == 0
-        axs[i].scatter(train_set["data"][background_mask]["x1"],train_set["data"][background_mask]["x2"], s=10,c="b", label="Background")
-        axs[i].scatter(train_set["data"][signal_mask]["x1"], train_set["data"][signal_mask]["x2"], s=10, c="r", label="Signal")
-        axs[i].set_xlabel("x1")
-        axs[i].set_ylabel("x2")
-        axs[i].set_title(names[i])
-        axs[i].set_xlim([-20,20])
-        axs[i].set_ylim([-20,20])
-        axs[i].axhline(y=0, color='g', linestyle='--')
-        axs[i].axvline(x=0, color='g', linestyle='--')
-        if i == 0:
-            axs[i].plot(bg_mu[0], bg_mu[1], marker="x", markersize=10, color="k", label="bg center")
-            axs[i].plot(sg_mu[0], sg_mu[1], marker="x", markersize=10, color="k", label="sg center")
-            axs[i].plot([bg_mu[0],sg_mu[0]],[bg_mu[1], sg_mu[1]], "--+", markersize=10, color="k", label="separation direction")
-        axs[i].legend()
-    plt.suptitle("Case - {}".format(case))
+
+    # Clock
+    
+    axs[0].set_xlim([-8,8])
+    axs[0].set_ylim([-8,8])
+    b_c = np.multiply(bg_mu, 2)
+    s_c = np.multiply(sg_mu, 2)
+    z_c = np.multiply(z, 2)
+
+    axs[0].plot(b_c[0], b_c[1], 'bo', markersize=20)
+    axs[0].plot([b_c[0], s_c[0]], [b_c[1], s_c[1]], linestyle='-.', color="k", label="separation direction")
+    axs[0].plot(s_c[0], s_c[1], 'ro', )
+    axs[0].plot([b_c[0]-0.25, z_c[0]-0.25], [b_c[1]-0.25, z_c[1]-0.25], linestyle='-.', color="r", label="translation_direction")
+    axs[0].set_xticks([])
+    axs[0].set_yticks([])
+    axs[0].legend()
+    axs[0].set_title("Case - {}".format(case))
+
+
+    signal_mask = train_set["labels"] == 1
+    background_mask = train_set["labels"] == 0
+    axs[1].scatter(train_set["data"][background_mask]["x1"],train_set["data"][background_mask]["x2"], s=10,c="b", label="Background")
+    axs[1].scatter(train_set["data"][signal_mask]["x1"], train_set["data"][signal_mask]["x2"], s=10, c="r", label="Signal")
+    axs[1].set_xlabel("x1")
+    axs[1].set_ylabel("x2")
+    axs[1].set_title("Train set")
+    axs[1].set_xlim([-20,20])
+    axs[1].set_ylim([-20,20])
+    axs[1].axhline(y=0, color='g', linestyle='--')
+    axs[1].axvline(x=0, color='g', linestyle='--')
+    axs[1].plot(bg_mu[0], bg_mu[1], marker="x", markersize=10, color="k", label="bg center")
+    axs[1].plot(sg_mu[0], sg_mu[1], marker="x", markersize=10, color="k", label="sg center")
+    axs[1].plot([bg_mu[0],sg_mu[0]],[bg_mu[1], sg_mu[1]], "--+", markersize=10, color="k", label="separation direction")
+    axs[1].legend()
+
+
+    signal_mask = augmented_set["labels"] == 1
+    background_mask = augmented_set["labels"] == 0
+    axs[2].scatter(augmented_set["data"][background_mask]["x1"],augmented_set["data"][background_mask]["x2"], s=10,c="b", label="Background")
+    axs[2].scatter(augmented_set["data"][signal_mask]["x1"], augmented_set["data"][signal_mask]["x2"], s=10, c="r", label="Signal")
+    axs[2].set_xlabel("x1")
+    axs[2].set_ylabel("x2")
+    axs[2].set_title("Augmented set")
+    axs[2].set_xlim([-20,20])
+    axs[2].set_ylim([-20,20])
+    axs[2].axhline(y=0, color='g', linestyle='--')
+    axs[2].axvline(x=0, color='g', linestyle='--')
+    axs[2].legend()
     plt.show()
 
 
@@ -287,23 +369,28 @@ def visualize_decicion_boundary(models, train_sets, test_sets):
     
         x_min, x_max = train_data["x1"].min() - 0.5, train_data["x1"].max() + 0.5
         y_min, y_max = train_data["x2"].min() - 0.5, train_data["x2"].max() + 0.5
+        x = (x_min+x_max)/2
+        y = (y_min+y_max)/2
         ax = plt.subplot(1, 3, 1)
         ax.set_title("Decision Boundry")
         DecisionBoundaryDisplay.from_estimator(
             model.clf, train_data, cmap=cm, alpha=0.8, ax=ax, eps=0.5)
         ax.set_xlim(x_min, x_max)
         ax.set_ylim(y_min, y_max)
+        ax.axhline(y=y, color='g', linestyle='--')
+        ax.axvline(x=x, color='g', linestyle='--')
 
 
 
         ax = plt.subplot(1, 3, 2)
         ax.set_title("Train Data")
         DecisionBoundaryDisplay.from_estimator(model.clf, train_data, cmap=cm, alpha=0.8, ax=ax, eps=0.5)
-        ax.scatter(train_data[train_background_mask]["x1"],train_data[train_background_mask]["x2"], c='b', edgecolors="k", label="Background")
-        ax.scatter(train_data[trian_signal_mask]["x1"],train_data[trian_signal_mask]["x2"], c='r', edgecolors="k", label="Signal")
+        ax.scatter(train_data[train_background_mask]["x1"],train_data[train_background_mask]["x2"], c='b', edgecolors="k")
+        ax.scatter(train_data[trian_signal_mask]["x1"],train_data[trian_signal_mask]["x2"], c='r', edgecolors="k")
         ax.set_xlim(x_min, x_max)
         ax.set_ylim(y_min, y_max)
-        ax.legend()
+        ax.axhline(y=y, color='g', linestyle='--')
+        ax.axvline(x=x, color='g', linestyle='--')
 
 
 
@@ -312,11 +399,12 @@ def visualize_decicion_boundary(models, train_sets, test_sets):
         ax = plt.subplot(1, 3, 3)
         ax.set_title("Test Data")
         DecisionBoundaryDisplay.from_estimator(model.clf, train_data, cmap=cm, alpha=0.8, ax=ax, eps=0.5)
-        ax.scatter(test_data[test_background_mask]["x1"],test_data[test_background_mask]["x2"], c='b', edgecolors="k", label="Background")
-        ax.scatter(test_data[test_signal_mask]["x1"],test_data[test_signal_mask]["x2"], c='r', edgecolors="k", label="Signal")
+        ax.scatter(test_data[test_background_mask]["x1"],test_data[test_background_mask]["x2"], c='b', edgecolors="k")
+        ax.scatter(test_data[test_signal_mask]["x1"],test_data[test_signal_mask]["x2"], c='r', edgecolors="k")
         ax.set_xlim(x_min, x_max)
         ax.set_ylim(y_min, y_max)
-        ax.legend()
+        ax.axhline(y=y, color='g', linestyle='--')
+        ax.axvline(x=x, color='g', linestyle='--')
 
     plt.show()
 

@@ -13,7 +13,6 @@ from copy import deepcopy
 def get_augmented_data(train_set, test_set):
 
         
-        
         random_state = 42
         train_mean = np.mean(train_set["data"]).values
         test_mean = np.mean(test_set["data"]).values
@@ -27,7 +26,7 @@ def get_augmented_data(train_set, test_set):
         for i in range(0, 5):
                 # randomly choose an alpha
 
-                alphas = np.repeat(np.random.uniform(-2.0, 2.0, size=size).reshape(-1,1), 2, axis=1 )
+                alphas = np.repeat(np.random.uniform(-3.0, 3.0, size=size).reshape(-1,1), 2, axis=1 )
 
                 # transform z0 by alpha
                 z0 = z0 * alphas

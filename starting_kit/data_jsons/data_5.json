@@ -10,7 +10,7 @@
     "L" : 2,
     "z_amplitude" : 1,
     "alpha" : 90,
-    "z" : [0,-2],
+    "z" : [-2,0],
     "train_comment": "direction of separation diagonal \n(both $x_1$ and $x_2$ are informative)",
     "test_comment": "direction of separation and\n translation neither aligned nor perpendicular"
 }

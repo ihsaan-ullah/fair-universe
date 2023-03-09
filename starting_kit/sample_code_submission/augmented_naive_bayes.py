@@ -35,21 +35,21 @@ class Model:
 
         return X_train_augmented
 
-    def fit(self, X_train, X_test, Y_train):
+    def fit(self, X_train, Y_train):
 
-        augmented_data = self._get_augmented_data(X_train, X_test)
+        # augmented_data = self._get_augmented_data(X_train, X_test)
 
 
-        # combine real and augemnted data
-        X = pd.concat([X_train , augmented_data])
+        # # combine real and augemnted data
+        # X = pd.concat([X_train , augmented_data])
 
-        Y = np.append(Y_train,Y_train)
+        # Y = np.append(Y_train,Y_train)
 
-        # shuffle data
-        X, Y = shuffle(X, Y, random_state=0)
+        # # shuffle data
+        # X, Y = shuffle(X, Y, random_state=0)
 
         # fit data
-        self.clf.fit(X, Y)
+        self.clf.fit(X_train, Y_train)
 
         self.is_trained=True
 
