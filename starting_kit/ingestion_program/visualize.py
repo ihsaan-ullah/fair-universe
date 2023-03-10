@@ -1,10 +1,8 @@
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
-from sklearn.inspection import DecisionBoundaryDisplay
 from math import cos,sin,radians
 
-from matplotlib.colors import ListedColormap
+
 
 
 
@@ -144,53 +142,6 @@ def visualize_data(settings, train_set, test_set):
 
     plt.suptitle("Case - {}".format(case))
     plt.show()
-
-# #------------------------------------
-# # Visualize Train set
-# #------------------------------------
-# def visualize_train_data(train_sets):
-
-#     nb_train = len(train_sets)
-#     fig = plt.figure(constrained_layout=True, figsize=(10, 4))
-#     axs = fig.subplots(1, nb_train, sharex=True)
-
-
-#     for i, train_set in enumerate(train_sets) :
-#         signal_mask = train_set["labels"] == 1
-#         background_mask = train_set["labels"] == 0
-#         axs[i].scatter(train_set["data"][signal_mask]["x1"], train_set["data"][signal_mask]["x2"], s=10, c="r")
-#         axs[i].scatter(train_set["data"][background_mask]["x1"],train_set["data"][background_mask]["x2"], s=10,c="b")
-#         axs[i].set_xlabel("x1")
-#         axs[i].set_ylabel("x2")
-#         axs[i].set_title("Train set "+ str(i+1))
-#         axs[i].set_xlim([-4,8])
-#         axs[i].set_ylim([-4,8])
-#         axs[i].axhline(y=2, color='g', linestyle='--')
-#         axs[i].axvline(x=2, color='g', linestyle='--')
-#     plt.show()
-
-# #------------------------------------
-# # Visualize Train set
-# #------------------------------------
-# def visualize_test_data(test_sets):
-
-#     nb_test = len(test_sets)
-#     fig = plt.figure(constrained_layout=True, figsize=(10, 4))
-#     axs = fig.subplots(1, nb_test, sharex=True)
-
-
-#     for i, test_set in enumerate(test_sets) :
-#         axs[i].scatter(test_set["data"]["x1"], test_set["data"]["x2"], s=10, c="black")
-#         axs[i].scatter(test_set["data"]["x1"], test_set["data"]["x2"], s=10,c="black")
-#         axs[i].set_xlabel("x1")
-#         axs[i].set_ylabel("x2")
-#         axs[i].set_title("Test set "+ str(i+1))
-#         axs[i].set_xlim([-4,8])
-#         axs[i].set_ylim([-4,8])
-#         axs[i].axhline(y=2, color='g', linestyle='--')
-#         axs[i].axvline(x=2, color='g', linestyle='--')
-#     plt.show()
-
 
 
 
@@ -340,12 +291,81 @@ def visualize_augmented_data(settings, train_set, augmented_set):
 #------------------------------------
 # Visualize Decision Boundry
 #------------------------------------
+# def visualize_decicion_boundary_a(models, train_sets, test_sets):
+
+    
+#     for index, model in enumerate(models):
+
+#         fig = plt.figure(figsize=(12, 4))
+
+#         train_data = train_sets[index]["data"]
+#         train_labels = train_sets[index]["labels"]
+
+#         trian_signal_mask = train_labels == 1
+#         train_background_mask = train_labels == 0
+
+#         test_data = test_sets[index]["data"]
+#         test_labels = test_sets[index]["labels"]
+
+#         test_signal_mask = test_labels == 1
+#         test_background_mask = test_labels == 0
+
+
+
+        
+
+#         cm = plt.cm.RdBu
+#         cm_bright = ListedColormap(["#FF0000", "#0000FF"])
+        
+    
+#         x_min, x_max = train_data["x1"].min() - 0.5, train_data["x1"].max() + 0.5
+#         y_min, y_max = train_data["x2"].min() - 0.5, train_data["x2"].max() + 0.5
+#         x = (x_min+x_max)/2
+#         y = (y_min+y_max)/2
+#         ax = plt.subplot(1, 3, 1)
+#         ax.set_title("Decision Boundry")
+#         DecisionBoundaryDisplay.from_estimator(
+#             model.clf, train_data, cmap=cm, alpha=0.8, ax=ax, eps=0.5)
+#         ax.set_xlim(x_min, x_max)
+#         ax.set_ylim(y_min, y_max)
+#         ax.axhline(y=y, color='g', linestyle='--')
+#         ax.axvline(x=x, color='g', linestyle='--')
+
+
+
+#         ax = plt.subplot(1, 3, 2)
+#         ax.set_title("Train Data")
+#         DecisionBoundaryDisplay.from_estimator(model.clf, train_data, cmap=cm, alpha=0.8, ax=ax, eps=0.5)
+#         ax.scatter(train_data[train_background_mask]["x1"],train_data[train_background_mask]["x2"], c='b', edgecolors="k")
+#         ax.scatter(train_data[trian_signal_mask]["x1"],train_data[trian_signal_mask]["x2"], c='r', edgecolors="k")
+#         ax.set_xlim(x_min, x_max)
+#         ax.set_ylim(y_min, y_max)
+#         ax.axhline(y=y, color='g', linestyle='--')
+#         ax.axvline(x=x, color='g', linestyle='--')
+
+
+
+#         x_min, x_max = test_data["x1"].min() - 0.5, test_data["x1"].max() + 0.5
+#         y_min, y_max = test_data["x2"].min() - 0.5, test_data["x2"].max() + 0.5
+#         ax = plt.subplot(1, 3, 3)
+#         ax.set_title("Test Data")
+#         DecisionBoundaryDisplay.from_estimator(model.clf, train_data, cmap=cm, alpha=0.8, ax=ax, eps=0.5)
+#         ax.scatter(test_data[test_background_mask]["x1"],test_data[test_background_mask]["x2"], c='b', edgecolors="k")
+#         ax.scatter(test_data[test_signal_mask]["x1"],test_data[test_signal_mask]["x2"], c='r', edgecolors="k")
+#         ax.set_xlim(x_min, x_max)
+#         ax.set_ylim(y_min, y_max)
+#         ax.axhline(y=y, color='g', linestyle='--')
+#         ax.axvline(x=x, color='g', linestyle='--')
+
+#     plt.show()
+
+
 def visualize_decicion_boundary(models, train_sets, test_sets):
 
     
     for index, model in enumerate(models):
 
-        fig = plt.figure(figsize=(12, 4))
+        fig = plt.figure(figsize=(12, 3.5))
 
         train_data = train_sets[index]["data"]
         train_labels = train_sets[index]["labels"]
@@ -363,48 +383,67 @@ def visualize_decicion_boundary(models, train_sets, test_sets):
 
         
 
-        cm = plt.cm.RdBu
-        cm_bright = ListedColormap(["#FF0000", "#0000FF"])
+        grid_resolution=100
+        eps=.02
+        plot_method="contourf"
+
+
+
+        x0_min, x0_max = train_data["x1"].min() - eps, train_data["x1"].max() + eps
+        x1_min, x1_max = train_data["x2"].min() - eps, train_data["x2"].max() + eps
+        xx0, xx1 = np.meshgrid(
+            np.linspace(x0_min, x0_max, grid_resolution),
+            np.linspace(x1_min, x1_max, grid_resolution),
+        )
+
+        X_grid = np.c_[xx0.ravel(), xx1.ravel()]
+        response = model.clf.predict_proba(X_grid)
+        response = response[:,1]
+        response=response.reshape(xx0.shape)
+
+
         
-    
-        x_min, x_max = train_data["x1"].min() - 0.5, train_data["x1"].max() + 0.5
-        y_min, y_max = train_data["x2"].min() - 0.5, train_data["x2"].max() + 0.5
-        x = (x_min+x_max)/2
-        y = (y_min+y_max)/2
+        x = (x0_min+x0_max)/2
+        y = (x1_min+x1_max)/2
         ax = plt.subplot(1, 3, 1)
         ax.set_title("Decision Boundry")
-        DecisionBoundaryDisplay.from_estimator(
-            model.clf, train_data, cmap=cm, alpha=0.8, ax=ax, eps=0.5)
-        ax.set_xlim(x_min, x_max)
-        ax.set_ylim(y_min, y_max)
+        plot_func = getattr(ax, plot_method)
+        surface_ = plot_func(xx0, xx1, response,cmap=plt.cm.RdBu, alpha=1)
+        ax.set_xlim([-6,6])
+        ax.set_ylim([-6,6])
         ax.axhline(y=y, color='g', linestyle='--')
         ax.axvline(x=x, color='g', linestyle='--')
+        ax.set_facecolor((0.6,0,0))
+
 
 
 
         ax = plt.subplot(1, 3, 2)
         ax.set_title("Train Data")
-        DecisionBoundaryDisplay.from_estimator(model.clf, train_data, cmap=cm, alpha=0.8, ax=ax, eps=0.5)
+        plot_func = getattr(ax, plot_method)
+        surface_ = plot_func(xx0, xx1, response,cmap=plt.cm.RdBu, alpha=1)
         ax.scatter(train_data[train_background_mask]["x1"],train_data[train_background_mask]["x2"], c='b', edgecolors="k")
         ax.scatter(train_data[trian_signal_mask]["x1"],train_data[trian_signal_mask]["x2"], c='r', edgecolors="k")
-        ax.set_xlim(x_min, x_max)
-        ax.set_ylim(y_min, y_max)
+        ax.set_xlim([-6,6])
+        ax.set_ylim([-6,6])
         ax.axhline(y=y, color='g', linestyle='--')
         ax.axvline(x=x, color='g', linestyle='--')
+        ax.set_facecolor((0.6,0,0))
 
 
 
-        x_min, x_max = test_data["x1"].min() - 0.5, test_data["x1"].max() + 0.5
-        y_min, y_max = test_data["x2"].min() - 0.5, test_data["x2"].max() + 0.5
+       
         ax = plt.subplot(1, 3, 3)
         ax.set_title("Test Data")
-        DecisionBoundaryDisplay.from_estimator(model.clf, train_data, cmap=cm, alpha=0.8, ax=ax, eps=0.5)
+        plot_func = getattr(ax, plot_method)
+        surface_ = plot_func(xx0, xx1, response,cmap=plt.cm.RdBu, alpha=1)
         ax.scatter(test_data[test_background_mask]["x1"],test_data[test_background_mask]["x2"], c='b', edgecolors="k")
         ax.scatter(test_data[test_signal_mask]["x1"],test_data[test_signal_mask]["x2"], c='r', edgecolors="k")
-        ax.set_xlim(x_min, x_max)
-        ax.set_ylim(y_min, y_max)
+        ax.set_xlim([-6,6])
+        ax.set_ylim([-6,6])
         ax.axhline(y=y, color='g', linestyle='--')
         ax.axvline(x=x, color='g', linestyle='--')
+        ax.set_facecolor((0.6,0,0))
 
     plt.show()
 
