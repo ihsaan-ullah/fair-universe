@@ -8,9 +8,8 @@
     "signal_sigma_scale" : 0.3,
     "theta" : 0,
     "L" : 2,
-    "z_amplitude" : 1,
+    "z_magnitude" : 2,
     "alpha" : 90,
-    "z" : [0,2],
     "train_comment": "direction of separation horizontal \n(only $x_1$ is informative)",
     "test_comment": "direction of separation and\n translation are perpendicular"
 }

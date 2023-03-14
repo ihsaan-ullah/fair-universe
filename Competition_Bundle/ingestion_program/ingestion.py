@@ -13,30 +13,30 @@ import time
 #------------------------------------------
 # Default Directories
 #------------------------------------------
-if len(argv) == 1:
-    # root directory
-    root_dir = "./"
-    # Input data directory to read training data from
-    input_dir = root_dir + "sample_data"
-    # Output data directory to write predictions to
-    output_dir = root_dir + "sample_result_submission"
-    # Program directory
-    program_dir = root_dir + "ingestion_program"
-    # Directory to read submitted submissions from
-    submission_dir = root_dir + "sample_code_submission"
+# if len(argv) == 1:
+#     # root directory
+#     root_dir = "./"
+#     # Input data directory to read training data from
+#     input_dir = root_dir + "input_data/phase_1/"
+#     # Output data directory to write predictions to
+#     output_dir = root_dir + "sample_result_submission"
+#     # Program directory
+#     program_dir = root_dir + "ingestion_program"
+#     # Directory to read submitted submissions from
+#     submission_dir = root_dir + "sample_code_submission"
 #------------------------------------------
 # Codabench Directories
 #------------------------------------------
-else:
-    # Input data directory to read training data from
-    input_dir = '/app/input_data/' 
-    # Output data directory to write predictions to
-    output_dir = '/app/output/' 
-    # Program directory 
-    program_dir = '/app/program'
-    # Directory to read submitted submissions from
-    submission_dir = '/app/ingested_program'
-    
+# else:
+# Input data directory to read training data from
+input_dir = '/app/input_data/' 
+# Output data directory to write predictions to
+output_dir = '/app/output/' 
+# Program directory 
+program_dir = '/app/program'
+# Directory to read submitted submissions from
+submission_dir = '/app/ingested_program'
+        
        
     
 path.append(output_dir)
@@ -78,20 +78,25 @@ if __name__ == '__main__':
         # Load Model
         #------------------------------------------
         print("[*] Loading Model")
-        m = Model()
+        m = Model(
+            X_train=train_sets[index]["data"], 
+            Y_train=train_sets[index]["labels"], 
+            X_test=test_sets[index]["data"],
+        )
+        
 
         #------------------------------------------
         # Train Model
         #------------------------------------------
         print("[*] Training Model")
-        m.fit(train_sets[index]["data"], train_sets[index]["labels"])
+        m.fit()
 
         #------------------------------------------
         # Make Predictions
         #------------------------------------------
         print("[*] Making Predictions")
-        predictions = m.predict(test_sets[index]["data"])
-        scores = m.predict_score(test_sets[index]["data"])
+        predictions = m.predict()
+        scores = m.decision_function()
 
         #------------------------------------------
         # Save Predictions

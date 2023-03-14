@@ -31,16 +31,16 @@ phases:
   - index: 0
     name: Phase 1
     description: Feedback Phase
-    start: 2023-01-01
-    end: 2023-12-31
+    start: 2023-03-07
+    end: 2023-04-09
     color: green   
     tasks:
       - 0
   - index: 1
     name: Phase 2
     description: Final Phase
-    start: 2024-01-01
-    end: 2024-12-31
+    start: 2024-04-10
+    end: 2024-04-10
     color: purple   
     tasks:
       - 1
@@ -49,15 +49,15 @@ tasks:
   - index: 0
     name: Task Phase 1
     description: Signal vs Background Classificaiton
-    input_data: input_data/
-    reference_data: reference_data/  
+    input_data: input_data/phase_1/
+    reference_data: reference_data/phase_1/  
     scoring_program: scoring_program/
     ingestion_program: ingestion_program/
   - index: 1
     name: Task Phase 2
     description: Signal vs Background Classificaiton
-    input_data: input_data/
-    reference_data: reference_data/  
+    input_data: input_data/phase_2/
+    reference_data: reference_data/phase_2/  
     scoring_program: scoring_program/
     ingestion_program: ingestion_program/
 
@@ -75,54 +75,6 @@ leaderboards:
       - index: 1
         title: average bac
         key: bac
-        sorting: desc
-      - index: 2
-        title: auc 1
-        key: auc_1
-        sorting: desc
-      - index: 3
-        title: auc 2
-        key: auc_2
-        sorting: desc
-      - index: 4
-        title: auc 3
-        key: auc_3
-        sorting: desc
-      - index: 5
-        title: auc 4
-        key: auc_4
-        sorting: desc
-      - index: 6
-        title: auc 5
-        key: auc_5
-        sorting: desc
-      - index: 7
-        title: auc 6
-        key: auc_6
-        sorting: desc
-      - index: 8
-        title: bac 1
-        key: bac_1
-        sorting: desc
-      - index: 9
-        title: bac 2
-        key: bac_2
-        sorting: desc
-      - index: 10
-        title: bac 3
-        key: bac_3
-        sorting: desc
-      - index: 11
-        title: bac 4
-        key: bac_4
-        sorting: desc
-      - index: 12
-        title: bac 5
-        key: bac_5
-        sorting: desc
-      - index: 13
-        title: bac 6
-        key: bac_6
         sorting: desc
 
 

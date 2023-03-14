@@ -23,12 +23,6 @@ def read_pred_sol(prediction_dir, solution_dir):
 
 
 
-
-
-    print("[*] Predictions files : {}".format(prediction_files))
-    print("[*] Score files : {}".format(score_files))
-    print("[*] Solutions files : {}".format(solution_files))
-
     # check if files exist
     if len(prediction_files) != len(score_files) != len(solution_files):
         print("[-] Number of test labels,  prediction, and socre files do not match!")

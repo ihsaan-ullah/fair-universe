@@ -78,20 +78,25 @@ if __name__ == '__main__':
         # Load Model
         #------------------------------------------
         print("[*] Loading Model")
-        m = Model()
+        m = Model(
+            X_train=train_sets[index]["data"], 
+            Y_train=train_sets[index]["labels"], 
+            X_test=test_sets[index]["data"],
+        )
+        
 
         #------------------------------------------
         # Train Model
         #------------------------------------------
         print("[*] Training Model")
-        m.fit(train_sets[index]["data"], train_sets[index]["labels"])
+        m.fit()
 
         #------------------------------------------
         # Make Predictions
         #------------------------------------------
         print("[*] Making Predictions")
-        predictions = m.predict(test_sets[index]["data"])
-        scores = m.predict_score(test_sets[index]["data"])
+        predictions = m.predict()
+        scores = m.decision_function()
 
         #------------------------------------------
         # Save Predictions

@@ -147,10 +147,10 @@ class DataGenerator:
         #-----------------------------------------------
         # Load Systematics
         #-----------------------------------------------
-        # z_amplitude = self.settings["z_amplitude"]
-        # alpha = self.settings["alpha"]
-        # z = np.multiply([cos(radians(alpha)), sin(radians(alpha))], z_amplitude)
-        z = np.array(self.settings["z"])
+        z_magnitude = self.settings["z_magnitude"]
+        alpha = self.settings["alpha"]
+        z = np.multiply([round(cos(radians(alpha)) ,2), round(sin(radians(alpha)), 2)], z_magnitude)
+        # z = np.array(self.settings["z"])
         self.params_systematics = Translation({
             "name" : SYSTEMATIC_TRANSLATION,
             "allowed_dimension" : -1,
