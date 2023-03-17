@@ -1,9 +1,9 @@
 ,test_set 1,test_set 2,test_set 3,test_set 4,test_set 5,test_set 6,avg_bac
 constant model,0.5,0.5,0.5,0.5,0.5,0.5,0.5
-NB plain,0.5,0.47,0.4,0.5,0.5,0.38,0.46
-NB preprocessing,0.94,0.94,0.95,0.93,0.94,0.93,0.94
-LDA plain,0.71,0.86,0.74,0.63,0.5,0.73,0.7
-RR plain,0.5,0.93,0.91,0.5,0.5,0.9,0.71
-NB data augmentation,0.89,0.5,0.5,0.5,0.65,0.5,0.59
-LDA data augmentation,0.65,0.5,0.5,0.58,0.5,0.5,0.54
-RR data augmentation,0.5,0.5,0.5,0.5,0.5,0.5,0.5
+NB plain,0.5,0.58,0.45,0.5,0.48,0.46,0.5
+NB preprocessing,0.92,0.92,0.92,0.91,0.91,0.9,0.91
+LDA plain,0.95,0.94,0.61,0.95,0.73,0.62,0.8
+RR plain,0.82,0.78,0.73,0.81,0.86,0.74,0.79
+NB data augmentation,0.86,0.82,0.5,0.5,0.5,0.5,0.61
+LDA data augmentation,0.95,0.93,0.5,0.96,0.7,0.5,0.76
+RR data augmentation,0.61,0.5,0.5,0.75,0.5,0.5,0.56

@@ -15,12 +15,13 @@ from sklearn.utils import shuffle
 # Internal Imports
 #================================
 from distributions import Gaussian
-from systematics import Translation
+from systematics import Translation,Scaling
 from logger import Logger
 from checker import Checker
 from constants import (
     DISTRIBUTION_GAUSSIAN, 
     SYSTEMATIC_TRANSLATION,
+    SYSTEMATIC_SCALING,
     SIGNAL_LABEL,
     BACKGROUND_LABEL,
     JSON_FILE
@@ -44,7 +45,8 @@ class DataGenerator:
         #-----------------------------------------------
         self.settings = None
         self.params_distributions = {} 
-        self.params_systematics = None 
+        self.params_systematics_translation = None 
+        self.params_systematics_scaling = None 
 
 
         self.generated_data = None
@@ -121,7 +123,7 @@ class DataGenerator:
         self.logger.success("Background Distributions Loaded!")
 
         #-----------------------------------------------
-        # Load Background distribution
+        # Load Signal distribution
         #-----------------------------------------------
         theta = self.settings["theta"]
         L = self.settings["L"]
@@ -147,14 +149,22 @@ class DataGenerator:
         #-----------------------------------------------
         # Load Systematics
         #-----------------------------------------------
+        scaling_factor = self.settings["scaling_factor"]
         z_magnitude = self.settings["z_magnitude"]
         alpha = self.settings["alpha"]
         z = np.multiply([round(cos(radians(alpha)) ,2), round(sin(radians(alpha)), 2)], z_magnitude)
-        # z = np.array(self.settings["z"])
-        self.params_systematics = Translation({
+
+        self.params_systematics_translation = Translation({
             "name" : SYSTEMATIC_TRANSLATION,
             "allowed_dimension" : -1,
             "translation_vector" : z
+
+        })
+        if scaling_factor > 1:
+            self.params_systematics_scaling = Scaling({
+            "name" : SYSTEMATIC_SCALING,
+            "allowed_dimension" : -1,
+            "scaling_vector" : [scaling_factor,scaling_factor]
 
         })
 
@@ -172,7 +182,7 @@ class DataGenerator:
         #-----------------------------------------------
         # Check systematics loaded
         #-----------------------------------------------
-        if self.checker.systematics_are_not_loaded(self.params_systematics):
+        if self.checker.systematics_are_not_loaded(self.params_systematics_translation):
             self.logger.error("Systematics are not loaded. First call `load_systematics` function!")
             exit()
 
@@ -199,15 +209,19 @@ class DataGenerator:
         # Apply Systematics
         #-----------------------------------------------
 
-        # signal points
-        biased_signal_data = self.params_systematics.apply_systematics(self.problem_dimension, signal_data)
+        ## Translation
+        biased_signal_data = self.params_systematics_translation.apply_systematics(self.problem_dimension, signal_data)
+        biased_background_data = self.params_systematics_translation.apply_systematics(self.problem_dimension, background_data)
+        self.logger.success("Translation Applied!")
 
+        if self.params_systematics_scaling is not None:
+            ## Scaling
+            biased_signal_data = self.params_systematics_scaling.apply_systematics(self.problem_dimension, biased_signal_data)
+            biased_background_data = self.params_systematics_scaling.apply_systematics(self.problem_dimension, biased_background_data)
 
-      
+            self.logger.success("Scaling Applied!")
 
-        # background points
-        biased_background_data = self.params_systematics.apply_systematics(self.problem_dimension, background_data)
-
+        
         self.logger.success("Systemtics Applied!")
 
         #-----------------------------------------------

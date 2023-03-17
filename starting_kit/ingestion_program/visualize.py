@@ -2,6 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from math import cos,sin,radians
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+# import seaborn as sns
+# sns.set_theme(style="white")
 
 
 
@@ -15,22 +17,30 @@ def get_params(setting):
     z_magnitude = setting["z_magnitude"]
     alpha = setting["alpha"]
     z = np.multiply([round(cos(radians(alpha)) ,2), round(sin(radians(alpha)), 2)], z_magnitude)
+
+    scaling_factor = setting["scaling_factor"]
     case = setting["case"]
 
     train_comment = setting["train_comment"]
     test_comment = setting["test_comment"]
 
-    return case, bg_mu, sg_mu, z, train_comment, test_comment
+    return case, bg_mu, sg_mu, z, scaling_factor, train_comment, test_comment
 
 def visualize_clock(ax, setting):
 
-    case, bg_mu, sg_mu, z, _, _ = get_params(setting)
+    case, bg_mu, sg_mu, z, sf, _, _ = get_params(setting)
 
     ax.set_xlim([-8,8])
     ax.set_ylim([-8,8])
     b_c = np.multiply(bg_mu, 2)
     s_c = np.multiply(sg_mu, 2)
     z_c = np.multiply(z, 2)
+
+
+
+    if sf > 1:
+        ax.plot(b_c[0], b_c[1], 'bo', markersize=40, alpha=0.3)
+        ax.plot(s_c[0], s_c[1], 'ro', markersize=20, alpha=0.3)
 
     ax.plot(b_c[0], b_c[1], 'bo', markersize=20)
     ax.plot([b_c[0], s_c[0]], [b_c[1], s_c[1]], linestyle='-.', color="k", label="separation direction")
@@ -43,7 +53,7 @@ def visualize_clock(ax, setting):
 
 def visualize_train(ax, settings, train_set, comment=True):
 
-    _, bg_mu, sg_mu, _, train_comment, _ = get_params(settings)
+    _, bg_mu, sg_mu, _, _, train_comment, _ = get_params(settings)
 
     signal_mask = train_set["labels"] == 1
     background_mask = train_set["labels"] == 0
@@ -66,26 +76,50 @@ def visualize_train(ax, settings, train_set, comment=True):
 
 def visualize_test(ax, settings, test_set):
 
-    _, bg_mu, sg_mu, z, _, test_comment = get_params(settings)
+    _, bg_mu, sg_mu, z, sf, _, test_comment = get_params(settings)
 
     signal_mask = test_set["labels"] == 1
     background_mask = test_set["labels"] == 0
-    ax.scatter(test_set["data"][background_mask]["x1"],test_set["data"][background_mask]["x2"], s=10,c="b", alpha=0.7, label="Background")
-    ax.scatter(test_set["data"][signal_mask]["x1"], test_set["data"][signal_mask]["x2"], s=10, c="r", alpha=0.7, label="Signal")
+
+
+
+
+    bg_c , sg_c = [], []
+    if sf > 1:
+        bg_c = np.mean(test_set["data"][background_mask])
+        sg_c = np.mean(test_set["data"][signal_mask])
+    else:
+        bg_c = [bg_mu[0]+z[0], bg_mu[1]+z[1]]
+        sg_c = [sg_mu[0]+z[0], sg_mu[1]+z[1]]
+
+
+
+
+    sg_data = test_set["data"][signal_mask]
+    bg_data = test_set["data"][background_mask]
+
+   
+    test_set["data"][background_mask]
+
+
+
+    ax.scatter(bg_data["x1"],bg_data["x2"], s=10,c="b", alpha=0.7, label="Background")
+    ax.scatter(sg_data["x1"], sg_data["x2"], s=10, c="r", alpha=0.7, label="Signal")
     ax.set_xlabel("x1")
     ax.set_ylabel("x2")
     ax.set_xlim([-8,8])
     ax.set_ylim([-8,8])
     ax.axhline(y=0, color='g', linestyle='-.')
     ax.axvline(x=0, color='g', linestyle='-.')
-    ax.plot(bg_mu[0]+z[0], bg_mu[1]+z[1], marker="x", markersize=10, color="k", label="bg center")
-    ax.plot(sg_mu[0]+z[0], sg_mu[1]+z[1], marker="x", markersize=10, color="k", label="sg center")
-    ax.plot([bg_mu[0]+z[0],sg_mu[0]+z[0]],[bg_mu[1]+z[1], sg_mu[1]+z[1]], "--+", markersize=10, color="k", label="separation direction")
+    ax.plot(bg_c[0], bg_c[1], marker="x", markersize=10, color="k", label="bg center")
+    ax.plot(sg_c[0], sg_c[1], marker="x", markersize=10, color="k", label="sg center")
+    ax.plot([bg_c[0],sg_c[0]],[bg_c[1], sg_c[1]], "--+", markersize=10, color="k", label="separation direction")
     ax.legend()
     ax.set_title("Test set\n" +test_comment)
 
-
-    if z[0] == 0:
+    if z[0] == 0 and z[1] == 0:
+        pass
+    elif z[0] == 0:
         ax.axvline(x=0.25, color='r', linestyle='-.', label="translation direction")
     elif z[1] == 0:
         ax.axhline(y=0.25, color='r', linestyle='-.', label="translation direction")
@@ -185,6 +219,13 @@ def visualize_decision(ax, title, model):
 
     response=response.reshape(xx0.shape)
 
+
+    min = np.abs(np.min(response))
+    max = np.abs(np.max(response))
+    max_max = np.max([min,max])
+    response[0][0] = -max_max
+    response[0][1] = max_max
+
     ax.set_title(title)
     # plot_func = getattr(ax, plot_method)
     # surface_ = plot_func(xx0, xx1, response, 20, cmap=plt.cm.RdBu, alpha=0.5)
@@ -223,17 +264,17 @@ def visualize_decicion_boundary(name, settings, result, train_sets, test_sets):
         visualize_clock(ax,settings[index])
 
 
-        # decision boundry
+        # decision boundary
         ax = plt.subplot(1, 4, 2)
-        visualize_decision(ax, "Decision Boundry", model)
+        visualize_decision(ax, "Decision Boundary", model)
         
       
-        # train decision boundry
+        # train decision boundary
         ax = plt.subplot(1, 4, 3)
         visualize_decision(ax, "Train Data", model)
         visualize_scatter(ax, train_sets[index])
        
-        # test decision boundry
+        # test decision boundary
         ax = plt.subplot(1, 4, 4)
         visualize_decision(ax, "Test Data", model)
         visualize_scatter(ax, test_sets[index])
@@ -248,4 +289,34 @@ def visualize_decicion_boundary(name, settings, result, train_sets, test_sets):
         plt.suptitle(title, fontsize=15)
         plt.show()
 
+def visualize_score(df_train, df_test, title):
 
+    N = 8
+
+    if title == "AUC Score":
+        score_train = df_train.avg_auc.values
+        score_test = df_test.avg_auc.values
+    else:
+        score_train = df_train.avg_bac.values
+        score_test = df_test.avg_bac.values
+    names = df_train.index.values
+
+    ind = np.arange(N)
+    width = 0.3 
+
+    plt.figure(figsize=(10,5))
+    plt.bar(ind, score_train , width, label='train')
+    plt.bar(ind + width, score_test, width, label='test')
+
+    plt.xlabel('Baselines')
+    plt.ylabel(title)
+    plt.title(title)
+
+    plt.xticks(ind + width / 2, names)
+    plt.xticks(rotation=30)
+
+    plt.legend(loc='best')
+    plt.show()
+
+   
+    

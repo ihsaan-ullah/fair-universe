@@ -16,6 +16,10 @@ MODEL_LDA = "LDA"
 MODEL_RR = "RR"
 
 
+PREPROCESS_TRANSLATION = "trainslation"
+PREPROCESS_SCALING = "scaling"
+
+
 #------------------------------
 # Baseline Model
 #------------------------------
@@ -27,6 +31,7 @@ class Model:
                  Y_train=None, 
                  X_test=None, 
                  preprocessing=False, 
+                 preprocessing_method = PREPROCESS_TRANSLATION,
                  data_aumentation=False
         ):
 
@@ -36,6 +41,7 @@ class Model:
         self.X_test = X_test
 
         self.preprocessing = preprocessing
+        self.preprocessing_method = preprocessing_method
         self.data_aumentation = data_aumentation
 
         self._set_model()
@@ -53,12 +59,31 @@ class Model:
 
         self.is_trained=False
 
-    def _preprocess(self):
+    def _preprocess_translation(self):
 
         train_mean = np.mean(self.X_train).values
         test_mean = np.mean(self.X_test).values
 
-        X_test_preprocessed = self.X_test + train_mean - test_mean
+        translation = test_mean- train_mean
+
+        X_test_preprocessed = self.X_test + translation
+
+        return X_test_preprocessed
+    
+    def _preprocess_scaling(self):
+
+        train_mean = np.mean(self.X_train).values
+        test_mean = np.mean(self.X_test).values
+
+        train_std = np.std(self.X_train).values
+        test_std = np.std(self.X_test).values
+
+
+        translation = test_mean- train_mean
+        scaling = test_std/train_std
+
+
+        X_test_preprocessed = (self.X_test - translation)/scaling
 
         return X_test_preprocessed
 
@@ -125,7 +150,10 @@ class Model:
             X = self.X_test
 
         if self.preprocessing:
-            X = self._preprocess()
+            if self.preprocessing_method == PREPROCESS_TRANSLATION:
+                X = self._preprocess_translation()
+            else:
+                X = self._preprocess_scaling()
 
         return self.clf.predict(X)
 
@@ -135,7 +163,10 @@ class Model:
             X = self.X_test
         
         if self.preprocessing:
-            X = self._preprocess()
+            if self.preprocessing_method == PREPROCESS_TRANSLATION:
+                X = self._preprocess_translation()
+            else:
+                X = self._preprocess_scaling()
 
         if self.model_name == MODEL_NB:
             return self.clf.predict_proba(X)[:, 1]
