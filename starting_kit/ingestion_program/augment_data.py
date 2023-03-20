@@ -122,4 +122,3 @@ def get_augmented_data_scaling(train_set, test_set):
                 "data" : augmented_data,
                 "labels" : augmented_labels
         }
-
