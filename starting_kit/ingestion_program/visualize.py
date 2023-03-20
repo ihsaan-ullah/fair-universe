@@ -51,9 +51,13 @@ def visualize_clock(ax, setting):
     ax.legend()
     ax.set_title("Case - {}".format(case))
 
-def visualize_train(ax, settings, train_set, comment=True):
+def visualize_train(ax, settings, train_set, comment=True, augment=False, augment_limit=None):
 
     _, bg_mu, sg_mu, _, _, train_comment, _ = get_params(settings)
+
+    limit = [-8,8]
+    if augment_limit is not None:
+        limit =  augment_limit
 
     signal_mask = train_set["labels"] == 1
     background_mask = train_set["labels"] == 0
@@ -61,18 +65,22 @@ def visualize_train(ax, settings, train_set, comment=True):
     ax.scatter(train_set["data"][signal_mask]["x1"], train_set["data"][signal_mask]["x2"], s=10, c="r", alpha=0.7, label="Signal")
     ax.set_xlabel("x1")
     ax.set_ylabel("x2")
-    ax.set_xlim([-8,8])
-    ax.set_ylim([-8,8])
+    ax.set_xlim(limit)
+    ax.set_ylim(limit)
     ax.axhline(y=0, color='g', linestyle='-.')
     ax.axvline(x=0, color='g', linestyle='-.')
     ax.plot(bg_mu[0], bg_mu[1], marker="x", markersize=10, color="k", label="bg center")
     ax.plot(sg_mu[0], sg_mu[1], marker="x", markersize=10, color="k", label="sg center")
     ax.plot([bg_mu[0],sg_mu[0]],[bg_mu[1], sg_mu[1]], "--+", markersize=10, color="k", label="separation direction")
     ax.legend()
+
+    title = "Train set"
+    if augment:
+        title = "Augmented set"
     if comment:
-        ax.set_title("Train set\n" +train_comment)
+        ax.set_title(title+"\n" +train_comment)
     else:
-        ax.set_title("Train set")
+        ax.set_title(title)
 
 def visualize_test(ax, settings, test_set):
 
@@ -178,17 +186,17 @@ def visualize_data(settings, train_set, test_set):
     visualize_test(axs[2], settings, test_set)
     plt.show()
 
-def visualize_augmented_data(settings, train_set, augmented_set):
+def visualize_augmented_data(settings, train_set, augmented_set, augment_limit=None):
 
-    fig = plt.figure(constrained_layout=True, figsize=(12, 4))
+    fig = plt.figure(constrained_layout=True, figsize=(12, 4.5))
     axs = fig.subplots(1, 3, sharex=True)
 
     # Clock
     visualize_clock(axs[0],settings)
     # train
-    visualize_train(axs[1], settings, train_set, comment=False)
+    visualize_train(axs[1], settings, train_set, comment=False, augment_limit=augment_limit)
     # visualize_augmented
-    visualize_train(axs[2], settings, augmented_set)
+    visualize_train(axs[2], settings, augmented_set, comment=False ,augment=True, augment_limit=augment_limit)
     plt.show()
 
 def visualize_decision(ax, title, model):
