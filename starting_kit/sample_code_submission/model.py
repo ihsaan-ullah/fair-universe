@@ -16,7 +16,7 @@ MODEL_LDA = "LDA"
 MODEL_RR = "RR"
 
 
-PREPROCESS_TRANSLATION = "trainslation"
+PREPROCESS_TRANSLATION = "translation"
 PREPROCESS_SCALING = "scaling"
 
 AUGMENTATION_TRANSLATION = "translation"
@@ -34,7 +34,7 @@ class Model:
                  X_test=None, 
                  preprocessing=False, 
                  preprocessing_method = PREPROCESS_TRANSLATION,
-                 data_augmentation=False,
+                 data_augmentation=True,
                  data_augmentation_type=AUGMENTATION_TRANSLATION
         ):
 
@@ -96,12 +96,14 @@ class Model:
         random_state = 42
         size = 1000
 
+
         # Mean of Train and Test
-        train_mean = np.mean(self.X_train).values
-        test_mean = np.mean(self.X_test).values
+        train_mean = np.mean(self.X_train, axis=0).values
+        test_mean = np.mean(self.X_test, axis=0).values
 
         # Esitmate z0
-        translation = test_mean- train_mean
+        translation = test_mean - train_mean
+
 
 
         train_data_augmented, train_labels_augmented = [], []
@@ -111,7 +113,7 @@ class Model:
             alphas = np.repeat(np.random.uniform(-3.0, 3.0, size=size).reshape(-1,1), 2, axis=1 )
 
             # transform z0 by alpha
-            translation = translation * alphas
+            translation_ = translation * alphas
 
             np.random.RandomState(random_state)
             train_df = deepcopy(self.X_train)
@@ -122,7 +124,7 @@ class Model:
             labels_sampled = df_sampled["labels"].values
     
 
-            train_data_augmented.append(data_sampled + translation)
+            train_data_augmented.append(data_sampled + translation_)
             train_labels_augmented.append(labels_sampled)
 
  
@@ -142,11 +144,11 @@ class Model:
         size = 1000
 
         # Mean of Train and Test
-        train_mean = np.mean(self.X_train).values
-        test_mean = np.mean(self.X_test).values
+        train_mean = np.mean(self.X_train, axis=0).values
+        test_mean = np.mean(self.X_test, axis=0).values
 
-        train_std = np.std(self.X_train).values
-        test_std = np.std(self.X_test).values
+        train_std = np.std(self.X_train, axis=0).values
+        test_std = np.std(self.X_test, axis=0).values
 
         # Esitmate z0
         translation = test_mean- train_mean
@@ -163,9 +165,9 @@ class Model:
             betas = np.repeat(np.random.uniform(1.0, 1.5, size=size).reshape(-1,1), 2, axis=1 )
 
             # translation
-            translation = translation * alphas
+            translation_ = translation * alphas
             # sclaing
-            scaling = scaling * betas
+            scaling_ = scaling * betas
 
             np.random.RandomState(random_state)
             train_df = deepcopy(self.X_train)
@@ -175,7 +177,7 @@ class Model:
             data_sampled = df_sampled.drop("labels", axis=1)
             labels_sampled = df_sampled["labels"].values
 
-            transformed_train_data = (data_sampled + translation)*scaling
+            transformed_train_data = (data_sampled + translation_)*scaling_
     
 
             train_data_augmented.append(transformed_train_data)

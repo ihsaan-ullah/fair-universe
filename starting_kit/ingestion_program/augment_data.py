@@ -31,7 +31,7 @@ def get_augmented_data(train_set, test_set):
                 alphas = np.repeat(np.random.uniform(-3.0, 3.0, size=size).reshape(-1,1), 2, axis=1 )
 
                 # transform z0 by alpha
-                translation = translation * alphas
+                translation_ = translation * alphas
 
                 np.random.RandomState(random_state)
                 train_df = deepcopy(train_set["data"])
@@ -43,7 +43,7 @@ def get_augmented_data(train_set, test_set):
                 # data_sampled = train_set["data"].sample(n=size, random_state=random_state, replace=True)
                 # labels_sampled = np.random.choice(train_set["labels"], size)
 
-                train_data_augmented.append(data_sampled + translation)
+                train_data_augmented.append(data_sampled + translation_)
                 train_labels_augmented.append(labels_sampled)
 
  
@@ -74,13 +74,13 @@ def get_augmented_data_scaling(train_set, test_set):
         size = 1000
 
 
-        translation = test_mean- train_mean
+        translation = test_mean - train_mean
         scaling = test_std/train_std
 
 
         train_data_augmented, train_labels_augmented = [], []
         for i in range(0, 5):
-                # randomly choose an alpha
+
 
                 # for translation
                 alphas = np.repeat(np.random.uniform(-3.0, 3.0, size=size).reshape(-1,1), 2, axis=1 )
@@ -90,9 +90,9 @@ def get_augmented_data_scaling(train_set, test_set):
 
 
                 # translation
-                translation = translation * alphas
+                translation_ = translation * alphas
                 # sclaing
-                scaling = scaling * betas
+                scaling_ = scaling * betas
 
                 np.random.RandomState(random_state)
                 train_df = deepcopy(train_set["data"])
@@ -105,7 +105,7 @@ def get_augmented_data_scaling(train_set, test_set):
                 # labels_sampled = np.random.choice(train_set["labels"], size)
 
 
-                transformed_train_data = (data_sampled + translation)*scaling
+                transformed_train_data = (data_sampled + translation_)*scaling_
 
                 train_data_augmented.append(transformed_train_data)
                 train_labels_augmented.append(labels_sampled)

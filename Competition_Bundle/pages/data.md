@@ -1,6 +1,6 @@
 # Data
 
-### [Download Public Data](https://www.codabench.org/datasets/download/843d71b7-3dd9-46e2-9431-b66274418c06/)
+### [Download Public Data](https://www.codabench.org/datasets/download/814aa909-c8f2-4308-b119-ea2cb2f49d99/)
 
 We provide sample_data with the starting kit, but to prepare your submission, you must fetch the public_data from the challenge website and point to it.
 

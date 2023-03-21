@@ -45,10 +45,6 @@ It is recommended to use virtual environments e.g. conda env
 - Accept terms and conditions
 - Click **"Register"** button
 
-**Test**  
-- To test submissions, dowload [THIS SAMPLE SUBMISSION]
-- If all goes well, you should see the score of your submission appear on the “Results" page.
-- If you pass this test:
 
 **Get Starting Kit**  
 - Click **"Getting Started Kit"** tab in the side menu
