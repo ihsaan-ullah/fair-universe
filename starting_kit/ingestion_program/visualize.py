@@ -324,16 +324,12 @@ def visualize_decicion_boundary(name, settings, result, train_sets, test_sets):
         plt.suptitle(title, fontsize=15)
         plt.show()
 
-def visualize_score(df_train, df_test, title):
+def visualize_score(df_train, df_test, obc, title):
 
     N = 8
+    score_train = df_train.avg.values
+    score_test = df_test.avg.values
 
-    if title == "AUC Score":
-        score_train = df_train.avg_auc.values
-        score_test = df_test.avg_auc.values
-    else:
-        score_train = df_train.avg_bac.values
-        score_test = df_test.avg_bac.values
 
     std_err_train = df_train.std_err.values
     std_err_test = df_test.std_err.values
@@ -342,9 +338,10 @@ def visualize_score(df_train, df_test, title):
     ind = np.arange(N)
     width = 0.3 
 
-    plt.figure(figsize=(10,5))
+    plt.figure(figsize=(13,8))
     plt.bar(ind, score_train, yerr=std_err_train, width=width, label='train')
     plt.bar(ind + width, score_test,yerr=std_err_test, width=width, label='test')
+    plt.axhline(y=obc, color='r', linestyle='-.', label="OBC Score")
 
     plt.xlabel('Baselines')
     plt.ylabel(title)
@@ -353,7 +350,11 @@ def visualize_score(df_train, df_test, title):
     plt.xticks(ind + width / 2, names)
     plt.xticks(rotation=30)
 
-    plt.legend(loc='best')
+    plt.ylim(0,1)
+
+    # plt.legend(loc='best')
+    plt.legend(bbox_to_anchor=(1.05, 1.0), loc='upper left')
+    plt.tight_layout()
     plt.show()
 
    

@@ -34,7 +34,7 @@ class Model:
                  X_test=None, 
                  preprocessing=False, 
                  preprocessing_method = PREPROCESS_TRANSLATION,
-                 data_augmentation=True,
+                 data_augmentation=False,
                  data_augmentation_type=AUGMENTATION_TRANSLATION
         ):
 
@@ -196,23 +196,28 @@ class Model:
         
     def fit(self, X=None, y=None):
 
-        if X is None:
-            X = self.X_train
-        if y is None:
-            y = self.Y_train
+        if self.model_name != MODEL_CONSTANT:
+            
+            if X is None:
+                X = self.X_train
+            if y is None:
+                y = self.Y_train
 
-        if self.data_augmentation:
-            if self.data_augmentation_type == AUGMENTATION_TRANSLATION:
-                X, y = self._augment_data_translation()
-            else:
-                X, y = self._augment_data_scaling()
-  
-        self.clf.fit(X, y)
-        self.is_trained=True
+            if self.data_augmentation:
+                if self.data_augmentation_type == AUGMENTATION_TRANSLATION:
+                    X, y = self._augment_data_translation()
+                else:
+                    X, y = self._augment_data_scaling()
+    
+            self.clf.fit(X, y)
+            self.is_trained=True
 
     def predict(self, X=None):
         if X is None:
             X = self.X_test
+
+        if self.model_name == MODEL_CONSTANT:
+            return np.zeros(X.shape[0])
 
         if self.preprocessing:
             if self.preprocessing_method == PREPROCESS_TRANSLATION:
@@ -222,10 +227,13 @@ class Model:
 
         return self.clf.predict(X)
 
-    
     def decision_function(self, X=None):
+        
         if X is None:
             X = self.X_test
+
+        if self.model_name == MODEL_CONSTANT:
+            return np.zeros(X.shape[0])
         
         if self.preprocessing:
             if self.preprocessing_method == PREPROCESS_TRANSLATION:
@@ -241,7 +249,6 @@ class Model:
     def save(self, name):
         pickle.dump(self.clf, open(name + '.pickle', "wb"))
 
-    
     def load(self, name):
         modelfile = name + '.pickle'
         if isfile(modelfile):
