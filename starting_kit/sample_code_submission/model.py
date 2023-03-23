@@ -8,6 +8,7 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.linear_model import RidgeClassifier
 from sklearn.svm import SVC
+import tensorflow as tf
 
 
 
@@ -16,6 +17,7 @@ MODEL_NB = "NB"
 MODEL_LDA = "LDA"
 MODEL_RR = "RR"
 MODEL_SVM = "SVM"
+MODEL_NN = "NN"
 
 
 PREPROCESS_TRANSLATION = "translation"
@@ -64,6 +66,14 @@ class Model:
             self.clf = RidgeClassifier()
         if self.model_name == MODEL_SVM:
             self.clf = SVC()
+        if self.model_name == MODEL_NN:
+            self.clf = tf.keras.models.Sequential([
+                tf.keras.layers.Dense(10, activation='relu'),
+                tf.keras.layers.Dense(20, activation='relu'),
+                tf.keras.layers.Dense(10, activation='relu'),
+                tf.keras.layers.Dense(1, activation='linear'),
+            ])
+            self.clf.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
 
         self.is_trained=False
 
@@ -247,6 +257,8 @@ class Model:
 
         if self.model_name == MODEL_NB:
             return self.clf.predict_proba(X)[:, 1]
+        elif self.model_name == MODEL_NN:
+            return self.clf.predict(X)
         else:
             return self.clf.decision_function(X)
         
