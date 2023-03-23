@@ -7,6 +7,7 @@ from copy import deepcopy
 from sklearn.naive_bayes import GaussianNB
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.linear_model import RidgeClassifier
+from sklearn.svm import SVC
 
 
 
@@ -14,6 +15,7 @@ MODEL_CONSTANT = "Constant"
 MODEL_NB = "NB"
 MODEL_LDA = "LDA"
 MODEL_RR = "RR"
+MODEL_SVM = "SVM"
 
 
 PREPROCESS_TRANSLATION = "translation"
@@ -60,6 +62,8 @@ class Model:
             self.clf = LinearDiscriminantAnalysis()
         if self.model_name == MODEL_RR:
             self.clf = RidgeClassifier()
+        if self.model_name == MODEL_SVM:
+            self.clf = SVC()
 
         self.is_trained=False
 
