@@ -326,7 +326,7 @@ def visualize_decicion_boundary(name, settings, result, train_sets, test_sets):
 
 def visualize_score(df_train, df_test, obc, title):
 
-    N = 8
+    N = 10
     score_train = df_train.avg.values
     score_test = df_test.avg.values
 
@@ -338,7 +338,7 @@ def visualize_score(df_train, df_test, obc, title):
     ind = np.arange(N)
     width = 0.3 
 
-    plt.figure(figsize=(13,8))
+    plt.figure(figsize=(13,10))
     plt.bar(ind, score_train, yerr=std_err_train, width=width, label='train')
     plt.bar(ind + width, score_test,yerr=std_err_test, width=width, label='test')
     plt.axhline(y=obc, color='r', linestyle='-.', label="OBC Score")
