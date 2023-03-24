@@ -248,7 +248,7 @@ def visualize_decision(ax, title, model):
         epsilon = np.finfo(float).eps
         response = -np.log((1/(response+epsilon))-1)
     else:
-        response = model.clf.decision_function(X_grid)
+        response = model.decision_function(X_grid)
 
     
 

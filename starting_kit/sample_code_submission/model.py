@@ -73,7 +73,7 @@ class Model:
                 tf.keras.layers.Dense(10, activation='relu'),
                 tf.keras.layers.Dense(1, activation='linear'),
             ])
-            self.clf.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+            self.clf.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
 
         self.is_trained=False
 
