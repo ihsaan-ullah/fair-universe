@@ -68,9 +68,9 @@ class Model:
             self.clf = SVC()
         if self.model_name == MODEL_NN:
             self.clf = tf.keras.models.Sequential([
-                tf.keras.layers.Dense(10, activation='relu'),
-                tf.keras.layers.Dense(20, activation='relu'),
-                tf.keras.layers.Dense(10, activation='relu'),
+                tf.keras.layers.Dense(100, activation='relu'),
+                tf.keras.layers.Dense(100, activation='relu'),
+                tf.keras.layers.Dense(100, activation='relu'),
                 tf.keras.layers.Dense(1, activation='linear'),
             ])
             self.clf.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
