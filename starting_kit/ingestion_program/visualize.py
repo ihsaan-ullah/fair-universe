@@ -2,8 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from math import cos,sin,radians
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-# import seaborn as sns
-# sns.set_theme(style="white")
+from sklearn.metrics import roc_curve
 
 
 
@@ -108,7 +107,6 @@ def visualize_augmented(ax, settings, train_set, comment=True, xy_limit=None):
     else:
         ax.set_title("Augmented set")
 
-
 def visualize_test(ax, settings, test_set):
 
     _, bg_mu, sg_mu, z, sf, _, test_comment = get_params(settings)
@@ -174,21 +172,6 @@ def visualize_test(ax, settings, test_set):
     ax.legend()
     ax.set_title("Test set\nz = {}\n{}".format(z, test_comment))
 
-# def visualize_augmented(ax, settins, augmented_set):
-
-#     signal_mask = augmented_set["labels"] == 1
-#     background_mask = augmented_set["labels"] == 0
-#     ax.scatter(augmented_set["data"][background_mask]["x1"],augmented_set["data"][background_mask]["x2"], s=10,c="b", label="Background")
-#     ax.scatter(augmented_set["data"][signal_mask]["x1"], augmented_set["data"][signal_mask]["x2"], s=10, c="r", label="Signal")
-#     ax.set_xlabel("x1")
-#     ax.set_ylabel("x2")
-#     ax.set_title("Augmented set")
-#     ax.set_xlim([-8,8])
-#     ax.set_ylim([-8,8])
-#     ax.axhline(y=0, color='g', linestyle='--')
-#     ax.axvline(x=0, color='g', linestyle='--')
-#     ax.legend()
-    
 def visualize_clocks(settings):
 
     fig = plt.figure(constrained_layout=True, figsize=(9, 6))
@@ -230,8 +213,6 @@ def visualize_decision(ax, title, model):
 
     grid_resolution=100
     eps=.02
-    plot_method="contourf"
-
 
     x0_min, x0_max = (-8 - eps), (8+ eps)
     x1_min, x1_max = (-8 - eps), (8+ eps)
@@ -242,6 +223,7 @@ def visualize_decision(ax, title, model):
 
     X_grid = np.c_[xx0.ravel(), xx1.ravel()]
 
+    response = model.decision_function(X_grid)
     if model.model_name == "NB":
         response = model.clf.predict_proba(X_grid)[:, 1]
         # Transform with log
@@ -326,6 +308,7 @@ def visualize_decicion_boundary(name, settings, result, train_sets, test_sets):
 
 def visualize_score(df_train, df_test, obc, title,  N =8):
 
+    N = df_train.shape[0]
     score_train = df_train.avg.values
     score_test = df_test.avg.values
 
@@ -337,6 +320,9 @@ def visualize_score(df_train, df_test, obc, title,  N =8):
     ind = np.arange(N)
     width = 0.3 
 
+    fig_width = 2*N
+    fig_height = 8
+    plt.figure(figsize=(fig_width,fig_height))
     plt.figure(figsize=(13,N))
     plt.bar(ind, score_train, yerr=std_err_train, width=width, label='train')
     plt.bar(ind + width, score_test,yerr=std_err_test, width=width, label='test')
@@ -356,5 +342,50 @@ def visualize_score(df_train, df_test, obc, title,  N =8):
     plt.tight_layout()
     plt.show()
 
-   
+
+
+def visualize_roc_curves(name, result, settings, Y_trains, Y_tests):
+
+    for index, _ in enumerate(result["trained_models"]):
+
+
+        case, _, _, _, _, _, _ = get_params(settings[index])
+
+        train_auc = round(np.mean(result["auc_trains"]),2)
+        test_auc = round(np.mean(result["auc_tests"]),2)
+        train_bac = round(np.mean(result["bac_trains"]),2)
+        test_bac = round(np.mean(result["bac_tests"]),2)
+
+
+        fig = plt.figure(figsize=(10, 4))
+
+
+        # Decision Function
+        ax = plt.subplot(1, 2, 1)
+
+
+        fpr_train, tpr_train, _ = roc_curve(Y_trains[index],  result["Y_hat_score_trains"][index])
+        fpr_test, tpr_test, _ = roc_curve(Y_tests[index],  result["Y_hat_score_tests"][index])
+        ax.plot(fpr_train,tpr_train,label="Train, auc="+str(train_auc))
+        ax.plot(fpr_test,tpr_test,label="Test, auc="+str(test_auc))
+        ax.set_title("Decision Function ROC")
+        ax.set_xlabel("FPR")
+        ax.set_ylabel("TPR")
+        ax.legend()
+
+        # Predictions
+        ax = plt.subplot(1, 2, 2)
+        fpr_train, tpr_train, _ = roc_curve(Y_trains[index],  result["Y_hat_trains"][index])
+        fpr_test, tpr_test, _ = roc_curve(Y_tests[index],  result["Y_hat_tests"][index])
+        ax.plot(fpr_train,tpr_train,label="Train, bac="+str(train_bac))
+        ax.plot(fpr_test,tpr_test,label="Test, bac="+str(test_bac))
+        ax.set_title("Prediction Function ROC")
+        ax.set_xlabel("FPR")
+        ax.set_ylabel("TPR")
+        ax.legend()
+    
+        title = "Case " + str(case) + " --- " + name
+        plt.suptitle(title, fontsize=15)
+        plt.show()
+    
     

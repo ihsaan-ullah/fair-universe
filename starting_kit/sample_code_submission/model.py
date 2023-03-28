@@ -77,18 +77,17 @@ class Model:
 
         self.is_trained=False
 
-    def _preprocess_translation(self):
+    def _preprocess_translation(self, X):
 
         train_mean = np.mean(self.X_train).values
         test_mean = np.mean(self.X_test).values
 
         translation = test_mean- train_mean
 
-        X_test_preprocessed = self.X_test - translation
+        return X - translation
 
-        return X_test_preprocessed
     
-    def _preprocess_scaling(self):
+    def _preprocess_scaling(self, X):
 
         train_mean = np.mean(self.X_train).values
         test_mean = np.mean(self.X_test).values
@@ -101,9 +100,8 @@ class Model:
         scaling = test_std/train_std
 
 
-        X_test_preprocessed = (self.X_test - translation)/scaling
+        return (X - translation)/scaling
 
-        return X_test_preprocessed
 
     def _augment_data_translation(self):
 
@@ -235,9 +233,9 @@ class Model:
 
         if self.preprocessing:
             if self.preprocessing_method == PREPROCESS_TRANSLATION:
-                X = self._preprocess_translation()
+                X = self._preprocess_translation(X)
             else:
-                X = self._preprocess_scaling()
+                X = self._preprocess_scaling(X)
 
         return self.clf.predict(X)
 
@@ -251,14 +249,16 @@ class Model:
         
         if self.preprocessing:
             if self.preprocessing_method == PREPROCESS_TRANSLATION:
-                X = self._preprocess_translation()
+                X = self._preprocess_translation(X)
             else:
-                X = self._preprocess_scaling()
+                X = self._preprocess_scaling(X)
 
         if self.model_name == MODEL_NB:
-            return self.clf.predict_proba(X)[:, 1]
-        elif self.model_name == MODEL_NN:
-            return self.clf.predict(X)
+            predicted_score = self.clf.predict_proba(X)
+            # Transform with log
+            epsilon = np.finfo(float).eps
+            predicted_score = -np.log((1/(predicted_score+epsilon))-1)
+            return predicted_score[:, 1]
         else:
             return self.clf.decision_function(X)
         
