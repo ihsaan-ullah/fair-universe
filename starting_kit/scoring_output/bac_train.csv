@@ -1,8 +1,8 @@
 ,train_set 1,train_set 2,train_set 3,train_set 4,train_set 5,train_set 6,avg,std_err
 constant model,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.03
-NB plain,0.94,0.92,0.94,0.94,0.94,0.92,0.93,0.01
-NB preprocessing,0.93,0.9,0.94,0.94,0.91,0.92,0.92,0.01
-LDA plain,0.81,0.65,0.75,0.74,0.76,0.77,0.75,0.03
+NB plain,0.94,0.93,0.92,0.93,0.92,0.93,0.93,0.01
+NB preprocessing,0.5,0.53,0.5,0.5,0.5,0.5,0.5,0.03
+LDA plain,0.74,0.78,0.76,0.82,0.72,0.77,0.76,0.02
 RR plain,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.03
 NB data augmentation,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.03
 LDA data augmentation,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.03
