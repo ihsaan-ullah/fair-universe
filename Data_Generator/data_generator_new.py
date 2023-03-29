@@ -149,6 +149,10 @@ class DataGenerator:
         #-----------------------------------------------
         # Load Systematics
         #-----------------------------------------------
+
+        self.box_center = signal_mu #np.array(self.settings["box_center"])
+        self.box_l = self.settings["box_l"]
+
         scaling_factor = self.settings["scaling_factor"]
         z_magnitude = self.settings["z_magnitude"]
         alpha = self.settings["alpha"]
@@ -263,6 +267,16 @@ class DataGenerator:
         biased_dataframe = pd.concat([signal_df_biased, background_df_biased])
 
 
+        #-----------------------------------------------
+        # Apply box
+        #-----------------------------------------------
+        if self.box_l > 1:
+            generated_dataframe, biased_dataframe = self.box_filter(generated_dataframe, biased_dataframe)
+
+        #-----------------------------------------------
+        # Separate original and biased data
+        #-----------------------------------------------
+
         # generated data labels
         self.generated_data = generated_dataframe[generated_dataframe.columns[:-1]]
         self.generated_labels = generated_dataframe["y"].to_numpy()
@@ -294,7 +308,27 @@ class DataGenerator:
 
 
         return self.settings, original_set, biased_set
-    
+
+    def box_filter(self, df_org, df_bia):
+        
+        box_x = [self.box_center[0]-self.box_l, self.box_center[0]+self.box_l]
+        box_y = [self.box_center[1]-self.box_l, self.box_center[1]+self.box_l]
+
+        mask_org = (df_org['x1'] >= box_x[0]) & (df_org['x1'] <= box_x[1]) & (df_org['x2'] >= box_y[0]) & (df_org['x2'] <= box_y[1])
+        mask_bia = (df_bia['x1'] >= box_x[0]) & (df_bia['x1'] <= box_x[1]) & (df_bia['x2'] >= box_y[0]) & (df_bia['x2'] <= box_y[1])
+
+        df_org = df_org.loc[mask_org]
+        df_bia = df_bia.loc[mask_bia]
+
+        df_org.reset_index(inplace=True)
+        df_bia.reset_index(inplace=True)
+
+        return df_org[["x1", "x2", "y"]], df_bia[["x1", "x2", "y"]]
+
+        
+
+
+
     def save_data(self, directory, file_index=None):
 
         #-----------------------------------------------

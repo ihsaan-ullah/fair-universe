@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 from math import cos,sin,radians
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from sklearn.metrics import roc_curve
@@ -20,14 +21,35 @@ def get_params(setting):
     scaling_factor = setting["scaling_factor"]
     case = setting["case"]
 
+    box_center = sg_mu#setting["box_center"]
+    box_l = setting["box_l"]
+
     train_comment = setting["train_comment"]
     test_comment = setting["test_comment"]
 
-    return case, bg_mu, sg_mu, z, scaling_factor, train_comment, test_comment
+    return case, bg_mu, sg_mu, z, scaling_factor, train_comment, test_comment, box_center, box_l
+
+
+def visulaize_box(ax, box_center, box_l):
+
+    if box_l > 0:
+        margin = .1
+
+        box_x = [box_center[0]-box_l-margin, box_center[0]+box_l+margin]
+        box_y = [box_center[1]-box_l-margin, box_center[1]+box_l+margin]
+        
+        width = box_x[1] - box_x[0]
+        height = box_y[1] - box_y[0]
+
+        ax.add_patch(
+            patches.Rectangle(
+                xy=(box_x[0], box_y[0]),  # point of origin.
+                width=width, height=height, linewidth=1,
+                color='green', fill=True, alpha=0.3))
 
 def visualize_clock(ax, setting):
 
-    case, bg_mu, sg_mu, z, sf, _, _ = get_params(setting)
+    case, bg_mu, sg_mu, z, sf, _, _, _, _ = get_params(setting)
 
     ax.set_xlim([-8,8])
     ax.set_ylim([-8,8])
@@ -52,7 +74,10 @@ def visualize_clock(ax, setting):
 
 def visualize_train(ax, settings, train_set, comment=True, xy_limit=None):
 
-    _, bg_mu, sg_mu, _, _, train_comment, _ = get_params(settings)
+    _, bg_mu, sg_mu, _, _, train_comment, _, box_center, box_l = get_params(settings)
+
+
+    visulaize_box(ax, box_center, box_l)
 
     limit = [-8,8]
     if xy_limit is not None:
@@ -71,6 +96,7 @@ def visualize_train(ax, settings, train_set, comment=True, xy_limit=None):
     ax.plot(bg_mu[0], bg_mu[1], marker="x", markersize=10, color="k", label="bg center")
     ax.plot(sg_mu[0], sg_mu[1], marker="x", markersize=10, color="k", label="sg center")
     ax.plot([bg_mu[0],sg_mu[0]],[bg_mu[1], sg_mu[1]], "--+", markersize=10, color="k", label="separation direction")
+    
     ax.legend()
 
  
@@ -81,7 +107,7 @@ def visualize_train(ax, settings, train_set, comment=True, xy_limit=None):
 
 def visualize_augmented(ax, settings, train_set, comment=True, xy_limit=None):
 
-    _, bg_mu, sg_mu, _, _, train_comment, _ = get_params(settings)
+    _, bg_mu, sg_mu, _, _, train_comment, _, _, _ = get_params(settings)
 
     limit = [-8,8]
     if xy_limit is not None:
@@ -109,7 +135,9 @@ def visualize_augmented(ax, settings, train_set, comment=True, xy_limit=None):
 
 def visualize_test(ax, settings, test_set):
 
-    _, bg_mu, sg_mu, z, sf, _, test_comment = get_params(settings)
+    _, bg_mu, sg_mu, z, sf, _, test_comment, box_center, box_l = get_params(settings)
+
+    visulaize_box(ax, box_center, box_l)
 
     signal_mask = test_set["labels"] == 1
     background_mask = test_set["labels"] == 0
@@ -332,19 +360,19 @@ def visualize_score(df_train, df_test, obc, title):
     plt.tight_layout()
     plt.show()
 
-
-
 def visualize_roc_curves(name, result, settings, Y_trains, Y_tests):
 
     for index, _ in enumerate(result["trained_models"]):
 
 
-        case, _, _, _, _, _, _ = get_params(settings[index])
+        case, _, _, _, _, _, _, _, _ = get_params(settings[index])
 
-        train_auc = round(np.mean(result["auc_trains"]),2)
-        test_auc = round(np.mean(result["auc_tests"]),2)
-        train_bac = round(np.mean(result["bac_trains"]),2)
-        test_bac = round(np.mean(result["bac_tests"]),2)
+        
+
+        train_auc = result["auc_trains"][index]
+        test_auc = result["auc_tests"][index]
+        train_bac = result["bac_trains"][index]
+        test_bac = result["bac_tests"][index]
 
 
         fig = plt.figure(figsize=(10, 4))
