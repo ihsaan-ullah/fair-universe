@@ -82,9 +82,8 @@ class Model:
         train_mean = np.mean(self.X_train).values
         test_mean = np.mean(self.X_test).values
 
-        translation = test_mean- train_mean
-
-        return X - translation
+        translation = test_mean - train_mean
+        return (X - translation)
 
     
     def _preprocess_scaling(self, X):
@@ -224,22 +223,26 @@ class Model:
             self.clf.fit(X, y)
             self.is_trained=True
 
-    def predict(self, X=None):
+    def predict(self, X=None, preprocess=True):
+
         if X is None:
             X = self.X_test
+
+    
 
         if self.model_name == MODEL_CONSTANT:
             return np.zeros(X.shape[0])
 
-        if self.preprocessing:
+        if self.preprocessing & preprocess:
             if self.preprocessing_method == PREPROCESS_TRANSLATION:
                 X = self._preprocess_translation(X)
             else:
                 X = self._preprocess_scaling(X)
+          
 
         return self.clf.predict(X)
 
-    def decision_function(self, X=None):
+    def decision_function(self, X=None, preprocess=True):
         
         if X is None:
             X = self.X_test
@@ -247,7 +250,7 @@ class Model:
         if self.model_name == MODEL_CONSTANT:
             return np.zeros(X.shape[0])
         
-        if self.preprocessing:
+        if self.preprocessing and preprocess:
             if self.preprocessing_method == PREPROCESS_TRANSLATION:
                 X = self._preprocess_translation(X)
             else:
