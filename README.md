@@ -6,14 +6,14 @@ This repository consists of :
 - Starting Kit 
 
 <br>
-***
+---
 <br>
 
 ### Codabench Competition 2D
 https://www.codabench.org/competitions/674/
 
 <br>
-***
+---
 <br>
 
 ### Colab Notebooks
