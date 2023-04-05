@@ -1,0 +1,20 @@
+{
+    "case" : 6,
+    "problem_dimension" : 2,
+    "total_number_of_events" : 2000,
+    "p_b" : 0.9, 
+    "background_mu" : [0,0],
+    "background_sigma" : [2,4],
+    "signal_sigma_scale" : 0.3,
+    "scaling_factor" : 1,
+    "theta" : 45,
+    "L" : 3,
+    "z_magnitude" : 2,
+    "alpha" : 45,
+    "box_l" : 0,  
+    "generator" : "multivariate",
+    "signal_angle_rotation" : -45,
+    "background_angle_rotation" : 45,
+    "train_comment": "direction of separation diagonal \n(both $x_1$ and $x_2$ are informative)",
+    "test_comment": "direction of separation and\n translation aligned"
+}

@@ -385,21 +385,50 @@ def visualize_roc_curves(name, result, settings, Y_trains, Y_tests):
         test_bac = result["bac_tests"][index]
 
 
-        fig = plt.figure(figsize=(10, 4))
+        fig = plt.figure(figsize=(12, 4))
 
 
         # Decision Function
         ax = plt.subplot(1, 2, 1)
 
 
-        fpr_train, tpr_train, _ = roc_curve(Y_trains[index],  result["Y_hat_score_trains"][index])
-        fpr_test, tpr_test, _ = roc_curve(Y_tests[index],  result["Y_hat_score_tests"][index])
+        fpr_train, tpr_train, thresholds_train = roc_curve(Y_trains[index],  result["Y_hat_score_trains"][index])
+        tnr_train = 1-fpr_train
+        fnr_train = 1-tpr_train
+        fpr_test, tpr_test, thresholds_test = roc_curve(Y_tests[index],  result["Y_hat_score_tests"][index])
+        tnr_test = 1-fpr_test
+        fnr_test = 1-tpr_test
+        
         ax.plot(fpr_train,tpr_train,label="Train, auc="+str(train_auc))
         ax.plot(fpr_test,tpr_test,label="Test, auc="+str(test_auc))
         ax.set_title("Decision Function ROC")
         ax.set_xlabel("FPR")
         ax.set_ylabel("TPR")
         ax.legend()
+
+
+        # ax = plt.subplot(1, 4, 2)
+        # ax.plot(thresholds_train,tpr_train,label="TPR")
+        # ax.plot(thresholds_train,fpr_train,label="FPR")
+        # ax.plot(thresholds_train,tnr_train,label="TNR")
+        # ax.plot(thresholds_train,fnr_train,label="FNR")
+        # ax.set_title("Train Curves")
+        # ax.set_xlabel("Thresholds")
+        # ax.set_ylabel("-")
+        # ax.legend()
+
+
+        # ax = plt.subplot(1, 4, 3)
+        # ax.plot(thresholds_test,tpr_test,label="TPR")
+        # ax.plot(thresholds_test,fpr_test,label="FPR")
+        # ax.plot(thresholds_test,tnr_test,label="TNR")
+        # ax.plot(thresholds_test,fnr_test,label="FNR")
+        # ax.set_title("Test Curves")
+        # ax.set_xlabel("Thresholds")
+        # ax.set_ylabel("-")
+        # ax.legend()
+
+
 
         # Predictions
         ax = plt.subplot(1, 2, 2)
@@ -411,9 +440,9 @@ def visualize_roc_curves(name, result, settings, Y_trains, Y_tests):
         ax.set_xlabel("FPR")
         ax.set_ylabel("TPR")
         ax.legend()
+        
     
         title = "Case " + str(case) + " --- " + name
         plt.suptitle(title, fontsize=15)
         plt.show()
-    
     

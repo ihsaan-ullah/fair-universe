@@ -12,6 +12,7 @@
     "z_magnitude" : 2,
     "alpha" : 90,
     "box_l" : 0, 
+    "generator" : "normal",
     "train_comment": "direction of separation horizontal \n(only $x_1$ is informative)",
     "test_comment": "direction of separation and\n translation are perpendicular"
 }
