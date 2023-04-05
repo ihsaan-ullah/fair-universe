@@ -118,7 +118,9 @@ class DataGenerator:
         background_distribution = Gaussian({
             "name" : DISTRIBUTION_GAUSSIAN,
             "mu" :  background_mu,
-            "sigma" : background_sigma
+            "sigma" : background_sigma,
+            "generator" : self.settings["generator"],
+            "angle_rotation" : self.settings.get('background_angle_rotation', None)
         })
         self.logger.success("Background Distributions Loaded!")
 
@@ -136,7 +138,9 @@ class DataGenerator:
         signal_distribution = Gaussian({
             "name" : DISTRIBUTION_GAUSSIAN,
             "mu" :  signal_mu,
-            "sigma" : signal_sigma
+            "sigma" : signal_sigma,
+            "generator" : self.settings["generator"],
+            "angle_rotation" : self.settings.get('signal_angle_rotation', None)
         })
         self.logger.success("Signal Distributions Loaded!")
 

@@ -25,3 +25,10 @@ JSON_FILE = 'settings.json'
 #-----------------------------------------------
 SIGNAL_LABEL = 1
 BACKGROUND_LABEL = 0
+
+
+#-----------------------------------------------
+# Gaussian Generator types
+#-----------------------------------------------
+GAUSSIAN_GENERETOR_TYPE_NORMAL = "normal"
+GAUSSIAN_GENERETOR_TYPE_MULTIVARIATE = "multivariate"

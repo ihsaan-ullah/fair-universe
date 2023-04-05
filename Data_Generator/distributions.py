@@ -2,7 +2,11 @@
 # Imports
 #================================
 import numpy as np
-
+from math import cos, sin, radians
+from constants import (
+    GAUSSIAN_GENERETOR_TYPE_NORMAL,
+    GAUSSIAN_GENERETOR_TYPE_MULTIVARIATE
+)
 
 #================================
 #  Distribution Class
@@ -33,8 +37,10 @@ class Gaussian(Distribution):
         super().__init__(
             name = distribution["name"],
             mu =  distribution["mu"],
-            sigma = distribution["sigma"]
+            sigma = distribution["sigma"],
         )
+        self.generator_type = distribution["generator"]
+        self.angle_rotation = distribution["angle_rotation"]
 
 
     def generate_points(self, number_of_events, problem_dimension):
@@ -42,16 +48,33 @@ class Gaussian(Distribution):
         This function generates datapoints using Gaussian distribution
         """
 
-        # initialize vector with required dimension
-        points = np.zeros((number_of_events, problem_dimension))
-        
-        # loop over problem dimension to generate each dimension
-        for i in range(0, problem_dimension):
-            points[:, i] = np.array(np.random.normal(self.mu[i],self.sigma[i], number_of_events))
-            
-        return points
+        if self.generator_type == GAUSSIAN_GENERETOR_TYPE_NORMAL:
 
- 
+            # initialize vector with required dimension
+            points = np.zeros((number_of_events, problem_dimension))
+            
+            # loop over problem dimension to generate each dimension
+            for i in range(0, problem_dimension):
+                points[:, i] = np.array(np.random.normal(self.mu[i],self.sigma[i], number_of_events))
+                
+            return points
+        else:
+
+            rotation_matrix = np.array([
+                [round(cos(radians(self.angle_rotation)) ,2), round(-sin(radians(self.angle_rotation)) ,2)],
+                [round(sin(radians(self.angle_rotation)) ,2), round(cos(radians(self.angle_rotation)) ,2)]
+            ])
+
+            covariance_matrix = np.array([
+                [self.sigma[0], 0],
+                [0, self.sigma[1]]
+            ])
+
+            rotated_covariance_matrix = np.matmul(np.matmul(rotation_matrix,covariance_matrix),rotation_matrix.transpose())
+
+            points = np.random.multivariate_normal(mean=self.mu, cov=rotated_covariance_matrix, size=number_of_events)
+
+            return points
 
 #================================
 # Poisson Distribution Class

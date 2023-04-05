@@ -12,6 +12,7 @@
     "z_magnitude" : 2,
     "alpha" : 45,
     "box_l" : 0, 
+    "generator" : "normal",
     "train_comment": "direction of separation diagonal \n(both $x_1$ and $x_2$ are informative)",
     "test_comment": "direction of separation and\n translation aligned"
 }

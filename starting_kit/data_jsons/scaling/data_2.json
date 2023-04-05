@@ -12,6 +12,7 @@
     "z_magnitude" : 0,
     "alpha" : 90,
     "box_l" : 0, 
+    "generator" : "normal",
     "train_comment": "no translation",
     "test_comment": "no translation"
 }
