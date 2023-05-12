@@ -35,7 +35,9 @@ class Model:
                  preprocessing=False, 
                  preprocessing_method = PREPROCESS_TRANSLATION,
                  data_augmentation=False,
-                 data_augmentation_type=AUGMENTATION_TRANSLATION
+                 data_augmentation_type=AUGMENTATION_TRANSLATION,
+                 case = None,
+                 thetas = None
         ):
 
         self.model_name = model_name
@@ -47,6 +49,13 @@ class Model:
         self.preprocessing_method = preprocessing_method
         self.data_augmentation = data_augmentation
         self.data_augmentation_type = data_augmentation_type
+
+        if case is None:
+            self.case = case
+        else:
+            self.case = case - 1
+            
+        self.thetas = thetas
 
         self._set_model()
 
@@ -209,12 +218,53 @@ class Model:
             self.clf.fit(X, y)
             self.is_trained=True
 
+    # def predict(self, X=None, preprocess=True):
+
+    #     if X is None:
+    #         X = self.X_test
+
+    
+
+    #     if self.model_name == MODEL_CONSTANT:
+    #         return np.zeros(X.shape[0])
+
+    #     if self.preprocessing & preprocess:
+    #         if self.preprocessing_method == PREPROCESS_TRANSLATION:
+    #             X = self._preprocess_translation(X)
+    #         else:
+    #             X = self._preprocess_scaling(X)
+          
+
+    #     return self.clf.predict(X)
+
+    # def decision_function(self, X=None, preprocess=True):
+        
+    #     if X is None:
+    #         X = self.X_test
+
+    #     if self.model_name == MODEL_CONSTANT:
+    #         return np.zeros(X.shape[0])
+        
+    #     if self.preprocessing and preprocess:
+    #         if self.preprocessing_method == PREPROCESS_TRANSLATION:
+    #             X = self._preprocess_translation(X)
+    #         else:
+    #             X = self._preprocess_scaling(X)
+
+    #     if self.model_name == MODEL_NB:
+    #         predicted_score = self.clf.predict_proba(X)
+    #         # Transform with log
+    #         epsilon = np.finfo(float).eps
+    #         predicted_score = -np.log((1/(predicted_score+epsilon))-1)
+    #         return predicted_score[:, 1]
+    #     else:
+    #         return self.clf.decision_function(X)
+        
     def predict(self, X=None, preprocess=True):
 
         if X is None:
             X = self.X_test
 
-    
 
         if self.model_name == MODEL_CONSTANT:
             return np.zeros(X.shape[0])
@@ -225,8 +275,17 @@ class Model:
             else:
                 X = self._preprocess_scaling(X)
           
+        if self.case is None:
+            return self.clf.predict(X)
+        else:
 
-        return self.clf.predict(X)
+            # if decision function  > theta --> class 1 
+            # else --> class 0
+            predictions = np.zeros(X.shape[0])
+            decisions = self.decision_function(X)
+
+            predictions = (decisions > self.thetas[self.case]).astype(int)
+            return predictions
 
     def decision_function(self, X=None, preprocess=True):
         
@@ -247,10 +306,17 @@ class Model:
             # Transform with log
             epsilon = np.finfo(float).eps
             predicted_score = -np.log((1/(predicted_score+epsilon))-1)
-            return predicted_score[:, 1]
+            decisions =  predicted_score[:, 1]
         else:
-            return self.clf.decision_function(X)
+            decisions =  self.clf.decision_function(X)
         
+        if self.case is None:
+            return decisions
+        else:
+            # decision function = decision function - theta
+            return decisions - self.thetas[self.case]
+
+
     def save(self, name):
         pickle.dump(self.clf, open(name + '.pickle', "wb"))
 

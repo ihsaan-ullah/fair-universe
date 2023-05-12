@@ -1,6 +1,6 @@
-#================================
+# ================================
 # Logger Class
-#================================
+# ================================
 class Logger:
     def __init__(self, show_logs=True):
         self._warning_sign = "[!]"
@@ -24,7 +24,6 @@ class Logger:
             self.print_line()
             print(self._success_sign, msg)
             self.print_line()
-
 
     def print_line(self):
         if self.show_logs:

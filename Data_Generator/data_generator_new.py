@@ -270,7 +270,6 @@ class DataGenerator:
         generated_dataframe = pd.concat([signal_df, background_df])
         biased_dataframe = pd.concat([signal_df_biased, background_df_biased])
 
-
         #-----------------------------------------------
         # Apply box
         #-----------------------------------------------
@@ -289,11 +288,9 @@ class DataGenerator:
         self.biased_data = biased_dataframe[biased_dataframe.columns[:-1]]
         self.biased_labels = biased_dataframe["y"].to_numpy()
 
-
         # shuffle data
         self.generated_data = shuffle(self.generated_data, random_state=33)
         self.generated_labels =shuffle(self.generated_labels, random_state=33)
-
         self.biased_data = shuffle(self.biased_data, random_state=33)
         self.biased_labels =shuffle(self.biased_labels, random_state=33)
 
