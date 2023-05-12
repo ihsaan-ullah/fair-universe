@@ -1,6 +1,6 @@
-#================================
+# ================================
 # Checker Class
-#================================
+# ================================
 class Checker:
 
     def settings_is_not_loaded(self, settings):
@@ -8,9 +8,12 @@ class Checker:
 
     def distributions_are_not_loaded(self, params_distributions):
         return (not params_distributions)
+    
+    def distribution_is_not_loaded(self, distribution):
+        return (distribution is None)
 
     def systematics_are_not_loaded(self, params_systematics):
-        return (params_systematics  is None)
+        return (params_systematics is None)
 
     def data_is_not_generated(self, generated_dataframe):
-        return (generated_dataframe  is None)
+        return (generated_dataframe is None)
