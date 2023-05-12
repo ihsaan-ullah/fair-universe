@@ -4,6 +4,7 @@
 DISTRIBUTION_GAUSSIAN = "Gaussian"
 DISTRIBUTION_EXPONENTIAL = "Exponential"
 DISTRIBUTION_POISSON = "Poisson"
+DISTRIBUTION_GAMMA = "Gamma"
 
 
 # -----------------------------------------------
