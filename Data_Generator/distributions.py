@@ -167,7 +167,6 @@ class Gaussian_Gamma(Distribution):
         super().__init__(
             name = distribution["name"]
         )
-        self.cut = distribution["cut"]
         self.distributions_params = distribution["distributions_params"]
 
     def generate_points(self, number_of_events, problem_dimension):
@@ -183,33 +182,11 @@ class Gaussian_Gamma(Distribution):
             dimension_params = self.distributions_params[i]
             distrib_type = dimension_params["distrib"]
             distrib_param_1, distrib_param_2 = dimension_params["param_1"], dimension_params["param_2"]
-            if len(self.cut[i]) == 0:
-                if distrib_type == DISTRIBUTION_GAMMA :
-                    k,tau = distrib_param_1,distrib_param_2
-                    points[:, i] = np.array(np.random.gamma(k, tau, number_of_events))
-                elif distrib_type == DISTRIBUTION_GAUSSIAN :
-                    mu, sigma = distrib_param_1,distrib_param_2
-                    points[:, i] = np.array(np.random.normal(mu,sigma, number_of_events))
-            else :
-                # get min and max limit of the cut
-                min_lim, max_lim = self.cut[i]
-                points_i = np.array([])
-                # loop over points until points are equial to number of events
-                while len(points_i) < number_of_events:
-                    # generate points
-                    if distrib_type == DISTRIBUTION_GAMMA :
-                        k,tau = distrib_param_1,distrib_param_2
-                        points_generated = np.array(np.random.gamma(k, tau, number_of_events))
-                    elif distrib_type == DISTRIBUTION_GAUSSIAN :
-                        mu, sigma = distrib_param_1,distrib_param_2
-                        points_generated = np.array(np.random.normal(mu, sigma, number_of_events))                    # remove points not in limits
-                    points_generated = points_generated [ (points_generated >=min_lim) * (points_generated <= max_lim)]
-                    # append points to previously generated points
-                    points_i  = np.append(points_i, points_generated)
-                    # remove points if more than number of events
-                    if len(points_i) > number_of_events:
-                        points_i = points_i[:number_of_events]
-                
-                points[:, i] = points_i
+            if distrib_type == DISTRIBUTION_GAMMA :
+                k,tau = distrib_param_1,distrib_param_2
+                points[:, i] = np.array(np.random.gamma(k, tau, number_of_events))
+            elif distrib_type == DISTRIBUTION_GAUSSIAN :
+                mu, sigma = distrib_param_1,distrib_param_2
+                points[:, i] = np.array(np.random.normal(mu,sigma, number_of_events))
         return points
         
