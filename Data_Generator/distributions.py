@@ -14,14 +14,10 @@ from constants import (
 # ================================
 class Distribution:
 
-    def __init__(self, name=None, mu=None, sigma=None, lambdaa=None, cut=None):
+    def __init__(self, name=None):
 
         # init parameters
         self.name = name
-        self.mu = mu
-        self.sigma = sigma
-        self.lambdaa = lambdaa
-        self.cut = cut
 
 
 # ================================
@@ -37,10 +33,10 @@ class Gaussian(Distribution):
         """
 
         super().__init__(
-            name=distribution["name"],
-            mu=distribution["mu"],
-            sigma=distribution["sigma"],
+            name=distribution["name"]
         )
+        self.mu = distribution["mu"]
+        self.sigma = distribution["sigma"]
         self.generator_type = distribution["generator"]
         self.angle_rotation = distribution["angle_rotation"]
 
@@ -58,6 +54,7 @@ class Gaussian(Distribution):
                 points[:, i] = np.array(np.random.normal(self.mu[i],self.sigma[i], number_of_events))
 
             return points
+
         else:
             rotation_matrix = np.array([
                 [round(cos(radians(self.angle_rotation)), 2), round(-sin(radians(self.angle_rotation)), 2)],
@@ -83,10 +80,9 @@ class Poisson(Distribution):
 
     def __init__(self, distribution):
         super().__init__(
-            name=distribution["name"],
-            lambdaa=distribution["lambda"],
-            cut=distribution["cut"]
+            name=distribution["name"]
         )
+        self.lambdaa = distribution["lambda"]
 
     def generate_points(self, number_of_events, problem_dimension):
         """
@@ -98,25 +94,7 @@ class Poisson(Distribution):
 
         # loop over problem dimension to generate each dimension
         for i in range(0, problem_dimension):
-            if len(self.cut[i]) == 0:
-                points[:, i] = np.array(np.random.poisson(self.lambdaa[i], number_of_events))
-            else:
-                # get min and max limit of the cut
-                min_lim, max_lim = self.cut[i]
-                points_i = np.array([])
-                # loop over points until points are equial to number of events
-                while len(points_i) < number_of_events:
-                    # generate points
-                    points_generated = np.array(np.random.poisson(self.lambdaa[i], number_of_events))
-                    # remove points not in limits
-                    points_generated = points_generated[(points_generated >= min_lim) * (points_generated <= max_lim)]
-                    # appemd points to previously generated points
-                    points_i = np.append(points_i, points_generated)
-                    # remove points if more than number of events
-                    if len(points_i) > number_of_events:
-                        points_i = points_i[:number_of_events]
-
-                points[:, i] = points_i
+            points[:, i] = np.array(np.random.poisson(self.lambdaa[i], number_of_events))
 
         return points
 
@@ -128,10 +106,9 @@ class Exponential(Distribution):
 
     def __init__(self, distribution):
         super().__init__(
-            name=distribution["name"], 
-            lambdaa=distribution["lambda"],
-            cut=distribution["cut"]
+            name=distribution["name"]
         )
+        self.lambdaa = distribution["lambda"]
 
     def generate_points(self, number_of_events, problem_dimension):
         """
@@ -143,25 +120,8 @@ class Exponential(Distribution):
 
         # loop over problem dimension to generate each dimension
         for i in range(0, problem_dimension):
-            if len(self.cut[i]) == 0:
-                points[:, i] = np.array(np.random.exponential(self.lambdaa[i], number_of_events))
-            else:
-                # get min and max limit of the cut
-                min_lim, max_lim = self.cut[i]
-                points_i = np.array([])
-                # loop over points until points are equial to number of events
-                while len(points_i) < number_of_events:
-                    # generate points
-                    points_generated = np.array(np.random.exponential(self.lambdaa[i], number_of_events))
-                    # remove points not in limits
-                    points_generated = points_generated[(points_generated >= min_lim) * (points_generated <= max_lim)]
-                    # appemd points to previously generated points
-                    points_i = np.append(points_i, points_generated)
-                    # remove points if more than number of events
-                    if len(points_i) > number_of_events:
-                        points_i = points_i[:number_of_events]
+            points[:, i] = np.array(np.random.exponential(self.lambdaa[i], number_of_events))
 
-                points[:, i] = points_i
         return points
 
 
@@ -178,10 +138,10 @@ class Gamma(Distribution):
         """
 
         super().__init__(
-            name=distribution["name"],
-            k=distribution["k"],
-            tau=distribution["tau"],
+            name=distribution["name"]
         )
+        self.k = distribution["k"]
+        self.tau = distribution["tau"]
 
     def generate_points(self, number_of_events, problem_dimension):
         """
@@ -193,23 +153,5 @@ class Gamma(Distribution):
 
         # loop over problem dimension to generate each dimension
         for i in range(0, problem_dimension):
-            if len(self.cut[i]) == 0:
-                points[:, i] = np.array(np.random.gamma(self.k, self.tau, number_of_events))
-            else:
-                # get min and max limit of the cut
-                min_lim, max_lim = self.cut[i]
-                points_i = np.array([])
-                # loop over points until points are equial to number of events
-                while len(points_i) < number_of_events:
-                    # generate points
-                    points_generated = np.array(np.random.gamma(self.k, self.tau, number_of_events))
-                    # remove points not in limits
-                    points_generated = points_generated [ (points_generated >=min_lim) * (points_generated <= max_lim)]
-                    # appemd points to previously generated points
-                    points_i  = np.append(points_i, points_generated)
-                    # remove points if more than number of events
-                    if len(points_i) > number_of_events:
-                        points_i = points_i[:number_of_events]
-
-                points[:, i] = points_i
+            points[:, i] = np.array(np.random.gamma(self.k, self.tau, number_of_events))
         return points
