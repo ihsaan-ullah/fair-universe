@@ -139,8 +139,7 @@ class DataGenerator:
             background_params = [background_dim_1,background_dim_2]
             background_distribution = Gaussian_Gamma({
                 "name" : DISTRIBUTION_GAUSSIAN_GAMMA,
-                "distributions_params" : background_params,
-                "cut" : [[],[]]
+                "distributions_params" : background_params
             })
         else :
             self.logger.error("Data mode not recognized")
@@ -171,8 +170,7 @@ class DataGenerator:
             signal_params = [signal_dim_1,signal_dim_2]
             signal_distribution = Gaussian_Gamma({
                 "name" : DISTRIBUTION_GAUSSIAN_GAMMA,
-                "distributions_params" : signal_params,
-                "cut" : [[],[]]
+                "distributions_params" : signal_params
             })
         else :
             self.logger.error("Data mode not recognized")
@@ -221,8 +219,7 @@ class DataGenerator:
             biased_background_params = [biased_background_dim_1,biased_background_dim_2]
             biased_background_distribution = Gaussian_Gamma({
                 "name" : DISTRIBUTION_GAUSSIAN_GAMMA,
-                "distributions_params" : biased_background_params,
-                "cut" : [[],[]]
+                "distributions_params" : biased_background_params
             })
             # SIGNAL
             # Update parameters with bias values
@@ -231,8 +228,7 @@ class DataGenerator:
             biased_signal_params = [biased_signal_dim_1,biased_signal_dim_2]
             biased_signal_distribution = Gaussian_Gamma({
                 "name" : DISTRIBUTION_GAUSSIAN_GAMMA,
-                "distributions_params" : biased_signal_params,
-                "cut" : [[],[]]
+                "distributions_params" : biased_signal_params
             })
             self.biased_params_distributions["signal"] = biased_signal_distribution
             self.biased_params_distributions["background"] = biased_background_distribution
