@@ -5,6 +5,7 @@ DISTRIBUTION_GAUSSIAN = "Gaussian"
 DISTRIBUTION_EXPONENTIAL = "Exponential"
 DISTRIBUTION_POISSON = "Poisson"
 DISTRIBUTION_GAMMA = "Gamma"
+DISTRIBUTION_GAUSSIAN_GAMMA = "Gaussian_Gamma"
 
 
 # -----------------------------------------------
@@ -15,6 +16,7 @@ SYSTEMATIC_TRANSLATION = "Translation"
 SYSTEMATIC_SCALING = "Scaling"
 SYSTEMATIC_BOX = "Box"
 SYSTEMATIC_ROTATION = "Rotation"
+SYSTEMATIC_GAMMA_PERTURBATION = "Gamma_Perturbation"
 
 
 # -----------------------------------------------
