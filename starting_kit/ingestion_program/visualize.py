@@ -193,10 +193,11 @@ def visualize_train(ax, settings, train_set, comment=True, xy_limit=None):
     ax.plot([bg_mu[0], sg_mu[0]], [bg_mu[1], sg_mu[1]], "--+", markersize=10, color="k", label="separation direction")
     ax.legend()
 
-    if comment:
-        ax.set_title("Train set\n" + train_comment)
-    else:
-        ax.set_title("Train set")
+    ax.set_title("Train set")
+    # if comment:
+    #     ax.set_title("Train set\n" + train_comment)
+    # else:
+    #     ax.set_title("Train set")
 
 
 def visualize_augmented(ax, settings, train_set, comment=True, xy_limit=None):
@@ -267,7 +268,8 @@ def visualize_test(ax, settings, test_set):
     ax.plot(sg_c[0], sg_c[1], marker="x", markersize=10, color="k", label="sg center")
     ax.plot([bg_c[0],sg_c[0]],[bg_c[1], sg_c[1]], "--+", markersize=10, color="k", label="separation direction")
     ax.legend()
-    ax.set_title("Test set\n" + test_comment)
+    # ax.set_title("Test set\n" + test_comment)
+    ax.set_title("Test set")
 
     if z[0] == 0 and z[1] == 0:
         pass
@@ -289,17 +291,15 @@ def visualize_test(ax, settings, test_set):
 
         ax.axline((z[0], z[1]), slope=slope, linewidth=1, color='r', linestyle='-.', label="translation direction")
     ax.legend()
-    ax.set_title("Test set\n{}".format(test_comment))
 
 
 def visualize_clocks(settings):
 
     if len(settings) == 6:
-
         fig = plt.figure(constrained_layout=True, figsize=(9, 6))
         axs = fig.subplots(2, 3, sharex=True)
     if len(settings) == 12:
-        fig = plt.figure(constrained_layout=True, figsize=(8, 24))
+        fig = plt.figure(constrained_layout=True, figsize=(8, 25.5))
         axs = fig.subplots(6, 2, sharex=True)
 
     for i, ax in enumerate(axs.flat):
@@ -309,11 +309,8 @@ def visualize_clocks(settings):
 
 def visualize_data(settings, train_set, test_set):
 
-
-
-    fig = plt.figure(constrained_layout=True, figsize=(12, 4.5))
+    fig = plt.figure(constrained_layout=True, figsize=(12, 4.1))
     axs = fig.subplots(1, 3, sharex=True)
-
 
     # Clock
     visualize_clock(axs[0], settings)
@@ -321,6 +318,7 @@ def visualize_data(settings, train_set, test_set):
     visualize_train(axs[1], settings, train_set)
     # test
     visualize_test(axs[2], settings, test_set)
+
     plt.show()
 
 
