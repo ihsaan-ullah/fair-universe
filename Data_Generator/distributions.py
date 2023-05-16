@@ -48,7 +48,6 @@ class Gaussian(Distribution):
         """
         This function generates datapoints using Gaussian distribution
         """
-
         if self.generator_type == GAUSSIAN_GENERETOR_TYPE_NORMAL:
 
             # initialize vector with required dimension
@@ -60,7 +59,6 @@ class Gaussian(Distribution):
 
             return points
         else:
-
             rotation_matrix = np.array([
                 [round(cos(radians(self.angle_rotation)), 2), round(-sin(radians(self.angle_rotation)), 2)],
                 [round(sin(radians(self.angle_rotation)), 2), round(cos(radians(self.angle_rotation)), 2)]

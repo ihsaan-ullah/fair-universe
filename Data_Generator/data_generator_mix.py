@@ -97,7 +97,7 @@ class DataGenerator:
             "mu":  background_mu,
             "sigma": background_sigma,
             "generator": self.settings["generator"],
-            "angle_rotation": self.settings.get('background_angle_rotation', None)
+            "angle_rotation": self.settings.get('angle_rotation', 0)
         })
         self.logger.success("Background Distributions Loaded!")
 
@@ -118,7 +118,7 @@ class DataGenerator:
             "mu":  signal_mu,
             "sigma": signal_sigma,
             "generator": self.settings["generator"],
-            "angle_rotation": self.settings.get('signal_angle_rotation', None)
+            "angle_rotation": - self.settings.get('angle_rotation', 0)
         })
         self.logger.success("Signal Distributions Loaded!")
 
@@ -205,20 +205,21 @@ class DataGenerator:
         # Generate Data
         # -----------------------------------------------
 
-        # get signal datapoints
+        # get train signal datapoints
         signal_data = self.signal_distribution.generate_points(self.number_of_signal_events, self.problem_dimension)
-
-        # get background datapoints
+        # get train background datapoints
         background_data = self.background_distribution.generate_points(self.number_of_background_events, self.problem_dimension)
+
+        # get test signal datapoints
+        biased_signal_data = self.signal_distribution.generate_points(self.number_of_signal_events, self.problem_dimension)
+        # get test background datapoints
+        biased_background_data = self.background_distribution.generate_points(self.number_of_background_events, self.problem_dimension)
 
         self.logger.success("Data Generated!")
 
         # -----------------------------------------------
-        # Apply Translation, Scaling and Rotation Systematics
+        # Apply Rotation, Translation, Scaling and Box Systematics
         # -----------------------------------------------
-
-        biased_signal_data = signal_data
-        biased_background_data = background_data
 
         # Rotation
         if self.systematic_rotation is not None:
