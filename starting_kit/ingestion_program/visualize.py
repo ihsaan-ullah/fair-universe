@@ -6,6 +6,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from sklearn.metrics import roc_curve
 from matplotlib.patches import Arc, RegularPolygon
 from numpy import radians as rad
+import seaborn as sns
 
 
 # ----------------------------------------------------------
@@ -539,3 +540,56 @@ def visualize_roc_curves(name, result, settings, Y_trains, Y_tests):
         title = "Case " + str(case) + " --- " + name
         plt.suptitle(title, fontsize=15)
         plt.show()
+
+
+
+def visualize_scatter_gamma(train_set, test_set, setting):
+    fig = plt.figure(constrained_layout=True, figsize=(6,3))
+    axs = fig.subplots(1, 2, sharex=True)
+    # Train points
+    for lbl in [0,1]:
+        lbl_points = train_set["data"][train_set["labels"] == lbl]
+        if lbl == 0:
+            axs[0].scatter(lbl_points['x1'], lbl_points['x2'], s=5, alpha=0.5, label="b", color='blue')
+        elif lbl == 1:
+            axs[0].scatter(lbl_points['x1'], lbl_points['x2'], s=5, alpha=0.5, label="s", color='red')
+    axs[0].set_xlabel('x1')
+    axs[0].set_ylabel('x2')
+    axs[0].set_title("Train points \n" + str(setting["background_dim_1"]) + "\n" + str(setting["signal_dim_1"]) + "\n" + str(setting["background_dim_2"]) + "\n" + str(setting["signal_dim_2"]),fontsize="8")
+    axs[0].legend()
+
+    # Test points 
+    for lbl in [0,1]:
+        lbl_points = test_set["data"][test_set['labels'] == lbl]
+        if lbl == 0:
+            axs[1].scatter(lbl_points['x1'], lbl_points['x2'], s=5, alpha=0.5, label="b", color='blue')
+        elif lbl == 1:
+            axs[1].scatter(lbl_points['x1'], lbl_points['x2'], s=5, alpha=0.5, label="s", color='red')
+    axs[1].set_xlabel('x1')
+    axs[1].set_ylabel('x2')
+    axs[1].set_title("Test points \n" + "delta_k_1 : "+str(setting["delta_k_1"]) + "\n delta_tau_1 : "+str(setting["delta_tau_1"]) + "\n delta_k_2 : "+str(setting["delta_k_2"]) + "\n delta_tau_2 : "+str(setting["delta_tau_2"]),fontsize="8")
+    axs[1].legend()
+
+def visualize_pair_plot(train_set, test_set, setting):
+    # Train
+    sns.set(style="ticks")
+    train_data = train_set["data"].copy()
+    train_data["labels"] = train_set["labels"]
+
+    train_plot = sns.pairplot(train_data, hue='labels', palette=['blue', 'red'], plot_kws={'alpha': 0.6},diag_kind='hist')
+    train_plot.fig.suptitle("Train points \n" + str(setting["background_dim_1"]) + "\n" + str(setting["signal_dim_1"]) + "\n" + str(setting["background_dim_2"]) + "\n" + str(setting["signal_dim_2"]),fontsize="8")
+
+    # Test
+    sns.set(style="ticks")
+    test_data = test_set["data"].copy()
+    test_data["labels"] = test_set["labels"]
+
+    test_plot = sns.pairplot(test_data, hue='labels', palette=['blue', 'red'], plot_kws={'alpha': 0.6},diag_kind='hist')
+    test_plot.fig.suptitle("Test points \n" + "delta_k_1 : "+str(setting["delta_k_1"]) + "\n delta_tau_1 : "+str(setting["delta_tau_1"]) + "\n delta_k_2 : "+str(setting["delta_k_2"]) + "\n delta_tau_2 : "+str(setting["delta_tau_2"]),fontsize="8")
+
+    # Modify legend labels
+    legend = train_plot._legend
+    legend.texts[0].set_text('b')
+    legend.texts[1].set_text('s')
+
+    plt.show()
