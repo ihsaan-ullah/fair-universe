@@ -134,10 +134,12 @@ class Rotation(Systematics):
         )
         self.rotation_degree = radians(systematics["rotation_degree"])
         # systematics["rotation_degree"]*np.pi/180  # In degreess
+
         self.rotation_matrix = np.array([
             [np.cos(self.rotation_degree), -np.sin(self.rotation_degree)],
             [np.sin(self.rotation_degree), np.cos(self.rotation_degree)]
         ])
 
     def apply_systematics(self, problem_dimension, points):
+
         return (np.matmul(self.rotation_matrix, points.T).T)
