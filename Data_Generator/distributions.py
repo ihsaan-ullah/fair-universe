@@ -4,7 +4,9 @@
 import numpy as np
 from constants import (
     GAUSSIAN_GENERETOR_TYPE_NORMAL,
-    GAUSSIAN_GENERETOR_TYPE_MULTIVARIATE
+    GAUSSIAN_GENERETOR_TYPE_MULTIVARIATE,
+    DISTRIBUTION_GAUSSIAN,
+    DISTRIBUTION_GAMMA
 )
 
 
@@ -154,3 +156,37 @@ class Gamma(Distribution):
         for i in range(0, problem_dimension):
             points[:, i] = np.array(np.random.gamma(self.k[i], self._theta_[i], number_of_events))
         return points
+
+
+#================================
+# Gaussian_Gamma Distribution Class
+#================================
+class Gaussian_Gamma(Distribution):
+
+    def __init__(self, distribution):
+        super().__init__(
+            name = distribution["name"]
+        )
+        self.distributions_params = distribution["distributions_params"]
+
+    def generate_points(self, number_of_events, problem_dimension):
+        """
+        This function generates datapoints using Gamma distribution
+        """
+
+        # initialize vector with required dimension
+        points = np.zeros((number_of_events, problem_dimension))
+        
+        # loop over problem dimension to generate each dimension
+        for i in range(0, problem_dimension) :
+            dimension_params = self.distributions_params[i]
+            distrib_type = dimension_params["distrib"]
+            distrib_param_1, distrib_param_2 = dimension_params["param_1"], dimension_params["param_2"]
+            if distrib_type == DISTRIBUTION_GAMMA :
+                k,tau = distrib_param_1,distrib_param_2
+                points[:, i] = np.array(np.random.gamma(k, tau, number_of_events))
+            elif distrib_type == DISTRIBUTION_GAUSSIAN :
+                mu, sigma = distrib_param_1,distrib_param_2
+                points[:, i] = np.array(np.random.normal(mu,sigma, number_of_events))
+        return points
+        
