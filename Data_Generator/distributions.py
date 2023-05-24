@@ -2,7 +2,6 @@
 # Imports
 # ================================
 import numpy as np
-from math import cos, sin, radians
 from constants import (
     GAUSSIAN_GENERETOR_TYPE_NORMAL,
     GAUSSIAN_GENERETOR_TYPE_MULTIVARIATE
@@ -57,8 +56,8 @@ class Gaussian(Distribution):
 
         else:
             rotation_matrix = np.array([
-                [round(cos(radians(self.angle_rotation)), 2), round(-sin(radians(self.angle_rotation)), 2)],
-                [round(sin(radians(self.angle_rotation)), 2), round(cos(radians(self.angle_rotation)), 2)]
+                [np.cos(np.radians(self.angle_rotation)), -np.sin(np.radians(self.angle_rotation))],
+                [np.sin(np.radians(self.angle_rotation)), np.cos(np.radians(self.angle_rotation))]
             ])
 
             covariance_matrix = np.array([
@@ -134,14 +133,14 @@ class Gamma(Distribution):
         """
         name: name of the distribution
         k : k parameter of gamma distribution
-        tau :  parameter of gamma distribution
+        _theta_ :θ parameter of gamma distribution
         """
 
         super().__init__(
             name=distribution["name"]
         )
         self.k = distribution["k"]
-        self.tau = distribution["tau"]
+        self._theta_ = distribution["_theta_"]
 
     def generate_points(self, number_of_events, problem_dimension):
         """
@@ -153,5 +152,5 @@ class Gamma(Distribution):
 
         # loop over problem dimension to generate each dimension
         for i in range(0, problem_dimension):
-            points[:, i] = np.array(np.random.gamma(self.k, self.tau, number_of_events))
+            points[:, i] = np.array(np.random.gamma(self.k[i], self._theta_[i], number_of_events))
         return points
