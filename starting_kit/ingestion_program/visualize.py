@@ -14,7 +14,7 @@ import seaborn as sns
 def get_params(setting):
 
     # get box center
-    box_c = setting["box_center"]
+    box_c = setting.get("box_center", [0, 0])
 
     # get systematics from settings
     systematics = setting["systematics"]
@@ -243,9 +243,9 @@ def visualize_train(ax, settings, train_set, xylim):
     ax.set_title("Train set")
 
 
-def visualize_augmented(ax, settings, train_set, comment=True, xylim=None):
+def visualize_augmented(ax, settings, train_set, xylim=None):
 
-    _, _, _, _, train_comment, _, _, _, _, _  = get_params(settings)
+    # _, _, _, _, _, _, _, _, _, _  = get_params(settings)
 
 
     signal_mask = train_set["labels"] == 1
@@ -264,10 +264,7 @@ def visualize_augmented(ax, settings, train_set, comment=True, xylim=None):
     # ax.plot([bg_mu[0],sg_mu[0]],[bg_mu[1], sg_mu[1]], "--+", markersize=10, color="k", label="separation direction")
     ax.legend()
 
-    if comment:
-        ax.set_title("Augmented set\n" + train_comment)
-    else:
-        ax.set_title("Augmented set")
+    ax.set_title("Augmented set")
 
 
 def visualize_test(ax, settings, test_set, xylim):
@@ -331,6 +328,7 @@ def visualize_test(ax, settings, test_set, xylim):
 
 def visualize_clocks(settings, xylim=[-8, 8]):
 
+    axs = None
     if len(settings) == 6:
         fig = plt.figure(constrained_layout=True, figsize=(9, 6))
         axs = fig.subplots(2, 3, sharex=True)
@@ -358,17 +356,17 @@ def visualize_data(settings, train_set, test_set, xylim=[-8, 8]):
     plt.show()
 
 
-def visualize_augmented_data(settings, train_set, augmented_set, augment_limit=None):
+def visualize_augmented_data(settings, train_set, augmented_set, xylim=[-8, 8]):
 
     fig = plt.figure(constrained_layout=True, figsize=(12, 4.5))
     axs = fig.subplots(1, 3, sharex=True)
 
     # Clock
-    visualize_clock(axs[0],settings)
+    visualize_clock(axs[0], settings, xylim=xylim)
     # train
-    visualize_train(axs[1], settings, train_set, comment=False, xy_limit=augment_limit)
+    visualize_train(axs[1], settings, train_set, xylim=xylim)
     # visualize_augmented
-    visualize_augmented(axs[2], settings, augmented_set, comment=False, xy_limit=augment_limit)
+    visualize_augmented(axs[2], settings, augmented_set, xylim=xylim)
     plt.show()
 
 
@@ -432,7 +430,7 @@ def visualize_scatter(ax, data_set):
     ax.scatter(data[signal_mask]["x1"], data[signal_mask]["x2"], c='r', edgecolors="k")
 
 
-def visualize_decicion_boundary(name, settings, result, train_sets, test_sets):
+def visualize_decicion_boundary(name, settings, result, train_sets, test_sets, xylim=[-8,8]):
 
     for index, model in enumerate(result["trained_models"]):
 
@@ -440,7 +438,7 @@ def visualize_decicion_boundary(name, settings, result, train_sets, test_sets):
 
         # Clock
         ax = plt.subplot(1, 4, 1)
-        visualize_clock(ax, settings[index])
+        visualize_clock(ax, settings[index], xylim)
 
         # decision boundary
         ax = plt.subplot(1, 4, 2)
