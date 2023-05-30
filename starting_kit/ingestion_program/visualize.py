@@ -6,6 +6,9 @@ from sklearn.metrics import roc_curve
 from matplotlib.patches import Arc, RegularPolygon
 from numpy import radians as rad
 import seaborn as sns
+from matplotlib.patches import Patch
+from matplotlib.lines import Line2D
+import matplotlib.colors as mcolors
 
 
 # ----------------------------------------------------------
@@ -631,5 +634,71 @@ def visualize_pair_plot(train_set, test_set, setting):
     legend = train_plot._legend
     legend.texts[0].set_text('b')
     legend.texts[1].set_text('s')
+
+    plt.show()
+
+def visualize_DANN_boundaries(model, X_s, y_s, X_t, y_t, settings, scores, show_points=True, xylim=[-8,8]):
+    # Set min and max values for the grid
+    x_min, x_max = min(X_s[:, 0].min(),X_t[:, 0].min()) - 2, max(X_s[:, 0].max(),X_t[:, 0].max()) + 2
+    y_min, y_max = min(X_s[:, 1].min(),X_t[:, 1].min()) - 2, max(X_s[:, 1].max(),X_t[:, 1].max()) + 2
+    
+    if x_max-x_min > y_max-y_min :
+        y_min = (y_max+y_min)/2 - (x_max-x_min)/2
+        y_max = (y_max+y_min)/2 + (x_max-x_min)/2
+    else :
+        x_min = (x_max+x_min)/2 - (y_max-y_min)/2
+        x_max = (x_max+x_min)/2 + (y_max-y_min)/2
+
+    # Define figure
+    fig = plt.figure(constrained_layout=True, figsize=(10,5.6))
+    axs = fig.subplots(1, 2, sharex=False)
+
+    # Clock
+    visualize_clock(axs[0], settings, xylim=xylim)
+    
+    # Generate a grid of points with a small step size
+    h = 0.1  # step size
+    xx, yy = np.meshgrid(np.arange(x_min, x_max, h), np.arange(y_min, y_max, h))
+    
+    # Predict the class labels for the grid points
+    Z = model.predict(np.c_[xx.ravel(), yy.ravel()])[0]
+    Z = np.argmax(Z, axis=1)
+    Z = Z.reshape(xx.shape)
+
+    # Create a contour plot
+    axs[1].contourf(xx, yy, Z, alpha=0.5,cmap="bwr")
+
+    if show_points :
+        # Define a norm for proper cmapping
+        bounds = [-1.5, -0.5, 0.5, 1.5]
+        norm = mcolors.BoundaryNorm(bounds, plt.cm.bwr.N)
+
+        # Plot the source data points
+        y_pred_s = np.argmax(model.predict(X_s)[0],axis=1)
+        axs[1].scatter(X_s[:, 0], X_s[:, 1], c=y_s-y_pred_s, cmap="bwr", norm=norm, edgecolors='k',alpha=0.7,marker="s")
+            
+        # Plot the target data points
+        y_pred_t = np.argmax(model.predict(X_t)[0],axis=1)
+        axs[1].scatter(X_t[:, 0], X_t[:, 1], c=y_t-y_pred_t, cmap="bwr", norm=norm, edgecolors='k',alpha=0.7,marker="D")
+        
+        # Build legend
+        legend_elements = [Line2D([0],[0],marker='s',ls="",markeredgecolor="black",markerfacecolor='w',label='Source points',alpha=0.7),
+                        Line2D([0],[0],marker='D',ls="",markeredgecolor="black",markerfacecolor='w',label='Target points',alpha=0.7),
+                        Line2D([0],[0],marker='.',ls="",markeredgecolor="r",markerfacecolor='r',label='False background',alpha=0.7),
+                        Line2D([0],[0],marker='.',ls="",markeredgecolor="b",markerfacecolor='b',label='False signal',alpha=0.7),
+                        Line2D([0],[0],marker='.',ls="",markeredgecolor="w",markerfacecolor='w',label='True',alpha=1),
+                        Patch(facecolor='red', label='Signal region', alpha=0.5),
+                        Patch(facecolor='blue', label='Background region', alpha=0.5)]
+
+        axs[1].legend(handles=legend_elements)
+    
+    # Decorate figure
+    axs[1].set_xlabel('x1')
+    axs[1].set_ylabel('x2')
+    axs[1].set_xlim(x_min,x_max)
+    axs[1].set_ylim(y_min,y_max)
+    
+    scores_list = list(scores.items())
+    axs[1].set_title(str(scores_list[0])+str(scores_list[1])+"\n"+str(scores_list[2])+str(scores_list[3]))
 
     plt.show()
