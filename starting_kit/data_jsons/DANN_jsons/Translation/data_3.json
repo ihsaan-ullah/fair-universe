@@ -1,5 +1,5 @@
 {
-    "case" : "Translation 2",
+    "case" : "Translation 3",
     "problem_dimension" : 2,
     "total_number_of_events" : 2000,
     "p_b" : 0.5,
@@ -31,7 +31,7 @@
         },
         {
             "name" : "Scaling",
-            "scaling_factor" : 0
+            "scaling_factor" : 1
         },
         {
             "name" : "Box",
