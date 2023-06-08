@@ -9,6 +9,7 @@ import seaborn as sns
 from matplotlib.patches import Patch
 from matplotlib.lines import Line2D
 import matplotlib.colors as mcolors
+from colored import fg, attr
 
 
 # ----------------------------------------------------------
@@ -630,6 +631,28 @@ def visualize_pair_plot(train_set, test_set, setting):
 
     plt.show()
 
+def visualize_DANN_summary(model) :
+    summary = []
+    model.summary(print_fn=lambda x: summary.append(x))
+
+    section_colors = {
+    'feature_ext_1 ' : fg('green'),
+    'gradient_rev ' : fg('hot_pink_1a'),
+    'domain_clf_1 ' : fg('hot_pink_1a'),
+    'domain_preds ' : fg('hot_pink_1a'),
+    'label_clf_1 ' : fg('blue'),
+    'label_clf_2 ' : fg('blue'), 
+    'class_preds ' : fg('blue')
+    }
+
+    for line in summary:
+        for section, color in section_colors.items():
+            if section in line:
+                print(color + line + attr('reset'))
+                break
+        else:
+            print(line)
+
 def visualize_DANN_boundaries(model, X_s, y_s, X_t, y_t, settings, scores, show_points=True, xylim=[-8,8]):
     # Set min and max values for the grid
     x_min, x_max = min(X_s[:, 0].min(),X_t[:, 0].min()) - 2, max(X_s[:, 0].max(),X_t[:, 0].max()) + 2
@@ -685,6 +708,27 @@ def visualize_DANN_boundaries(model, X_s, y_s, X_t, y_t, settings, scores, show_
 
         axs[1].legend(handles=legend_elements)
     
+    # Link signal and background centers
+    if settings["background_distribution"]["name"] == settings["signal_distribution"]["name"] == "Gaussian" :
+        l = settings["L"]
+        theta = np.radians(settings["theta"])
+        source_b_center = np.array([0,0])
+        source_s_center = l*np.array([np.cos(theta),np.sin(theta)])
+        z = settings["systematics"][0]["z_magnitude"]
+        alpha = np.radians(settings["systematics"][0]["alpha"])
+        scaling_factor = settings["systematics"][1]["scaling_factor"]
+        rotation_angle = np.radians(settings["systematics"][3]["rotation_degree"])
+        rotation_matrix = np.array([[np.cos(rotation_angle), -np.sin(rotation_angle)],
+                                    [np.sin(rotation_angle), np.cos(rotation_angle)]])
+
+        target_b_center = scaling_factor*z*np.array([np.cos(alpha),np.sin(alpha)])
+        rotated_s_center = rotation_matrix@source_s_center
+        target_s_center = scaling_factor*rotated_s_center + target_b_center
+        # axs[1].plot(target_b_center[0],target_b_center[1],marker="o",markersize=20,color="chartreuse")
+        # axs[1].plot(target_s_center[0],target_s_center[1],marker="o",markersize=20,color="magenta")
+        axs[1].plot((source_b_center[0],source_s_center[0]),(source_b_center[1],source_s_center[1]), color="black", linestyle="-.")
+        axs[1].plot((target_b_center[0],target_s_center[0]),(target_b_center[1],target_s_center[1]), color="black", linestyle="-.")
+
     # Decorate figure
     axs[1].set_xlabel('x1')
     axs[1].set_ylabel('x2')
@@ -694,4 +738,31 @@ def visualize_DANN_boundaries(model, X_s, y_s, X_t, y_t, settings, scores, show_
     scores_list = list(scores.items())
     axs[1].set_title(str(scores_list[0])+str(scores_list[1])+"\n"+str(scores_list[2])+str(scores_list[3]))
 
+    plt.show()
+
+def visualize_history (history) :
+    # This function aims at visualizing performances of the model during training, at each epoch
+    source_evaluations = history.source_evaluations
+    target_evaluations = history.target_evaluations
+
+    fig = plt.figure(constrained_layout=True, figsize=(10,4))
+    ax1 = fig.subplots()
+    ax1.set_xlabel('Epoch')
+
+    # Plot class balanced accuracy with the left y-axis
+    ax1.plot(target_evaluations["val_class_preds_balanced_acc"],color="royalblue",linewidth=2)
+    ax1.set_ylabel('Class Balanced Accuracy', color='royalblue')
+    ax1.set_ylim(-0.05,1.05)
+    ax1.tick_params('y', colors='royalblue')
+
+    # Create a second y-axis
+    ax2 = ax1.twinx()
+
+    # Plot domain's accuracy with the right y-axis
+    ax2.plot(target_evaluations["val_domain_preds_acc"],color="hotpink",linewidth=2)
+    ax2.set_ylabel('Domain Accuracy', color='hotpink')
+    ax2.set_ylim(-0.05,1.05)
+    ax2.tick_params('y', colors='hotpink')
+
+    plt.title("Performances on target data")
     plt.show()

@@ -89,7 +89,7 @@ class DataGenerator:
         self.total_number_of_events = self.settings["total_number_of_events"]
 
         self.pb = self.settings["p_b"]
-        self.ps = round(1 - self.pb, 1)
+        self.ps = round(1 - self.pb, 5)
 
         self.number_of_signal_events = int(self.total_number_of_events*self.ps)
         self.number_of_background_events = int(self.total_number_of_events * self.pb)
