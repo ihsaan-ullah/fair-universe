@@ -1,0 +1,47 @@
+{
+    "case" : "Translation 3",
+    "problem_dimension" : 2,
+    "total_number_of_events" : 2000,
+    "p_b" : 0.5,
+    "theta" : 180,
+    "L" : 6,
+    "generator" : "normal",
+    "angle_rotation": 0,
+    "background_distribution":{
+        "name": "Gaussian",
+        "mu" : [0,0],
+        "sigma" : [0.5,0.5]
+    },
+    "apply_copula": false,
+    "alpha": [0,0],
+    "beta": [0,0],
+    "signal_from_background": true,
+    "signal_sigma_scale" : 1,
+    "signal_distribution":{
+        "name": "Gaussian",
+        "mu": [0,0],
+        "sigma": [0,0]
+    },
+    
+    "systematics" : [
+        {
+            "name" : "Translation",
+            "z_magnitude" : 12,
+            "alpha" : 135
+        },
+        {
+            "name" : "Scaling",
+            "scaling_factor" : 1
+        },
+        {
+            "name" : "Box",
+            "box_l" : 0
+        },
+        {
+            "name" : "Rotation",
+            "rotation_degree" : 0
+        }
+    ],
+    "train_comment": "no systematics",
+    "test_comment": "translation, scaling, box"
+}

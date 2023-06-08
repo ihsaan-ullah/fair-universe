@@ -5,4 +5,5 @@ __pycache__
 run.py
 run2.py
 
+.ipynb_checkpoints/
 data/
