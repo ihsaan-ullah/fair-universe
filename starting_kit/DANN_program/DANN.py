@@ -4,8 +4,6 @@ from tensorflow.keras.layers import Input, Layer, Dense, Activation, Dropout
 from tensorflow.keras.models import Model
 import keras
 import functools
-import collections
-from keras_custom_callbacks import SimpleLogCallback
 
 random_seed = 42
 np.random.seed(random_seed)
@@ -21,13 +19,15 @@ class label_classifier(Layer) :
         self.num_classes = num_classes
         self.c_name = name
         
-        self.hidden1 = Dense(10, activation='relu')
-        self.hidden2 = Dense(10, activation='relu')
+        self.hidden_ftr_1 = Dense(20, activation='relu', name="feature_ext_1")
+        self.hidden_lbl_1 = Dense(20, activation='relu', name="label_clf_1")
+        self.hidden_lbl_2 = Dense(20, activation='relu', name="label_clf_2")
         self.class_preds = Dense(self.num_classes, activation='softmax', name=self.c_name)
 
     def call(self,inputs):
-        self.out_hidden1 = self.hidden1(inputs)
-        x = self.hidden2(self.out_hidden1)
+        self.out_hidden_ftr = self.hidden_ftr_1(inputs)
+        x = self.hidden_lbl_1(self.out_hidden_ftr)
+        x = self.hidden_lbl_2(x)
         return self.class_preds(x)
     
 # ================================
@@ -56,11 +56,11 @@ def reverse_gradient(x, hp_lambda):
     
     return y, _flip_gradient
 
-class GradientReversal(tf.keras.layers.Layer):
+class ReversalLayer(tf.keras.layers.Layer):
     '''Flip the sign of gradient during training.'''
 
-    def __init__(self, hp_lambda, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, hp_lambda, name="gradient_rev",**kwargs):
+        super().__init__(name=name,**kwargs)
         self.hp_lambda = hp_lambda
 
     def call(self, inputs, training=None):
@@ -85,18 +85,16 @@ class domain_classifier(Layer) :
         self.num_domains = num_domains
         self.d_name = name
         
-        self.hidden3 = Dense(24, activation='linear')
-        self.hidden4 = Dense(10, activation='linear', name="do5")
-        self.activation = Activation("elu", name="do6")
-        self.dropout = Dropout(0.5)
+        self.hidden_dmn_1 = Dense(20, activation='relu', name="domain_clf_1")
+        #self.activation = Activation("elu", name="domain_clf_3")
+        #self.dropout = Dropout(0.5,name="domain_clf_4")
         self.domain_preds = Dense(num_domains, activation='softmax', name=self.d_name)
 
-    def call(self,hp_lambda,hidden1):
-        x = GradientReversal(hp_lambda)(hidden1)
-        x = self.hidden3(x)
-        x = self.hidden4(x)
-        x = self.activation(x)
-        x = self.dropout(x)
+    def call(self,hp_lambda,out_hidden_ftr):
+        x = ReversalLayer(hp_lambda)(out_hidden_ftr)
+        x = self.hidden_dmn_1(x)
+        #x = self.activation(x)
+        #x = self.dropout(x)
         return self.domain_preds(x)
 
 # ================================
@@ -104,7 +102,7 @@ class domain_classifier(Layer) :
 # ================================
 
 class balanced_accuracy(keras.metrics.SparseCategoricalAccuracy):
-    def __init__(self, name='balanced_sparse_categorical_accuracy', dtype=None):
+    def __init__(self, name='balanced_acc', dtype=None):
         super().__init__(name, dtype=dtype)
 
     def update_state(self, y_true, y_pred, sample_weight=None):
@@ -122,15 +120,16 @@ class balanced_accuracy(keras.metrics.SparseCategoricalAccuracy):
 # Reshape data
 # ================================
 
-def set_data_for_DANN (train_sets,test_sets) :
-    def reformat_data_for_DANN (data) :
+def extract_data (data) :
         x, y = data["data"], data["labels"]
         return  x,y
+
+def set_data_for_DANN (train_sets,test_sets) :
     x_sources, y_sources = [], []
     x_targets, y_targets = [], []
     for train_set, test_set in zip(train_sets,test_sets) :
-        x_source, y_source = reformat_data_for_DANN (train_set)
-        x_target, y_target = reformat_data_for_DANN (test_set)
+        x_source, y_source = extract_data (train_set)
+        x_target, y_target = extract_data (test_set)
         x_sources.append(x_source)
         y_sources.append(y_source)
         x_targets.append(x_target)
@@ -149,14 +148,12 @@ def build_training_dataset_for_DANN (x_source, y_source, x_target, setting, num_
 
     # Source training dataset composed of points and their labels:
     source_dataset = tf.data.Dataset.from_tensor_slices((x_source, y_source))
-    source_dataset = source_dataset.apply(tf.data.experimental.shuffle_and_repeat(
-        buffer_size=nb_of_events, count=num_epochs))
+    source_dataset = source_dataset.shuffle(buffer_size=nb_of_events).repeat(count=num_epochs)
     source_dataset = source_dataset.batch(half_batch_size)
 
     # Target training dataset composed of points only:
     target_dataset = tf.data.Dataset.from_tensor_slices(x_target_for_train)
-    target_dataset = target_dataset.apply(tf.data.experimental.shuffle_and_repeat(
-        buffer_size=nb_of_events, count=-1)) #nb_target_for_train, count=-1))
+    target_dataset = target_dataset.shuffle(buffer_size=nb_of_events).repeat(count=-1)
     # ^ we repeat the target data indefinitely, counting the epochs w.r.t the source data.
     target_dataset = target_dataset.batch(half_batch_size)
 
@@ -165,7 +162,7 @@ def build_training_dataset_for_DANN (x_source, y_source, x_target, setting, num_
     return training_dataset
 
 def _prepare_data_for_dann_training(source_data, target_images,
-                                    main_head_name='main_preds', domain_head_name='domain_preds'):
+                                    main_head_name='class_preds', domain_head_name='domain_preds'):
     
     source_images, source_labels = source_data
     
@@ -211,7 +208,7 @@ def _prepare_data_for_dann_training(source_data, target_images,
     return batch_images, batch_targets, batch_sample_weights
 
 def _prepare_data_for_dann_validation(target_images, target_labels,
-                                      main_head_name='main_preds', domain_head_name='domain_preds'):
+                                      main_head_name='class_preds', domain_head_name='domain_preds'):
     # The batch contains only validation/test images from the target domain. 
     # This time, we want to evaluate the main loss over these images, so we assign a normal loss
     # weight = 1 to each samples.
@@ -236,7 +233,7 @@ def build_datasets_for_DANN (x_sources,y_sources,x_targets,y_targets,settings,nu
     prepare_for_dann_fn = functools.partial(_prepare_data_for_dann_training,
                                         main_head_name="class_preds", 
                                         domain_head_name="domain_preds")
-    for x_source,y_source,x_target,y_target,setting in zip (x_sources,y_sources,x_targets,y_targets,settings) :
+    for x_source,y_source,x_target,setting in zip (x_sources,y_sources,x_targets,settings) :
         training_dataset = build_training_dataset_for_DANN(x_source, y_source, x_target, setting, num_epochs, half_batch_size, portion_of_target_for_train)
         training_dataset = training_dataset.map(prepare_for_dann_fn, num_parallel_calls=4)
         training_datasets.append(training_dataset)
@@ -252,6 +249,12 @@ def build_datasets_for_DANN (x_sources,y_sources,x_targets,y_targets,settings,nu
         testing_dataset = testing_dataset.map(prepare_for_dann_fn, num_parallel_calls=4)
         testing_datasets.append(testing_dataset)
     
+    # Cast datasets features to float32 instead of float64
+    def cast_to_float32(features, labels, weights):
+        return tf.cast(features, tf.float32), labels, weights
+    training_datasets = [training_dataset.map(cast_to_float32) for training_dataset in training_datasets]
+    testing_datasets = [testing_dataset.map(cast_to_float32) for testing_dataset in testing_datasets]
+
     return training_datasets, testing_datasets
 
 # ================================
@@ -268,7 +271,7 @@ def build_DANN (name,input_size,hp_lambda) :
     
     # Set domain classifier
     dmn_clssfr = domain_classifier(2,"domain_preds")
-    domain_preds = dmn_clssfr.call(tf.Variable(hp_lambda),lbl_clssfr.out_hidden1)
+    domain_preds = dmn_clssfr.call(tf.Variable(hp_lambda),lbl_clssfr.out_hidden_ftr)
     
     # Set DANN
     DANN_model = Model(inputs = inputs,
@@ -277,46 +280,58 @@ def build_DANN (name,input_size,hp_lambda) :
     return DANN_model
 
 # ================================
+# DANN Callbacks
+# ================================
+
+class CallbacksHistory(tf.keras.callbacks.Callback):
+    def __init__(self):
+        super(CallbacksHistory, self).__init__()
+        self.source_evaluations = {"class_preds_balanced_acc" : [],
+                                   "domain_preds_acc" : []}
+        self.target_evaluations = {"val_class_preds_balanced_acc" : [],
+                                   "val_domain_preds_acc" : []}
+
+    def on_epoch_end(self, epoch, logs=None):
+        self.source_evaluations["class_preds_balanced_acc"].append(logs['class_preds_balanced_acc'])
+        self.source_evaluations["domain_preds_acc"].append(logs['domain_preds_acc'])
+        self.target_evaluations["val_class_preds_balanced_acc"].append(logs['val_class_preds_balanced_acc'])
+        self.target_evaluations["val_domain_preds_acc"].append(logs['val_domain_preds_acc'])
+
+# ================================
 # DANN functions
 # ================================
 
 def compile_DANN (DANN_model) :
     # Compile DANN
+
     DANN_model.compile(optimizer = "adam",
                        loss = {"class_preds":  'sparse_categorical_crossentropy',
                                "domain_preds": 'sparse_categorical_crossentropy'},
                        loss_weights = {"class_preds": 1,
                                        "domain_preds": 1},
-                       weighted_metrics = [],
-                       metrics = {"class_preds": [tf.metrics.SparseCategoricalAccuracy(name='acc'),balanced_accuracy()],
-                                  "domain_preds": tf.metrics.SparseCategoricalAccuracy(name='acc')},
+                       weighted_metrics = {"class_preds" : [tf.metrics.SparseCategoricalAccuracy(name='acc'),balanced_accuracy()],
+                                           "domain_preds" : [tf.metrics.SparseCategoricalAccuracy(name='acc')]}
         )
 
 def fit_DANN (DANN_model,training_dataset,testing_dataset,num_epochs,train_steps_per_epoch,test_steps_per_epoch) :
-    metrics_to_print = collections.OrderedDict([
-        ("c-loss", "class_preds" + "_loss"),
-        ("d-loss", "domain_preds" + "_loss"),
-        ("c-acc", "class_preds" + "_acc"),
-        ("d-acc", "domain_preds" + "_acc"),
-        ("target c-acc", "val_" + "class_preds" + "_acc"),
-        ("BA", "class_preds" + "_balanced_sparse_categorical_accuracy")
-    ])
-    callbacks = [
-        SimpleLogCallback(metrics_to_print, num_epochs=num_epochs, log_frequency=11)
-    ]
     #class_weight={0:1,1:10}
-    history = DANN_model.fit(training_dataset,
-                             #sample_weight=class_weight,
-                             epochs=num_epochs,
-                             steps_per_epoch=train_steps_per_epoch,
-                             validation_data=testing_dataset,
-                             validation_steps=test_steps_per_epoch,
-                             verbose=0,
-                             callbacks=None)
+    history = CallbacksHistory()
+
+    DANN_model.fit(training_dataset,
+                   #sample_weight=class_weight,
+                   epochs=num_epochs,
+                   steps_per_epoch=train_steps_per_epoch,
+                   validation_data=testing_dataset,
+                   validation_steps=test_steps_per_epoch,
+                   verbose=0,
+                   callbacks=[history])
+    return history
 
 def evaluate_DANN (DANN_model,x_source, y_source, x_target, y_target,res_df=None) :
-    res_source = DANN_model.evaluate(x_source,y_source)
-    res_target = DANN_model.evaluate(x_target,y_target)
+    nb_source_events = x_source.shape[0]
+    nb_target_events = x_target.shape[0]
+    res_source = DANN_model.evaluate(x_source,{"class_preds" : y_source, "domain_preds" : np.ones((nb_source_events,))})
+    res_target = DANN_model.evaluate(x_target,{"class_preds" : y_target, "domain_preds" : np.zeros((nb_target_events,))})
 
     output_res = {"source_acc" : format(res_source[3], ".3f"),
                   "source_bal_acc" : format(res_source[4], ".3f"),
@@ -325,4 +340,4 @@ def evaluate_DANN (DANN_model,x_source, y_source, x_target, y_target,res_df=None
     if res_df :
         return res_df.append(output_res,ignore_index=True)
     else :
-        return output_res 
+        return output_res
