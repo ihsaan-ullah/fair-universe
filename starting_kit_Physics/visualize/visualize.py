@@ -316,7 +316,7 @@ def visualize_test(ax, settings, test_set, xylim):
         if (z[0] > 0) & (z[1] > 0):
             slope = 1
         elif (z[0] < 0) & (z[1] < 0):
-            slope = 11
+            slope = 1
         elif (z[0] > 0) & (z[1] < 0):
             slope = -1
         elif (z[0] < 0) & (z[1] > 0):
@@ -379,8 +379,8 @@ def visualize_decision(ax, title, model):
     grid_resolution = 100
     eps = .02
 
-    x0_min, x0_max = (-8 - eps), (8+ eps)
-    x1_min, x1_max = (-8 - eps), (8+ eps)
+    x0_min, x0_max = (-8 - eps), (8 + eps)
+    x1_min, x1_max = (-8 - eps), (8 + eps)
     xx0, xx1 = np.meshgrid(
         np.linspace(x0_min, x0_max, grid_resolution),
         np.linspace(x1_min, x1_max, grid_resolution),
@@ -394,7 +394,7 @@ def visualize_decision(ax, title, model):
 
     min = np.abs(np.min(response))
     max = np.abs(np.max(response))
-    max_max = np.max([min,max])
+    max_max = np.max([min, max])
     response[0][0] = -max_max
     response[0][1] = max_max
 
@@ -407,8 +407,8 @@ def visualize_decision(ax, title, model):
     cax = divider.append_axes("right", size="5%", pad=0.05)
     plt.colorbar(im, cax=cax)
 
-    ax.set_xlim([-8,8])
-    ax.set_ylim([-8,8])
+    ax.set_xlim([-8, 8])
+    ax.set_ylim([-8, 8])
     ax.axhline(y=0, color='g', linestyle='--')
     ax.axvline(x=0, color='g', linestyle='--')
 
