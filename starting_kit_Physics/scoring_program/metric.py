@@ -1,9 +1,9 @@
 from sklearn.metrics import (
-    roc_curve, 
-    auc, 
-    balanced_accuracy_score
+    roc_curve,
+    auc,
+    balanced_accuracy_score,
+    mean_squared_error
 )
-
 
 
 def auc_metric(y_true, y_score, pos_label=None):
@@ -38,6 +38,7 @@ def auc_metric(y_true, y_score, pos_label=None):
 
     return auc(fpr, tpr)
 
+
 def bac_metric(y_true, y_pred):
     """
     This function calculates balanced accuracy score
@@ -58,4 +59,21 @@ def bac_metric(y_true, y_pred):
     return balanced_accuracy_score(y_true, y_pred)
 
 
+def mse_metric(y_true, y_pred):
+    """
+    This function calculates mean squared error
 
+    Parameters
+    ----------
+    y_true:
+        Ground truth (correct) target values.
+    y_pred:
+        Estimated targets as returned by a classifier.
+
+    Returns
+    -------
+    mean_squared_error:
+        Mean Squared error.
+
+    """
+    return mean_squared_error(y_true, y_pred)

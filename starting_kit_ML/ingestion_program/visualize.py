@@ -316,7 +316,7 @@ def visualize_test(ax, settings, test_set, xylim):
         if (z[0] > 0) & (z[1] > 0):
             slope = 1
         elif (z[0] < 0) & (z[1] < 0):
-            slope = 11
+            slope = 1
         elif (z[0] > 0) & (z[1] < 0):
             slope = -1
         elif (z[0] < 0) & (z[1] > 0):

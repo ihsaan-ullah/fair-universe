@@ -9,6 +9,11 @@ class Setting:
         self.case = case
         self.params = params
 
+        self.systematics = []
+        translation = self.params.get_translation()
+        if translation:
+            self.systematics.append(translation)
+
     def get_setting(self):
         return {
             "case": self.case,
@@ -25,13 +30,7 @@ class Setting:
             },
             "signal_from_background": True,
             "signal_sigma_scale": 0.3,
-            "systematics": [
-                {
-                    "name": "Translation",
-                    "z_magnitude": self.params.get_z(),
-                    "alpha": 90
-                },
-            ],
+            "systematics": self.systematics,
             "train_comment": "",
             "test_comment": "",
         }
