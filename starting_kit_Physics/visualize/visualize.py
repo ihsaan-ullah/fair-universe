@@ -70,10 +70,11 @@ def get_params(setting):
 # Function to compute z from translation parameters
 # ----------------------------------------------------------
 def get_z(translation):
-
-    z_magnitude = translation["z_magnitude"]
-    alpha = translation["alpha"]
-    z = np.multiply([round(np.cos(rad(alpha)), 2), round(np.sin(rad(alpha)), 2)], z_magnitude)
+    z = None
+    if translation:
+        z_magnitude = translation["z_magnitude"]
+        alpha = translation["alpha"]
+        z = np.multiply([round(np.cos(rad(alpha)), 2), round(np.sin(rad(alpha)), 2)], z_magnitude)
     return z
 
 
@@ -135,8 +136,9 @@ def visualize_clock(ax, setting, xylim):
     ax.set_ylim(xylim)
     b_c = bg_c_train
     s_c = sg_c_train
-    z_c = np.multiply(z, 2)
-    z_c = z_c + b_c
+    if z:
+        z_c = np.multiply(z, 2)
+        z_c = z_c + b_c
 
     visulaize_box(ax, box_center, box_l)
 
@@ -147,7 +149,8 @@ def visualize_clock(ax, setting, xylim):
     ax.plot(b_c[0], b_c[1], 'bo', markersize=20)
     ax.plot([b_c[0], s_c[0]], [b_c[1], s_c[1]], linestyle='-.', color="k", label="separation direction")
     ax.plot(s_c[0], s_c[1], 'ro', )
-    ax.plot([b_c[0]-0.25, z_c[0]-0.25], [b_c[1]-0.25, z_c[1]-0.25], linestyle='-.', color="r", label="translation_direction")
+    if z:
+        ax.plot([b_c[0]-0.25, z_c[0]-0.25], [b_c[1]-0.25, z_c[1]-0.25], linestyle='-.', color="r", label="translation_direction")
 
     if rd != 0:
         drawCirc(ax, 3, b_c[0], b_c[1], angle_=theta, theta2_=rd, color_='green', label_="rotation_direction")
@@ -303,30 +306,31 @@ def visualize_test(ax, settings, test_set, xylim):
     ax.legend()
     # ax.set_title("Test set\n" + test_comment)
     ax.set_title("Test set")
-
-    if z[0] == 0 and z[1] == 0:
-        pass
-    elif z[0] == 0:
-        ax.axvline(x=x+0.25, color='r', linestyle='-.', label="translation direction")
-    elif z[1] == 0:
-        ax.axhline(y=y+0.25, color='r', linestyle='-.', label="translation direction")
-    else:
-        slope = 0
-
-        if (z[0] > 0) & (z[1] > 0):
-            slope = 1
-        elif (z[0] < 0) & (z[1] < 0):
-            slope = 1
-        elif (z[0] > 0) & (z[1] < 0):
-            slope = -1
-        elif (z[0] < 0) & (z[1] > 0):
-            slope = -1
-        else:
-            # do nothing
+    if z:
+        if z[0] == 0 and z[1] == 0:
             pass
+        elif z[0] == 0:
+            ax.axvline(x=x+0.25, color='r', linestyle='-.', label="translation direction")
+        elif z[1] == 0:
+            ax.axhline(y=y+0.25, color='r', linestyle='-.', label="translation direction")
+        else:
+            slope = 0
 
-        # ax.axline((z[0], z[1]), slope=slope, linewidth=1, color='r', linestyle='-.', label="translation direction") 
-        ax.axline((x, y), slope=slope, linewidth=1, color='r', linestyle='-.', label="translation direction")
+            if (z[0] > 0) & (z[1] > 0):
+                slope = 1
+            elif (z[0] < 0) & (z[1] < 0):
+                slope = 1
+            elif (z[0] > 0) & (z[1] < 0):
+                slope = -1
+            elif (z[0] < 0) & (z[1] > 0):
+                slope = -1
+            else:
+                # do nothing
+                pass
+
+            # ax.axline((z[0], z[1]), slope=slope, linewidth=1, color='r', linestyle='-.', label="translation direction") 
+            ax.axline((x, y), slope=slope, linewidth=1, color='r', linestyle='-.', label="translation direction")
+    
     ax.legend()
 
 
