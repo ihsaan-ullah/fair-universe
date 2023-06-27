@@ -1,13 +1,13 @@
-# This file consists of functions for 
+# This file consists of functions for
 # > Data Loading
 # > Data Checking
 # > Writing Predictions
 # > Zip files
 
 
-#-------------------------------------
+# -------------------------------------
 # Imports
-#-------------------------------------
+# -------------------------------------
 import os
 import numpy as np
 import pandas as pd
@@ -16,131 +16,85 @@ from contextlib import closing
 import json
 
 
-#-------------------------------------
+# -------------------------------------
 # Load Data
-#-------------------------------------
-def load_data (data_dir, load_settings=False) :
-
+# -------------------------------------
+def load_data(_data_dir, data_type="train"):
 
     print("\n\n###-------------------------------------###")
     print("### Data Loading")
     print("###-------------------------------------###\n")
 
     # set train and test directories
-    train_data_dir = os.path.join(data_dir,"train", "data")
-    train_labels_dir = os.path.join(data_dir,"train", "labels")
-    test_data_dir = os.path.join(data_dir,"test", "data")
-    test_labels_dir = os.path.join(data_dir,"test", "labels")
-    settings_dir = os.path.join(data_dir,"settings")
-    
+    data_dir = os.path.join(_data_dir, data_type, "data")
+    labels_dir = os.path.join(_data_dir, data_type, "labels")
+    settings_dir = os.path.join(_data_dir, data_type, "settings")
+
     # print directories
     print("[*] data dir : ", data_dir)
-    print("[*] train data dir : ", train_data_dir)
-    print("[*] train labels dir : ", train_labels_dir)
-    print("[*] test data dir : ", test_data_dir)
-    print("[*] test labels dir : ", test_labels_dir)
-    if load_settings:
-        print("[*] settings dir : ", settings_dir)
-
+    print("[*] labels dir : ", labels_dir)
+    print("[*] settings dir : ", settings_dir)
 
     # check if directories exist
-    if not os.path.exists(train_data_dir):
-        print("[-] train data dir : ", train_data_dir, " not found")
+    if not os.path.exists(data_dir):
+        print("[-] data dir : ", data_dir, " not found")
         return
     else:
-        print("[+] train data dir found")
+        print("[+] data dir found")
 
-    if not os.path.exists(train_labels_dir):
-        print("[-] train labels dir : ", train_labels_dir, " not found")
+    if not os.path.exists(labels_dir):
+        print("[-] labels dir : ", labels_dir, " not found")
         return
     else:
-        print("[+] train labels dir found")
+        print("[+] labels dir found")
 
-    if not os.path.exists(test_data_dir):
-        print("[-] test data dir : ", test_data_dir, " not found")
+    if not os.path.exists(settings_dir):
+        print("[-] settings dir : ", settings_dir, " not found")
         return
     else:
-        print("[+] test data dir found")
-
-    if not os.path.exists(test_labels_dir):
-        print("[!] test labels dir : ", test_labels_dir, " not found")
-    else:
-        print("[+] test labels dir found")
-
-
-    if load_settings:
-        if not os.path.exists(settings_dir):
-            print("[!] settings dir : ", settings_dir, " not found")
-        else:
-            print("[+] settings dir found")
-    
+        print("[+] settings dir found")
 
     # train and test files
-    train_data_files = [f for f in os.listdir(train_data_dir) if f.endswith('.csv')]
-    train_labels_files = [f for f in os.listdir(train_labels_dir) if f.endswith('.labels')]
-    test_data_files = [f for f in os.listdir(test_data_dir) if f.endswith('.csv')]
-
+    data_files = [f for f in os.listdir(data_dir) if f.endswith('.csv')]
+    labels_files = [f for f in os.listdir(labels_dir) if f.endswith('.labels')]
+    settings_files = [f for f in os.listdir(settings_dir) if f.endswith('.json')]
 
     # check if files exist
-    if len(train_data_files) != len(train_labels_files) != len(test_data_files):
-        print("[-] Number of train data, train labels, test data files do not match! ")
+    if len(settings_dir) != len(labels_files) != len(settings_files):
+        print("[-] Number of data, labels, and settings files do not match! ")
         return
-    
 
-    total_files = len(train_data_files)
+    total_files = len(data_files)
 
-    print("[+] {} train and test sets found".format(total_files))
-    
+    print("[+] {} datsets found".format(total_files))
 
-    train_sets, test_sets, settings = [], [], []
+    datasets = []
 
+    for i in range(0, total_files):
 
-    for i in range(0,total_files):
-
-
-        train_data_file = "train_"+str(i+1)+".csv"
-        test_data_file = "test_"+str(i+1)+".csv"
-        train_labels_file = "train_"+str(i+1)+".labels"
-        test_labels_file = "test_"+str(i+1)+".labels"
+        data_file = "data_"+str(i+1)+".csv"
+        labels_file = "data_"+str(i+1)+".labels"
         settings_file = "settings_"+str(i+1)+".json"
 
-        train_data_file_path = os.path.join(train_data_dir, train_data_file)
-        test_data_file_path = os.path.join(test_data_dir, test_data_file)
-        train_labels_file_path = os.path.join(train_labels_dir, train_labels_file)
-        test_labels_file_path = os.path.join(test_labels_dir, test_labels_file)
+        data_file_path = os.path.join(data_dir, data_file)
+        labels_file_path = os.path.join(labels_dir, labels_file)
         settings_file_path = os.path.join(settings_dir, settings_file)
-        
-        
-        train_sets.append({
-            "data" : read_data_file(train_data_file_path),
-            "labels" : read_labels_file(train_labels_file_path)
+
+        datasets.append({
+            "data": read_data_file(data_file_path),
+            "labels": read_labels_file(labels_file_path),
+            "settings": read_json_file(settings_file_path)
         })
 
-        if os.path.exists(test_labels_file_path):
-            test_sets.append({
-                "data" : read_data_file(test_data_file_path),
-                "labels" : read_labels_file(test_labels_file_path),
-            })
-        else:
-            test_sets.append({
-                "data" : read_data_file(test_data_file_path),
-            })
-        
-        if load_settings:
-            settings.append(read_json_file(settings_file_path))
-
-    
     print("---------------------------------")
-    print("[+] Train and Test data loaded!")
+    print("[+] Data loaded!")
     print("---------------------------------\n\n")
-    if load_settings:
-        return train_sets, test_sets, settings
-    else:
-        return train_sets, test_sets
+    return datasets
 
-#-------------------------------------
+
+# -------------------------------------
 # Read Data File
-#-------------------------------------
+# ------------------------------------
 def read_data_file(data_file):
 
     # check data file
@@ -153,9 +107,10 @@ def read_data_file(data_file):
 
     return df
 
-#-------------------------------------
+
+# -------------------------------------
 # Read Labels File
-#-------------------------------------
+# -------------------------------------
 def read_labels_file(labels_file):
 
     # check labels file
@@ -166,13 +121,14 @@ def read_labels_file(labels_file):
     # Read labels file
     f = open(labels_file, "r")
     labels = f.read().splitlines()
-    labels = np.array(labels,dtype=float)
+    labels = np.array(labels, dtype=float)
     f.close()
     return labels
 
-#-------------------------------------
+
+# -------------------------------------
 # Read Json File
-#-------------------------------------
+# -------------------------------------
 def read_json_file(json_file):
 
     # check json file
@@ -181,9 +137,10 @@ def read_json_file(json_file):
         return
     return json.load(open(json_file))
 
-#-------------------------------------
-# Data Statistics 
-#-------------------------------------
+
+# -------------------------------------
+# Data Statistics
+# -------------------------------------
 def show_data_statistics(data_sets, name="Train"):
 
     print("###-------------------------------------###")
@@ -200,9 +157,10 @@ def show_data_statistics(data_sets, name="Train"):
             print("[*] Background points: ", len(data_set["labels"]) - np.count_nonzero(data_set["labels"] == 1))
             print("[*] Signal points: ", np.count_nonzero(data_set["labels"] == 1))
 
-#-------------------------------------
-# Write Predictions 
-#-------------------------------------
+
+# -------------------------------------
+# Write Predictions
+# -------------------------------------
 def write(filename, predictions):
 
     with open(filename, 'w') as f:
@@ -213,18 +171,18 @@ def write(filename, predictions):
             else:
                 f.write(str_label)
 
-#-------------------------------------
-# Zip files 
-#-------------------------------------
+
+# -------------------------------------
+# Zip files
+# -------------------------------------
 def zipdir(archivename, basedir):
     '''Zip directory, from J.F. Sebastian http://stackoverflow.com/'''
     assert os.path.isdir(basedir)
     with closing(ZipFile(archivename, "w", ZIP_DEFLATED)) as z:
         for root, dirs, files in os.walk(basedir):
-            #NOTE: ignore empty directories
+            # NOTE: ignore empty directories
             for fn in files:
-                if fn[-4:]!='.zip' and fn!='.DS_Store' :
+                if fn[-4:] != '.zip' and fn != '.DS_Store':
                     absfn = os.path.join(root, fn)
-                    zfn = absfn[len(basedir):] #XXX: relative path
+                    zfn = absfn[len(basedir):]  # XXX: relative path
                     z.write(absfn, zfn)
-                    
