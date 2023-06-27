@@ -3,15 +3,14 @@ from model_optimize_theta import Model
 
 
 class Optimizer:
-    def __init__(self,
-                 thetas,
-                 train_sets,
-                 test_sets
-                 ):
+    def __init__(
+        self,
+        thetas,
+        train_set
+    ):
 
         self.thetas = thetas
-        self.train_sets = train_sets
-        self.test_sets = test_sets
+        self.train_set = train_set
         self.predictions = []
 
     def train(self):
@@ -19,44 +18,43 @@ class Optimizer:
         # ---------------------------------
         # Load Model
         # ---------------------------------
-        print("\t[*] Loading Model")
+        print("[*] Loading Model")
         self.model = Model()
 
         # ---------------------------------
-        # Load Over datasets to train
+        # Train
         # ---------------------------------
-        for train_set in self.train_sets:
 
-            # Train set
-            X_Train = train_set['data']
-            Y_Train = train_set['labels']
+        # Train set
+        X_Train = self.train_set['data']
+        Y_Train = self.train_set['labels']
 
         # ---------------------------------
         # Train Model
         # ---------------------------------
-        print("\t[*] Training Model")
+        print("[*] Training Model")
         self.model.fit(X_Train, Y_Train)
 
     def predict(self):
         # ---------------------------------
         # Get Predictions
         # ---------------------------------
-        print("\t[*] Get Predictions")
-        for test_set, theta in zip(self.test_sets, self.thetas):
-            X_Test = test_set['data']
+        print("[*] Get Predictions")
+        for theta in self.thetas:
+            X_Train = self.train_set['data']
             self.predictions.append(
-                self.model.predict(X_Test, theta)
+                self.model.predict(X_Train, theta)
             )
 
     def compute_score(self):
 
-        print("\t[*] Compute Scores")
+        print("[*] Compute Scores")
 
         self.results = []
 
-        for theta, predictions, train_set in zip(self.thetas, self.predictions, self.train_sets):
+        for theta, predictions in zip(self.thetas, self.predictions):
 
-            Y_Train = train_set["labels"]
+            Y_Train = self.train_set["labels"]
 
             # ---------------------------------
             # Estiamte $\nu_{ROI}$
@@ -94,7 +92,7 @@ class Optimizer:
             self.results.append(result)
 
     def get_best_theta(self):
-        print("\t[*] Return Best Theta")
+        print("[*] Return Best Theta")
         all_sigma_scores = [res["score"] for res in self.results]
         best_theta_result = self.results[np.argmin(all_sigma_scores)]
         return best_theta_result

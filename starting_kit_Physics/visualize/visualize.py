@@ -349,10 +349,12 @@ def visualize_clocks(settings, xylim=[-8, 8]):
     plt.show()
 
 
-def visualize_data(settings, train_set, test_set, xylim=[-8, 8]):
+def visualize_data(train_set, test_set, xylim=[-8, 8]):
 
     fig = plt.figure(constrained_layout=True, figsize=(12, 4.1))
     axs = fig.subplots(1, 3, sharex=True)
+
+    settings = train_set["settings"]
 
     # Clock
     visualize_clock(axs[0], settings, xylim=xylim)
@@ -429,7 +431,7 @@ def visualize_scatter(ax, data_set):
     ax.scatter(data[signal_mask]["x1"], data[signal_mask]["x2"], c='r', edgecolors="k")
 
 
-def visualize_decicion_boundary(name, settings, result, train_sets, test_sets, xylim=[-8,8]):
+def visualize_decicion_boundary(name, result, train_sets, test_sets, xylim=[-8, 8]):
 
     for index, model in enumerate(result["trained_models"]):
 
@@ -437,7 +439,7 @@ def visualize_decicion_boundary(name, settings, result, train_sets, test_sets, x
 
         # Clock
         ax = plt.subplot(1, 4, 1)
-        visualize_clock(ax, settings[index], xylim)
+        visualize_clock(ax, train_sets[index]["settings"], xylim)
 
         # decision boundary
         ax = plt.subplot(1, 4, 2)
@@ -453,13 +455,59 @@ def visualize_decicion_boundary(name, settings, result, train_sets, test_sets, x
         visualize_decision(ax, "Test Data", model)
         visualize_scatter(ax, test_sets[index])
 
-        train_auc = round(np.mean(result["auc_trains"]), 2)
-        test_auc = round(np.mean(result["auc_tests"]), 2)
-        train_bac = round(np.mean(result["bac_trains"]), 2)
-        test_bac = round(np.mean(result["bac_tests"]), 2)
-        title = "{}\nTrain: AUC:{} BAC:{} --- Test: AUC:{} BAC:{}".format(name, train_auc, train_bac, test_auc, test_bac)
-        plt.suptitle(title, fontsize=15)
+        # plt.suptitle(title, fontsize=15)
         plt.show()
+
+
+def visualize_histogram(result, theta, show_signal=True, show_background=True):
+
+    # Get train and test predictions and decisions
+    train_predictions = result['Y_hat_trains'][0]
+    test_predictions = result['Y_hat_tests'][0]
+    train_decisions = result['Y_hat_trains_decisions'][0]
+    test_decisions = result['Y_hat_tests_decisions'][0]
+
+    # Indexes of signal and background points
+    signal_train_indexes = np.argwhere(train_predictions == 1)
+    background_train_indexes = np.argwhere(train_predictions == 0)
+
+    signal_test_indexes = np.argwhere(test_predictions == 1)
+    background_test_indexes = np.argwhere(test_predictions == 0)
+
+    # Get signal and background decisions at indexes
+    signal_train_decisions = train_decisions[signal_train_indexes]
+    background_train_decisions = train_decisions[background_train_indexes]
+
+    signal_test_decisions = test_decisions[signal_test_indexes]
+    background_test_decisions = test_decisions[background_test_indexes]
+
+    fig = plt.figure(constrained_layout=True, figsize=(12, 4))
+
+    # train histogram
+    ax = plt.subplot(1, 2, 1)
+    if show_background:
+        ax.hist(background_train_decisions, bins=30, alpha=0.5, color='blue', label='Background')
+    if show_signal:
+        ax.hist(signal_train_decisions, bins=30, alpha=0.5, color='red', label='Signal')
+    ax.axvline(theta, color='black', linestyle='--', linewidth=2, label='Threshold ($\\theta$)')
+    ax.set_xlabel('D(x)')
+    ax.set_ylabel('Number of Events')
+    ax.set_title('Histogram of Signal and Background Events (Train)')
+    ax.legend()
+
+    # test histogram
+    ax = plt.subplot(1, 2, 2)
+    if show_background:
+        ax.hist(background_test_decisions, bins=30, alpha=0.5, color='blue', label='Background')
+    if show_signal:
+        ax.hist(signal_test_decisions, bins=30, alpha=0.5, color='red', label='Signal')
+    ax.axvline(theta, color='black', linestyle='--', linewidth=2, label='Threshold ($\\theta$)')
+    ax.set_xlabel('D(x)')
+    ax.set_ylabel('Number of Events')
+    ax.set_title('Histogram of Signal and Background Events (Test)')
+    ax.legend()
+
+    plt.show()
 
 
 def visualize_score(df_train, df_test, obc, title):

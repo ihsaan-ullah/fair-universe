@@ -32,6 +32,7 @@ from constants import (
 # Data Generation Class
 # ================================
 class DataGenerator:
+
     def __init__(self, settings_dict=None, logs=False):
 
         if logs:
@@ -64,9 +65,6 @@ class DataGenerator:
 
         self.generated_data = None
         self.generated_labels = None
-
-        self.biased_data = None
-        self.biased_labels = None
 
         self.problem_dimension = None
         self.ps, self.pb = None, None
@@ -251,11 +249,6 @@ class DataGenerator:
         # get train background datapoints
         background_data = self.background_distribution.generate_points(self.number_of_background_events, self.problem_dimension)
 
-        # get test signal datapoints
-        biased_signal_data = self.signal_distribution.generate_points(self.number_of_signal_events, self.problem_dimension)
-        # get test background datapoints
-        biased_background_data = self.background_distribution.generate_points(self.number_of_background_events, self.problem_dimension)
-
         self.logger.success("Data Generated!")
 
         # -----------------------------------------------
@@ -266,9 +259,6 @@ class DataGenerator:
             if self.alpha and self.beta:
                 c_bg_data = sp.stats.norm.cdf(background_data)
                 background_data = sp.stats.gamma.ppf(c_bg_data, self.alpha, self.beta)
-
-                c_biased_bg_data = sp.stats.norm.cdf(biased_background_data)
-                biased_background_data = sp.stats.gamma.ppf(c_biased_bg_data, self.alpha, self.beta)
 
             else:
                 self.logger.warning("Parameters of Gamma Distribution (alpha, beta) are not valid")
@@ -286,25 +276,25 @@ class DataGenerator:
 
         # Rotation
         if self.systematic_rotation is not None:
-            biased_signal_data = self.systematic_rotation.apply_systematics(self.problem_dimension, biased_signal_data)
-            biased_background_data = self.systematic_rotation.apply_systematics(self.problem_dimension, biased_background_data)
+            signal_data = self.systematic_rotation.apply_systematics(self.problem_dimension, signal_data)
+            background_data = self.systematic_rotation.apply_systematics(self.problem_dimension, background_data)
             self.logger.success("Rotation Systematics Applied!")
 
         # Translation
         if self.systematic_translation is not None:
-            biased_signal_data = self.systematic_translation.apply_systematics(self.problem_dimension, biased_signal_data)
-            biased_background_data = self.systematic_translation.apply_systematics(self.problem_dimension, biased_background_data)
+            signal_data = self.systematic_translation.apply_systematics(self.problem_dimension, signal_data)
+            background_data = self.systematic_translation.apply_systematics(self.problem_dimension, background_data)
             self.logger.success("Translation Systematics Applied!")
 
         # Scaling
         if self.systematic_scaling is not None:
-            biased_signal_data = self.systematic_scaling.apply_systematics(self.problem_dimension, biased_signal_data)
-            biased_background_data = self.systematic_scaling.apply_systematics(self.problem_dimension, biased_background_data)
+            signal_data = self.systematic_scaling.apply_systematics(self.problem_dimension, signal_data)
+            background_data = self.systematic_scaling.apply_systematics(self.problem_dimension, background_data)
             self.logger.success("Scaling Systematics Applied!")
 
         # setting centers of both distributions before applying systematics for visualizations
-        self.settings["signal_center_biased"] = np.mean(biased_signal_data, axis=0).tolist()
-        self.settings["background_center_biased"] = np.mean(biased_background_data, axis=0).tolist()
+        self.settings["signal_center_biased"] = np.mean(signal_data, axis=0).tolist()
+        self.settings["background_center_biased"] = np.mean(background_data, axis=0).tolist()
         # -----------------------------------------------
         # Generate labels
         # -----------------------------------------------
@@ -312,12 +302,10 @@ class DataGenerator:
         # stack signal labels with data points
         signal_labels = np.repeat(SIGNAL_LABEL, signal_data.shape[0]).reshape((-1, 1))
         signal_original = np.hstack((signal_data, signal_labels))
-        signal_biased = np.hstack((biased_signal_data, signal_labels))
 
         # stack background labels with data points
         background_labels = np.repeat(BACKGROUND_LABEL, background_data.shape[0]).reshape((-1, 1))
         background_original = np.hstack((background_data, background_labels))
-        background_biased = np.hstack((biased_background_data, background_labels))
 
         # -----------------------------------------------
         # Create DataFrame from Data
@@ -325,13 +313,9 @@ class DataGenerator:
 
         # create signal df
         signal_df = pd.DataFrame(signal_original, columns=columns)
-        # create signal df biased
-        signal_df_biased = pd.DataFrame(signal_biased, columns=columns)
 
         # create background df
         background_df = pd.DataFrame(background_original, columns=columns)
-        # create background df biased
-        background_df_biased = pd.DataFrame(background_biased, columns=columns)
 
         # -----------------------------------------------
         # Combine Signal and Background in a DataFrame
@@ -339,14 +323,13 @@ class DataGenerator:
 
         # combine dataframe
         generated_dataframe = pd.concat([signal_df, background_df])
-        biased_dataframe = pd.concat([signal_df_biased, background_df_biased])
 
         # -----------------------------------------------
         # Apply Box Systematics
         # -----------------------------------------------
 
         if self.systematic_box is not None:
-            generated_dataframe, biased_dataframe = self.systematic_box.apply_systematics(generated_dataframe, biased_dataframe)
+            generated_dataframe = self.systematic_box.apply_systematics(generated_dataframe)
             self.logger.success("Box Systematics Applied!")
         # -----------------------------------------------
         # Separate original and biased data
@@ -356,15 +339,10 @@ class DataGenerator:
         self.generated_data = generated_dataframe[generated_dataframe.columns[:-1]]
         self.generated_labels = generated_dataframe["y"].to_numpy()
 
-        # biased data labels
-        self.biased_data = biased_dataframe[biased_dataframe.columns[:-1]]
-        self.biased_labels = biased_dataframe["y"].to_numpy()
 
         # shuffle data
         self.generated_data = shuffle(self.generated_data, random_state=33)
         self.generated_labels = shuffle(self.generated_labels, random_state=33)
-        self.biased_data = shuffle(self.biased_data, random_state=33)
-        self.biased_labels = shuffle(self.biased_labels, random_state=33)
 
     def get_data(self):
 
@@ -375,12 +353,15 @@ class DataGenerator:
             self.logger.error("Data is not generated. First call `generate_data` function!")
             exit()
 
-        original_set = {"data": self.generated_data, "labels": self.generated_labels}
-        biased_set = {"data": self.biased_data, "labels": self.biased_labels}
+        dataset = {
+            "data": self.generated_data,
+            "labels": self.generated_labels,
+            "settings": self.settings,
+        }
 
-        return self.settings, original_set, biased_set
+        return dataset
 
-    def save_data(self, directory, file_index=None):
+    def save_data(self, directory, data_type="train", file_index=None):
 
         # -----------------------------------------------
         # Check Data Generated
@@ -396,45 +377,34 @@ class DataGenerator:
         if not os.path.exists(directory):
             self.logger.warning("Directory {} does not exist. Creating directory!".format(directory))
             os.mkdir(directory)
-        train_data_dir = os.path.join(directory, "train", "data")
-        train_labels_dir = os.path.join(directory, "train", "labels")
-        test_data_dir = os.path.join(directory, "test", "data")
-        test_labels_dir = os.path.join(directory, "test", "labels")
-        settings_dir = os.path.join(directory, "settings")
-        if not os.path.exists(train_data_dir):
-            os.makedirs(train_data_dir)
-        if not os.path.exists(train_labels_dir):
-            os.makedirs(train_labels_dir)
-        if not os.path.exists(test_data_dir):
-            os.makedirs(test_data_dir)
-        if not os.path.exists(test_labels_dir):
-            os.makedirs(test_labels_dir)
+        data_dir = os.path.join(directory, data_type, "data")
+        labels_dir = os.path.join(directory, data_type, "labels")
+        settings_dir = os.path.join(directory, data_type, "settings")
+        if not os.path.exists(data_dir):
+            os.makedirs(data_dir)
+        if not os.path.exists(labels_dir):
+            os.makedirs(labels_dir)
         if not os.path.exists(settings_dir):
             os.makedirs(settings_dir)
 
         if file_index is None:
-            train_data_name = "train.csv"
-            train_labels_name = "train.labels"
-            test_data_name = "test.csv"
-            test_labels_name = "test.labels"
+            data_file_name = "data.csv"
+            labels_file_name = "data.labels"
             settings_file_name = "settings.json"
         else:
-            train_data_name = "train_"+str(file_index)+".csv"
-            train_labels_name = "train_"+str(file_index)+".labels"
-            test_data_name = "test_"+str(file_index)+".csv"
-            test_labels_name = "test_"+str(file_index)+".labels"
+            data_file_name = "data_"+str(file_index)+".csv"
+            labels_file_name = "data_"+str(file_index)+".labels"
             settings_file_name = "settings_"+str(file_index)+".json"
 
-        train_data_file = os.path.join(train_data_dir, train_data_name)
-        train_labels_file = os.path.join(train_labels_dir, train_labels_name)
-        test_data_file = os.path.join(test_data_dir, test_data_name)
-        test_labels_file = os.path.join(test_labels_dir, test_labels_name)
+        data_file = os.path.join(data_dir, data_file_name)
+        labels_file = os.path.join(labels_dir, labels_file_name)
         settings_file = os.path.join(settings_dir, settings_file_name)
 
-        self.generated_data.to_csv(train_data_file, index=False)
-        self.biased_data.to_csv(test_data_file, index=False)
+        # Save Data file
+        self.generated_data.to_csv(data_file, index=False)
 
-        with open(train_labels_file, 'w') as filehandle1:
+        # Save Labels file
+        with open(labels_file, 'w') as filehandle1:
             for ind, lbl in enumerate(self.generated_labels):
                 str_label = str(int(lbl))
                 if ind < len(self.generated_labels)-1:
@@ -443,16 +413,8 @@ class DataGenerator:
                     filehandle1.write(str_label)
         filehandle1.close()
 
-        with open(test_labels_file, 'w') as filehandle2:
-            for ind, lbl in enumerate(self.biased_labels):
-                str_label = str(int(lbl))
-                if ind < len(self.biased_labels)-1:
-                    filehandle2.write(str_label + "\n")
-                else:
-                    filehandle2.write(str_label)
-        filehandle2.close()
-
+        # Save Settings file
         with open(settings_file, 'w') as fp:
             json.dump(self.settings, fp)
 
-        self.logger.success("Train and Test data saved!")
+        self.logger.success("Data saved!")
