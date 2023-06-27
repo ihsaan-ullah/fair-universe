@@ -106,21 +106,18 @@ class Box(Systematics):
         self.box_center = systematics["box_center"]
         self.box_length = systematics["box_length"]
 
-    def apply_systematics(self, df_org, df_bia):
+    def apply_systematics(self, df_org):
 
         box_x = [self.box_center[0]-self.box_length, self.box_center[0]+self.box_length]
         box_y = [self.box_center[1]-self.box_length, self.box_center[1]+self.box_length]
 
         mask_org = (df_org['x1'] >= box_x[0]) & (df_org['x1'] <= box_x[1]) & (df_org['x2'] >= box_y[0]) & (df_org['x2'] <= box_y[1])
-        mask_bia = (df_bia['x1'] >= box_x[0]) & (df_bia['x1'] <= box_x[1]) & (df_bia['x2'] >= box_y[0]) & (df_bia['x2'] <= box_y[1])
 
         df_org = df_org.loc[mask_org]
-        df_bia = df_bia.loc[mask_bia]
 
         df_org.reset_index(inplace=True)
-        df_bia.reset_index(inplace=True)
 
-        return df_org[["x1", "x2", "y"]], df_bia[["x1", "x2", "y"]]
+        return df_org[["x1", "x2", "y"]]
 
 
 # ================================

@@ -118,8 +118,7 @@ class Model:
             decisions = self.clf.decision_function(X)
 
         # decision function = decision function - theta
-        # return decisions - self.theta
-        return decisions
+        return decisions - self.theta
 
     def save(self, name):
         pickle.dump(self.clf, open(name + '.pickle', "wb"))
