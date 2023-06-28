@@ -459,36 +459,35 @@ def visualize_decicion_boundary(name, result, train_sets, test_sets, xylim=[-8, 
         plt.show()
 
 
-def visualize_histogram(result, theta, show_signal=True, show_background=True):
-
-    # Get train and test predictions and decisions
-    train_predictions = result['Y_hat_trains'][0]
-    test_predictions = result['Y_hat_tests'][0]
-    train_decisions = result['Y_hat_trains_decisions'][0]
-    test_decisions = result['Y_hat_tests_decisions'][0]
+def visualize_histogram(
+        Y_train,
+        Y_test,
+        Y_hat_train_decisions,
+        Y_hat_test_decisions,
+        theta,
+        show_bg):
 
     # Indexes of signal and background points
-    signal_train_indexes = np.argwhere(train_predictions == 1)
-    background_train_indexes = np.argwhere(train_predictions == 0)
+    signal_train_indexes = np.argwhere(Y_train == 1)
+    background_train_indexes = np.argwhere(Y_train == 0)
 
-    signal_test_indexes = np.argwhere(test_predictions == 1)
-    background_test_indexes = np.argwhere(test_predictions == 0)
+    signal_test_indexes = np.argwhere(Y_test == 1)
+    background_test_indexes = np.argwhere(Y_test == 0)
 
     # Get signal and background decisions at indexes
-    signal_train_decisions = train_decisions[signal_train_indexes]
-    background_train_decisions = train_decisions[background_train_indexes]
+    signal_train_decisions = Y_hat_train_decisions[signal_train_indexes]
+    background_train_decisions = Y_hat_train_decisions[background_train_indexes]
 
-    signal_test_decisions = test_decisions[signal_test_indexes]
-    background_test_decisions = test_decisions[background_test_indexes]
+    signal_test_decisions = Y_hat_test_decisions[signal_test_indexes]
+    background_test_decisions = Y_hat_test_decisions[background_test_indexes]
 
     fig = plt.figure(constrained_layout=True, figsize=(12, 4))
 
     # train histogram
     ax = plt.subplot(1, 2, 1)
-    if show_background:
+    if show_bg:
         ax.hist(background_train_decisions, bins=30, alpha=0.5, color='blue', label='Background')
-    if show_signal:
-        ax.hist(signal_train_decisions, bins=30, alpha=0.5, color='red', label='Signal')
+    ax.hist(signal_train_decisions, bins=30, alpha=0.5, color='red', label='Signal')
     ax.axvline(theta, color='black', linestyle='--', linewidth=2, label='Threshold ($\\theta$)')
     ax.set_xlabel('D(x)')
     ax.set_ylabel('Number of Events')
@@ -497,10 +496,9 @@ def visualize_histogram(result, theta, show_signal=True, show_background=True):
 
     # test histogram
     ax = plt.subplot(1, 2, 2)
-    if show_background:
+    if show_bg:
         ax.hist(background_test_decisions, bins=30, alpha=0.5, color='blue', label='Background')
-    if show_signal:
-        ax.hist(signal_test_decisions, bins=30, alpha=0.5, color='red', label='Signal')
+    ax.hist(signal_test_decisions, bins=30, alpha=0.5, color='red', label='Signal')
     ax.axvline(theta, color='black', linestyle='--', linewidth=2, label='Threshold ($\\theta$)')
     ax.set_xlabel('D(x)')
     ax.set_ylabel('Number of Events')
