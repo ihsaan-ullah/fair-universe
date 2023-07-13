@@ -339,10 +339,12 @@ class DataGenerator:
         self.generated_data = generated_dataframe[generated_dataframe.columns[:-1]]
         self.generated_labels = generated_dataframe["y"].to_numpy()
 
-
         # shuffle data
         self.generated_data = shuffle(self.generated_data, random_state=33)
         self.generated_labels = shuffle(self.generated_labels, random_state=33)
+
+        # reset indexes
+        self.generated_data.reset_index(drop=True, inplace=True)
 
     def get_data(self):
 
