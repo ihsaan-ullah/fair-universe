@@ -1,0 +1,55 @@
+# FAIR-UNIVERSE competition yaml file
+# Created by: Ihsan Ullah
+# Created on: July 14, 2022
+
+version: 2
+title: Fair Universe - 2D (Physics)
+description: Fair-Universe Competition with toy 2D physics problem 
+image: logo.png
+has_registration: True   
+force_submission_to_leaderboard: True   # If false, participants must submit manually, do not change
+disallow_leaderboard_modifying: True    # If true, submissions cannot be changed
+enable_detailed_results: True           # True if html file written
+enable_forum: True                      # Forum active
+docker_image: ihsaanullah/codalab-legacy:gpu
+
+terms: pages/terms.md
+pages:  
+  - title: Overview
+    file: pages/overview.md
+  - title: Evaluation
+    file: pages/evaluation.md
+  - title: Terms
+    file: pages/terms.md
+  - title: Data
+    file: pages/data.md
+
+phases:
+  - index: 0
+    name: Phase 1
+    description: Feedback Phase
+    start: 2023-07-14
+    end: 2023-08-15
+    tasks:
+      - 0
+
+tasks:
+  - index: 0
+    name: Mu Estimation
+    description: Estimate signal strength mu
+    input_data: input_data/
+    reference_data: reference_data/  
+    scoring_program: scoring_program/
+    ingestion_program: ingestion_program/
+
+
+leaderboards:
+  - index: 0 
+    title: Results
+    key: main
+    submission_rule: "Force_Last"
+    columns:
+      - index: 0
+        title: score
+        key: score
+        sorting: desc

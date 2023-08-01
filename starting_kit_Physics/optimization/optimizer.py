@@ -77,7 +77,7 @@ class Optimizer:
             beta_roi = nu_roi - gamma_roi
 
             # ---------------------------------
-            # Compute Score \beta_{ROI}
+            # Compute Score
             # ---------------------------------
             score = self._score(nu_roi, gamma_roi)
 

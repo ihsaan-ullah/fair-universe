@@ -16,6 +16,7 @@ class Setting:
 
     def get_setting(self):
         return {
+            "ground_truth_mu": self.params.get_mu(),
             "case": self.case,
             "problem_dimension": 2,
             "total_number_of_events": self.params.get_N(),
