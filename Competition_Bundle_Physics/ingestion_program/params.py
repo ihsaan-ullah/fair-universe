@@ -20,41 +20,16 @@ class Params:
         self.verbose = verbose
         self.systematics = systematics
 
-        # 1. Draw $\mu$ uniformly between 0.9 and 1.1
-        self.mu = np.round(np.random.uniform(mu_range[0], mu_range[1], 1)[0], 2)
+        self.mu_range = mu_range
 
-        # 2. Set systematics
-        self.set_systematics()
-
-        # 3. Initialize $\nu_1$ = 10000
         self.nu_1 = nu_1
-
-        # 4. Initilaize $\pi$ = 0.01
         self.pi = pi
 
-        # 5. Compute $\nu$ = $\nu_1 (\mu \pi + (1-\pi))$
-        self.nu = int(self.nu_1 * (self.mu * self.pi + (1-self.pi)))
+        # 1. Set systematics
+        self.set_systematics()
 
-        # 6. Compute $\gamma$ = $\nu \pi$
-        self.gamma = self.nu_1 * self.pi
-
-        # 7. Compute $\beta$ = $\nu1 (1-\pi)$
-        self.beta = self.nu_1 * (1-self.pi)
-
-        # 8. Compute $p_s$ = $\pi \mu /(\mu \pi + (1-\pi))$
-        self.p_s = np.round(self.mu*self.pi / (self.mu*self.pi + (1-self.pi)), 2)
-
-        # 9. Compute $p_b$  = $(1 - \pi)/(\mu \pi + (1-\pi))$
-        self.p_b = np.round((1-self.pi) / (self.mu*self.pi + (1-self.pi)), 2)
-
-        # 10. Draw $N \sim Poisson(\nu)$
-        self.N = np.random.poisson(self.nu)
-
-        if self.verbose:
-            print("------------------")
-            print("Toy 2D Parameters")
-            print("------------------")
-            print(f"pi = {self.pi}\nmu = {self.mu}\nnu = {self.nu}\nnu1 = {self.nu_1}\nbeta = {self.beta}\ngamma = {self.gamma}\nps = {self.p_s}\npb = {self.p_b}\nN = {self.N}\n")
+        # 2. Set params
+        self.reset_params()
 
     def set_systematics(self):
 
@@ -76,6 +51,35 @@ class Params:
                     "z_magnitude": z_magnitude,
                     "alpha": alpha
                 }
+
+    def reset_params(self):
+
+        # 1. Draw $\mu$ uniformly between mu_range
+        self.mu = np.round(np.random.uniform(self.mu_range[0], self.mu_range[1], 1)[0], 2)
+
+        # 2. Compute $\nu$ = $\nu_1 (\mu \pi + (1-\pi))$
+        self.nu = int(self.nu_1 * (self.mu * self.pi + (1-self.pi)))
+
+        # 3. Compute $\gamma$ = $\nu \pi$
+        self.gamma = self.nu_1 * self.pi
+
+        # 4. Compute $\beta$ = $\nu1 (1-\pi)$
+        self.beta = self.nu_1 * (1-self.pi)
+
+        # 5. Compute $p_s$ = $\pi \mu /(\mu \pi + (1-\pi))$
+        self.p_s = np.round(self.mu*self.pi / (self.mu*self.pi + (1-self.pi)), 2)
+
+        # 6. Compute $p_b$  = $(1 - \pi)/(\mu \pi + (1-\pi))$
+        self.p_b = np.round((1-self.pi) / (self.mu*self.pi + (1-self.pi)), 2)
+
+        # 7. Draw $N \sim Poisson(\nu)$
+        self.N = np.random.poisson(self.nu)
+
+        if self.verbose:
+            print("------------------")
+            print("Toy 2D Parameters")
+            print("------------------")
+            print(f"pi = {self.pi}\nmu = {self.mu}\nnu = {self.nu}\nnu1 = {self.nu_1}\nbeta = {self.beta}\ngamma = {self.gamma}\nps = {self.p_s}\npb = {self.p_b}\nN = {self.N}\n")
 
     def get_translation(self):
         return self.translation
@@ -100,3 +104,42 @@ class Params:
 
     def get_N(self):
         return self.N
+
+    def get_settings(self, use_systematics=True):
+        settings = self.Setting(self)
+        return settings.get_setting(use_systematics)
+
+    class Setting:
+
+        def __init__(self, params, case=None):
+            self.case = case
+            self.params = params
+
+            self.systematics = []
+            translation = self.params.get_translation()
+            if translation:
+                self.systematics.append(translation)
+
+        def get_setting(self, use_systematics):
+            
+            systematics = self.systematics if use_systematics else []
+            return {
+                "ground_truth_mu": self.params.get_mu(),
+                "case": self.case,
+                "problem_dimension": 2,
+                "total_number_of_events": self.params.get_N(),
+                "p_b": self.params.get_p_b(),
+                "theta": 0,
+                "L": 2,
+                "generator": "normal",
+                "background_distribution": {
+                    "name": "Gaussian",
+                    "mu": [0, 0],
+                    "sigma": [1, 1]
+                },
+                "signal_from_background": True,
+                "signal_sigma_scale": 0.3,
+                "systematics": systematics,
+                "train_comment": "",
+                "test_comment": "",
+            }
