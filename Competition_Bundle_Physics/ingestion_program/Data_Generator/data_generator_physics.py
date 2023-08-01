@@ -12,11 +12,11 @@ from sys import exit
 # ================================
 # Internal Imports
 # ================================
-from distributions import Gaussian, Gamma
-from systematics import Translation, Scaling, Box, Rotation
-from logger import Logger
-from checker import Checker
-from constants import (
+from .distributions import Gaussian, Gamma
+from .systematics import Translation, Scaling, Box, Rotation
+from .logger import Logger
+from .checker import Checker
+from .constants import (
     DISTRIBUTION_GAUSSIAN,
     DISTRIBUTION_GAMMA,
     SYSTEMATIC_TRANSLATION,
