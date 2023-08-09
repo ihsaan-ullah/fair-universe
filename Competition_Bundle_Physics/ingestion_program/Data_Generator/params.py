@@ -4,55 +4,72 @@
 # ------------------------------------------------------
 
 import numpy as np
+import random
+import time
 
 
 class Params:
 
-    def __init__(self,
-                 pi=0.1,
-                 nu_1=10000,
-                 mu_range=[0.9, 1.1],
-                 systematics=[],
-                 verbose=True):
+    def __init__(
+            self,
+            pi=0.1,
+            nu_1=10000,
+            mu_range=[0.9, 1.1],
+            systematics=[],
+            verbose=True,
+            SEED=None,
+            ):
 
         self.translation = None
-
         self.verbose = verbose
         self.systematics = systematics
-
         self.mu_range = mu_range
-
         self.nu_1 = nu_1
         self.pi = pi
+        self.SEED = SEED
 
-        # 1. Set systematics
+        # set seed
+        self._set_seed()
+
+        # set systematics
         self.set_systematics()
 
-        # 2. Set params
-        self.reset_params()
+        # Set params
+        self.set_params()
+
+    def _set_seed(self, seed=None):
+        if self.SEED is None:
+            t = str(time.time())
+            t = t.split(".", 1)[1]
+            t = int(t)
+            random.seed(t)
+            np.random.seed(t)
+        else:
+            random.seed(seed)
+            np.random.seed(seed)
 
     def set_systematics(self):
+        if self.systematics is not None:
+            for systematic in self.systematics:
 
-        for systematic in self.systematics:
+                if systematic["name"] == "Translation":
 
-            if systematic["name"] == "Translation":
+                    z_range = systematic["z_range"]
+                    z_angles = systematic["z_angles"]
 
-                z_range = systematic["z_range"]
-                z_angles = systematic["z_angles"]
+                    # Draw $z_magnitude$ uniformly between range
+                    z_magnitude = np.random.uniform(z_range[0], z_range[1], 1)[0]
 
-                # Draw $z_magnitude$ uniformly between range
-                z_magnitude = np.random.uniform(z_range[0], z_range[1], 1)[0]
+                    # Draw $alpha$ randomly between range
+                    alpha = np.random.choice(z_angles)
 
-                # Draw $alpha$ randomly between range
-                alpha = np.random.choice(z_angles)
+                    self.translation = {
+                        "name": "Translation",
+                        "z_magnitude": z_magnitude,
+                        "alpha": alpha
+                    }
 
-                self.translation = {
-                    "name": "Translation",
-                    "z_magnitude": z_magnitude,
-                    "alpha": alpha
-                }
-
-    def reset_params(self):
+    def set_params(self, use_seed=True):
 
         # 1. Draw $\mu$ uniformly between mu_range
         self.mu = np.round(np.random.uniform(self.mu_range[0], self.mu_range[1], 1)[0], 2)
@@ -60,7 +77,7 @@ class Params:
         # 2. Compute $\nu$ = $\nu_1 (\mu \pi + (1-\pi))$
         self.nu = int(self.nu_1 * (self.mu * self.pi + (1-self.pi)))
 
-        # 3. Compute $\gamma$ = $\nu \pi$
+        # 3. Compute $\gamma$ = $\nu1 \pi$
         self.gamma = self.nu_1 * self.pi
 
         # 4. Compute $\beta$ = $\nu1 (1-\pi)$
@@ -104,6 +121,9 @@ class Params:
 
     def get_N(self):
         return self.N
+    
+    def get_seed(self):
+        return self.SEED 
 
     def get_settings(self, use_systematics=True):
         settings = self.Setting(self)
@@ -121,9 +141,9 @@ class Params:
                 self.systematics.append(translation)
 
         def get_setting(self, use_systematics):
-            
             systematics = self.systematics if use_systematics else []
             return {
+                "seed": self.params.get_seed(),
                 "ground_truth_mu": self.params.get_mu(),
                 "case": self.case,
                 "problem_dimension": 2,
