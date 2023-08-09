@@ -2,13 +2,16 @@
 # Imports
 # ------------------------------------------
 from sys import path
-import os
 import numpy as np
+import os
 import pandas as pd
 from datetime import datetime as dt
 import json
 import warnings
 warnings.filterwarnings("ignore")
+
+
+SEED = 1
 
 # ------------------------------------------
 # Default Directories
@@ -36,19 +39,15 @@ submission_dir = root_dir + "sample_code_submission"
 # # Directory to read submitted submissions from
 # submission_dir = '/app/ingested_program'
 
-data_generator_dir = "./Data_Generator"
-
 path.append(input_dir)
 path.append(output_dir)
 path.append(program_dir)
 path.append(submission_dir)
-path.append(data_generator_dir)
 
 
 # ------------------------------------------
 # Import Data Gen classes
 # ------------------------------------------
-from params import Params
 from Data_Generator.data_generator_physics import DataGenerator
 
 # ------------------------------------------
@@ -65,7 +64,10 @@ class Ingestion():
         self.start_time = None
         self.end_time = None
         self.model = None
-        self.test_set = None
+        self.test_sets = []
+
+        print(f"[*] SEED: {SEED}")
+        self.data_gen = DataGenerator
 
     def start_timer(self):
         self.start_time = dt.now()
@@ -89,38 +91,19 @@ class Ingestion():
         print(f'[✔] Total duration: {self.get_duration()}')
         print("---------------------------------")
 
-    def configure_data_generator(self):
-
-        print("[*] Configuring Data generator")
-
-        systematics = [{
-            "name": "Translation",
-            "z_range": [-10, 10],
-            "z_angles": [45]
-        }]
-
-        # params
-        self.data_gen_param = Params(
-            pi=0.1,
-            nu_1=100000,
-            mu_range=[0.9, 1.1],
-            systematics=systematics,
-            verbose=False
-        )
-
-        self.data_gen = DataGenerator
-
-    def load_test_set(self):
+    def load_test_sets(self):
         print("[*] Loading Test data")
-        test_data_file = os.path.join(input_dir, 'data.csv')
-        self.test_set = pd.read_csv(test_data_file)
+        self.test_sets = []
+        for i in range(0, 10):
+            test_data_file = os.path.join(input_dir, 'data', 'data_'+str(i)+'.csv')
+            self.test_sets.append(pd.read_csv(test_data_file))
 
     def initialize_submission(self):
         print("[*] Initializing submitted model")
         self.model = Model(
-            data_gen_param=self.data_gen_param,
             data_gen=self.data_gen,
-            test_data=self.test_set
+            test_sets=self.test_sets,
+            SEED=SEED
         )
 
     def fit_submission(self):
@@ -131,7 +114,7 @@ class Ingestion():
         print("[*] Calling predict method of submitted model")
         predicted_dict = self.model.predict()
 
-        self.mu_hat = predicted_dict["mu_hat"]
+        self.mu_hats = predicted_dict["mu_hats"]
         self.delta_mu_hat = predicted_dict["delta_mu_hat"]
 
     def save_result(self):
@@ -140,10 +123,10 @@ class Ingestion():
 
         result_dict = {
             "delta_mu_hat": self.delta_mu_hat,
-            "mu_hat_test": self.mu_hat
+            "mu_hats": self.mu_hats
         }
         print(f"[*] --- delta_mu_hat: {result_dict['delta_mu_hat']}")
-        print(f"[*] --- mu_hat_test: {result_dict['mu_hat_test']}")
+        print(f"[*] --- mu_hats (avg): {np.mean(result_dict['mu_hats'])}")
 
         result_file = os.path.join(output_dir, "result.json")
 
@@ -163,11 +146,8 @@ if __name__ == '__main__':
     # Start timer
     ingestion.start_timer()
 
-    # Configure data generator
-    ingestion.configure_data_generator()
-
     # load test set
-    ingestion.load_test_set()
+    ingestion.load_test_sets()
 
     # Initialize submission
     ingestion.initialize_submission()

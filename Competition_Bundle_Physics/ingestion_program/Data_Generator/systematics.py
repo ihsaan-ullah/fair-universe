@@ -2,6 +2,7 @@
 # Imports
 # ================================
 import numpy as np
+import random
 from math import radians
 from .logger import Logger
 
@@ -13,7 +14,7 @@ class Systematics:
     def __init__(self, name=None, allowed_dimension=None):
 
         """
-        name: name of the systematic 
+        name: name of the systematic
         allowed_dimension : dimension of data required
         number_of_nuissance_values : number of nuissance values required
         """
