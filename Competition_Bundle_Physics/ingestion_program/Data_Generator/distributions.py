@@ -2,6 +2,8 @@
 # Imports
 # ================================
 import numpy as np
+import random
+import time
 from .constants import (
     GAUSSIAN_GENERETOR_TYPE_NORMAL,
     GAUSSIAN_GENERETOR_TYPE_MULTIVARIATE,
@@ -15,17 +17,31 @@ from .constants import (
 # ================================
 class Distribution:
 
-    def __init__(self, name=None):
+    def __init__(self, name=None, SEED=None):
 
         # init parameters
         self.name = name
+        self.SEED = SEED
+
+        self._set_seed()
+
+    def _set_seed(self):
+        if self.SEED is None:
+            t = str(time.time())
+            t = t.split(".", 1)[1]
+            t = int(t)
+            random.seed(t)
+            np.random.seed(t)
+        else:
+            random.seed(self.SEED)
+            np.random.seed(self.SEED)
 
 
 # ================================
 # Gaussian Distribution Class
 # ================================
 class Gaussian(Distribution):
-    def __init__(self, distribution):
+    def __init__(self, distribution, SEED):
 
         """
         name: name of the distribution
@@ -34,7 +50,8 @@ class Gaussian(Distribution):
         """
 
         super().__init__(
-            name=distribution["name"]
+            name=distribution["name"],
+            SEED=SEED
         )
         self.mu = distribution["mu"]
         self.sigma = distribution["sigma"]
@@ -79,9 +96,10 @@ class Gaussian(Distribution):
 # ================================
 class Poisson(Distribution):
 
-    def __init__(self, distribution):
+    def __init__(self, distribution, SEED):
         super().__init__(
-            name=distribution["name"]
+            name=distribution["name"],
+            SEED=SEED
         )
         self.lambdaa = distribution["lambda"]
 
@@ -105,9 +123,10 @@ class Poisson(Distribution):
 # ================================
 class Exponential(Distribution):
 
-    def __init__(self, distribution):
+    def __init__(self, distribution, SEED):
         super().__init__(
-            name=distribution["name"]
+            name=distribution["name"],
+            SEED=SEED
         )
         self.lambdaa = distribution["lambda"]
 
@@ -130,7 +149,7 @@ class Exponential(Distribution):
 # Gamma Distribution Class
 # ================================
 class Gamma(Distribution):
-    def __init__(self, distribution):
+    def __init__(self, distribution, SEED):
 
         """
         name: name of the distribution
@@ -139,7 +158,8 @@ class Gamma(Distribution):
         """
 
         super().__init__(
-            name=distribution["name"]
+            name=distribution["name"],
+            SEED=SEED
         )
         self.k = distribution["k"]
         self._theta_ = distribution["_theta_"]
@@ -158,14 +178,15 @@ class Gamma(Distribution):
         return points
 
 
-#================================
+# ================================
 # Gaussian_Gamma Distribution Class
-#================================
+# ================================
 class Gaussian_Gamma(Distribution):
 
-    def __init__(self, distribution):
+    def __init__(self, distribution, SEED):
         super().__init__(
-            name = distribution["name"]
+            name=distribution["name"],
+            SEED=SEED
         )
         self.distributions_params = distribution["distributions_params"]
 
@@ -176,17 +197,16 @@ class Gaussian_Gamma(Distribution):
 
         # initialize vector with required dimension
         points = np.zeros((number_of_events, problem_dimension))
-        
+
         # loop over problem dimension to generate each dimension
-        for i in range(0, problem_dimension) :
+        for i in range(0, problem_dimension):
             dimension_params = self.distributions_params[i]
             distrib_type = dimension_params["distrib"]
             distrib_param_1, distrib_param_2 = dimension_params["param_1"], dimension_params["param_2"]
-            if distrib_type == DISTRIBUTION_GAMMA :
-                k,tau = distrib_param_1,distrib_param_2
+            if distrib_type == DISTRIBUTION_GAMMA:
+                k, tau = distrib_param_1,distrib_param_2
                 points[:, i] = np.array(np.random.gamma(k, tau, number_of_events))
-            elif distrib_type == DISTRIBUTION_GAUSSIAN :
+            elif distrib_type == DISTRIBUTION_GAUSSIAN:
                 mu, sigma = distrib_param_1,distrib_param_2
                 points[:, i] = np.array(np.random.normal(mu,sigma, number_of_events))
         return points
-        

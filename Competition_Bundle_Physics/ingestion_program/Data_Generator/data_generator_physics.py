@@ -4,6 +4,7 @@
 import os
 import json
 import numpy as np
+import random
 import scipy as sp
 import pandas as pd
 from sklearn.utils import shuffle
@@ -12,6 +13,7 @@ from sys import exit
 # ================================
 # Internal Imports
 # ================================
+from .params import Params
 from .distributions import Gaussian, Gamma
 from .systematics import Translation, Scaling, Box, Rotation
 from .logger import Logger
@@ -33,7 +35,13 @@ from .constants import (
 # ================================
 class DataGenerator:
 
-    def __init__(self, settings_dict=None, logs=False):
+    def __init__(
+            self,
+            params: None,
+            settings_dict=None,
+            logs=False,
+            SEED=None
+            ):
 
         if logs:
             print("############################################")
@@ -46,14 +54,35 @@ class DataGenerator:
         self.logger = Logger(show_logs=logs)
 
         # -----------------------------------------------
+        # Set SEED
+        # -----------------------------------------------
+        self.SEED = SEED
+
+        # -----------------------------------------------
         # Initialize checks class
         # -----------------------------------------------
         self.checker = Checker()
 
         # -----------------------------------------------
+        # Set settings
+        # -----------------------------------------------
+        if settings_dict is None:
+            self.params = Params(
+                pi=params["pi"],
+                nu_1=params["nu_1"],
+                mu_range=params["mu_range"],
+                systematics=params["systematics"],
+                verbose=False,
+                SEED=self.SEED
+            )
+            self.settings = self.params.get_settings()
+        else:
+            self.settings = settings_dict
+            self.SEED = self.settings['seed']
+
+        # -----------------------------------------------
         # Initialize data members
         # -----------------------------------------------
-        self.settings = None
         self.visualize_settings = None
         self.signal_distribution = None
         self.background_distribution = None
@@ -77,7 +106,6 @@ class DataGenerator:
         self.alpha = None
         self.beta = None
 
-        self.settings = settings_dict
         self.logger.success("Settings Loaded!")
 
         # -----------------------------------------------
@@ -103,14 +131,14 @@ class DataGenerator:
                 "sigma": background_dist["sigma"],
                 "generator": self.settings["generator"],
                 "angle_rotation": self.settings.get('angle_rotation', 0)
-            })
+            }, SEED=self.SEED)
 
         if background_dist["name"] == DISTRIBUTION_GAMMA:
             self.background_distribution = Gamma({
                 "name": DISTRIBUTION_GAMMA,
                 "k":  background_dist["k"],
                 "_theta_": background_dist["_theta_"]
-            })
+            }, SEED=self.SEED)
 
         # get copula
         self.apply_copula = self.settings.get("apply_copula", False)
@@ -142,7 +170,7 @@ class DataGenerator:
                 "sigma": signal_sigma,
                 "generator": self.settings["generator"],
                 "angle_rotation": - self.settings.get('angle_rotation', 0)
-            })
+            }, SEED=self.SEED)
         else:
             signal_dist = self.settings["signal_distribution"]
             if signal_dist["name"] == DISTRIBUTION_GAUSSIAN:
@@ -152,7 +180,7 @@ class DataGenerator:
                     "sigma": signal_dist["sigma"],
                     "generator": self.settings["generator"],
                     "angle_rotation": - self.settings.get('angle_rotation', 0)
-                })
+                }, SEED=self.SEED)
                 box_center = signal_dist["mu"]
 
         if self.signal_distribution is None:
@@ -417,6 +445,6 @@ class DataGenerator:
 
         # Save Settings file
         with open(settings_file, 'w') as fp:
-            json.dump(self.settings, fp)
+            json.dump(self.settings, fp, default=float)
 
         self.logger.success("Data saved!")

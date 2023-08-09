@@ -136,7 +136,7 @@ def visualize_clock(ax, setting, xylim):
     ax.set_ylim(xylim)
     b_c = bg_c_train
     s_c = sg_c_train
-    if z:
+    if z is not None:
         z_c = np.multiply(z, 2)
         z_c = z_c + b_c
 
@@ -149,7 +149,7 @@ def visualize_clock(ax, setting, xylim):
     ax.plot(b_c[0], b_c[1], 'bo', markersize=20)
     ax.plot([b_c[0], s_c[0]], [b_c[1], s_c[1]], linestyle='-.', color="k", label="separation direction")
     ax.plot(s_c[0], s_c[1], 'ro', )
-    if z:
+    if z is not None:
         ax.plot([b_c[0]-0.25, z_c[0]-0.25], [b_c[1]-0.25, z_c[1]-0.25], linestyle='-.', color="r", label="translation_direction")
 
     if rd != 0:
@@ -274,7 +274,7 @@ def visualize_augmented(ax, settings, train_set, xylim=None):
     ax.set_title("Augmented set")
 
 
-def visualize_test(ax, settings, test_set, xylim):
+def visualize_test(ax, settings, test_set, xylim, title="Test set"):
 
     _, _, (bg_c_test, sg_c_test), _, _, test_comment, translation, scaling, _, box = get_params(settings)
 
@@ -305,8 +305,8 @@ def visualize_test(ax, settings, test_set, xylim):
     ax.plot([bg_c_test[0], sg_c_test[0]], [bg_c_test[1], sg_c_test[1]], "--+", markersize=10, color="k", label="separation direction")
     ax.legend()
     # ax.set_title("Test set\n" + test_comment)
-    ax.set_title("Test set")
-    if z:
+    ax.set_title(title)
+    if z is not None:
         if z[0] == 0 and z[1] == 0:
             pass
         elif z[0] == 0:
@@ -334,6 +334,62 @@ def visualize_test(ax, settings, test_set, xylim):
     ax.legend()
 
 
+def visualize_valid(ax, settings, test_set, xylim):
+
+    _, _, (bg_c_test, sg_c_test), _, _, test_comment, translation, scaling, _, box = get_params(settings)
+
+    z = get_z(translation)
+    box_l, box_center = get_box(box)
+
+    visulaize_box(ax, box_center, box_l)
+
+    signal_mask = test_set["labels"] == 1
+    background_mask = test_set["labels"] == 0
+
+    sg_data = test_set["data"][signal_mask]
+    bg_data = test_set["data"][background_mask]
+
+    test_set["data"][background_mask]
+
+    ax.scatter(bg_data["x1"],bg_data["x2"], s=10, c="b", alpha=0.7, label="Background")
+    ax.scatter(sg_data["x1"], sg_data["x2"], s=10, c="r", alpha=0.7, label="Signal")
+    ax.set_xlabel("x1")
+    ax.set_ylabel("x2")
+    ax.set_xlim(xylim)
+    ax.set_ylim(xylim)
+    x = y = np.sum(xylim)/2
+    ax.axhline(y=x, color='g', linestyle='-.')
+    ax.axvline(x=y, color='g', linestyle='-.')
+    ax.plot(bg_c_test[0], bg_c_test[1], marker="x", markersize=10, color="k", label="bg center")
+    ax.plot(sg_c_test[0], sg_c_test[1], marker="x", markersize=10, color="k", label="sg center")
+    ax.plot([bg_c_test[0], sg_c_test[0]], [bg_c_test[1], sg_c_test[1]], "--+", markersize=10, color="k", label="separation direction")
+
+    if z is not None:
+        if z[0] == 0 and z[1] == 0:
+            pass
+        elif z[0] == 0:
+            ax.axvline(x=x+0.25, color='r', linestyle='-.', label="translation direction")
+        elif z[1] == 0:
+            ax.axhline(y=y+0.25, color='r', linestyle='-.', label="translation direction")
+        else:
+            slope = 0
+
+            if (z[0] > 0) & (z[1] > 0):
+                slope = 1
+            elif (z[0] < 0) & (z[1] < 0):
+                slope = 1
+            elif (z[0] > 0) & (z[1] < 0):
+                slope = -1
+            elif (z[0] < 0) & (z[1] > 0):
+                slope = -1
+            else:
+                # do nothing
+                pass
+
+            # ax.axline((z[0], z[1]), slope=slope, linewidth=1, color='r', linestyle='-.', label="translation direction") 
+            ax.axline((x, y), slope=slope, linewidth=1, color='r', linestyle='-.', label="translation direction")
+
+
 def visualize_clocks(settings, xylim=[-8, 8]):
 
     axs = None
@@ -354,14 +410,31 @@ def visualize_data(train_set, test_set, xylim=[-8, 8]):
     fig = plt.figure(constrained_layout=True, figsize=(12, 4.1))
     axs = fig.subplots(1, 3, sharex=True)
 
-    settings = train_set["settings"]
+    settings = test_set["settings"]
+
+    print(f"{settings['systematics']}")
 
     # Clock
     visualize_clock(axs[0], settings, xylim=xylim)
     # train
     visualize_train(axs[1], settings, train_set, xylim=xylim)
+
     # test
     visualize_test(axs[2], settings, test_set, xylim=xylim)
+
+    plt.show()
+
+
+def visualize_data_2(valid_sets, xylim=[-10, 10]):
+
+    fig = plt.figure(constrained_layout=True, figsize=(16, 6))
+    axs = fig.subplots(2, 5, sharex=True).flatten()
+
+    for index, valid_set in enumerate(valid_sets):
+
+        valid_settings = valid_set["settings"]
+        print(f"{valid_settings['systematics']}")
+        visualize_valid(axs[index], valid_settings, valid_set, xylim=xylim)
 
     plt.show()
 
@@ -380,7 +453,7 @@ def visualize_augmented_data(settings, train_set, augmented_set, xylim=[-8, 8]):
     plt.show()
 
 
-def visualize_decision(ax, title, model):
+def visualize_decision(ax, title, model, theta):
 
     grid_resolution = 100
     eps = .02
@@ -394,7 +467,7 @@ def visualize_decision(ax, title, model):
 
     X_grid = np.c_[xx0.ravel(), xx1.ravel()]
 
-    response = model.decision_function(X_grid)
+    response = model._decision_function(X_grid, theta)
 
     response = response.reshape(xx0.shape)
 
@@ -431,7 +504,7 @@ def visualize_scatter(ax, data_set):
     ax.scatter(data[signal_mask]["x1"], data[signal_mask]["x2"], c='r', edgecolors="k")
 
 
-def visualize_decicion_boundary(name, result, train_sets, test_sets, xylim=[-8, 8]):
+def visualize_decision_boundary(name, result, train_sets, test_sets, xylim=[-8, 8], train_title="Train Data", theta=None):
 
     for index, model in enumerate(result["trained_models"]):
 
@@ -439,20 +512,20 @@ def visualize_decicion_boundary(name, result, train_sets, test_sets, xylim=[-8, 
 
         # Clock
         ax = plt.subplot(1, 4, 1)
-        visualize_clock(ax, train_sets[index]["settings"], xylim)
+        visualize_clock(ax, test_sets[index]["settings"], xylim)
 
         # decision boundary
         ax = plt.subplot(1, 4, 2)
-        visualize_decision(ax, "Decision Boundary", model)
+        visualize_decision(ax, "Decision Boundary", model, theta)
 
         # train decision boundary
         ax = plt.subplot(1, 4, 3)
-        visualize_decision(ax, "Train Data", model)
+        visualize_decision(ax, train_title, model, theta)
         visualize_scatter(ax, train_sets[index])
 
         # test decision boundary
         ax = plt.subplot(1, 4, 4)
-        visualize_decision(ax, "Test Data", model)
+        visualize_decision(ax, "Test Data", model, theta)
         visualize_scatter(ax, test_sets[index])
 
         # plt.suptitle(title, fontsize=15)
