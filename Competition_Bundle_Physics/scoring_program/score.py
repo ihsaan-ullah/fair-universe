@@ -5,43 +5,46 @@ import os
 import numpy as np
 import json
 from datetime import datetime as dt
-
+from sklearn.metrics import (
+    mean_absolute_error as mae,
+    mean_squared_error as mse
+)
 
 # ------------------------------------------
 # Default Directories
 # ------------------------------------------
-# root directory
-root_dir = "./"
+# # root directory
+# root_dir = "./"
 
-# Directory to output computed score into
-output_dir = root_dir + "scoring_output"
+# # Directory to output computed score into
+# output_dir = root_dir + "scoring_output"
 
-# reference data (test labels)
-reference_dir = os.path.join(root_dir, "reference_data")
+# # reference data (test labels)
+# reference_dir = os.path.join(root_dir, "reference_data")
 
-# submitted/predicted lables
-prediction_dir = root_dir + "sample_result_submission"
+# # submitted/predicted lables
+# prediction_dir = root_dir + "sample_result_submission"
 
-# score file to write score into
-score_file = os.path.join(output_dir, 'scores.json')
+# # score file to write score into
+# score_file = os.path.join(output_dir, 'scores.json')
 
 # ------------------------------------------
 # Codabench Directories
 # ------------------------------------------
-# # Directory read predictions and solutions from
-# input_dir = '/app/input'
+# Directory read predictions and solutions from
+input_dir = '/app/input'
 
-# # Directory to output computed score into
-# output_dir = '/app/output/'
+# Directory to output computed score into
+output_dir = '/app/output/'
 
-# # reference data (test labels)
-# reference_dir = os.path.join(input_dir, 'ref')  # Ground truth data
+# reference data (test labels)
+reference_dir = os.path.join(input_dir, 'ref')  # Ground truth data
 
-# # submitted/predicted labels
-# prediction_dir = os.path.join(input_dir, 'res')
+# submitted/predicted labels
+prediction_dir = os.path.join(input_dir, 'res')
 
-# # score file to write score into
-# score_file = os.path.join(output_dir, 'scores.json')
+# score file to write score into
+score_file = os.path.join(output_dir, 'scores.json')
 
 
 class Scoring():
@@ -113,36 +116,60 @@ class Scoring():
 
         mus = [test_setting['ground_truth_mu'] for test_setting in self.test_settings]
         mu_hats = self.ingestion_results['mu_hats']
+        delta_mus = [mu-mu_hat for mu, mu_hat in zip(mus, mu_hats)]
         delta_mu_hat = self.ingestion_results["delta_mu_hat"]
+        delta_mu_hats = np.repeat(delta_mu_hat, len(delta_mus))
 
-        scores1 = []
-        coverage = 0
-        for i in range(0, 10):
-            # delta mu = mu - mu_hat_test
-            delta_mu = np.abs(mus[i] - mu_hats[i])
-            delta_delta_mu = np.abs(delta_mu - delta_mu_hat)
-            score1 = delta_mu + delta_delta_mu
-            scores1.append(score1)
-
-            # calculate mu+ and mu-
-            mu_plus = mu_hats[i] + np.abs(delta_mu_hat)
-            mu_minu = mu_hats[i] - np.abs(delta_mu_hat)
-
-            # calculate how many times the groundtruth mu is between mu+ and mu-
-            if mus[i] >= mu_minu and mus[i] <= mu_plus:
-                coverage += 1
+        mae_mu = self.compute_MAE(mus, mu_hats)
+        mae_delta_mu = self.compute_MAE(delta_mus, delta_mu_hats)
+        mse_mu = self.compute_MSE(mus, mu_hats)
+        mse_delta_mu = self.compute_MSE(delta_mus, delta_mu_hats)
+        coverage = self.compute_coverage(mus, mu_hats, delta_mu_hat)
+        score1_mae = self.compute_score1(mae_mu, mae_delta_mu)
+        score1_mse = self.compute_score1(mse_mu, mse_delta_mu)
 
         self.scores_dict = {
             "mu_hat": np.mean(mu_hats),
             "delta_mu_hat": delta_mu_hat,
-            "score": np.mean(scores1)
+            "mae_mu": mae_mu,
+            "mse_mu": mse_mu,
+            "mae_delta_mu": mae_delta_mu,
+            "mse_delta_mu": mse_delta_mu,
+            "coverage": coverage,
+            "score1_mae": score1_mae,
+            "score1_mse": score1_mse
         }
-        print(f"[*] --- mu_hat (avg): {np.mean(mu_hats)}")
-        print(f"[*] --- delta_mu_hat: {delta_mu_hat}")
+        print(f"[*] --- delta_mu_hat: {round(delta_mu_hat, 3)}")
+        print(f"[*] --- MAE (mu): {round(mae_mu, 3)}")
+        print(f"[*] --- MSE (mu): {round(mse_mu, 3)}")
+        print(f"[*] --- MAE (delta mu): {round(mae_delta_mu, 3)}")
+        print(f"[*] --- MSE (delta mu): {round(mse_delta_mu, 3)}")
         print(f"[*] --- coverage: {coverage}")
-        print(f"[*] --- score: {np.mean(scores1)}")
+        print(f"[*] --- score1 (MAE): {round(score1_mae, 3)}")
+        print(f"[*] --- score1 (MSE): {round(score1_mse, 3)}")
 
         print("[✔]")
+
+    def compute_MAE(self, actual, calculated):
+        return mae(actual, calculated)
+
+    def compute_MSE(self, actual, calculated):
+        return mse(actual, calculated)
+
+    def compute_coverage(self, mus, mu_hats, delta_mu_hat):
+        coverage = 0
+        for mu, mu_hat in zip(mus, mu_hats):
+            # calculate mu+ and mu-
+            mu_plus = mu_hat + np.abs(delta_mu_hat)
+            mu_minu = mu_hat - np.abs(delta_mu_hat)
+            # calculate how many times the groundtruth mu is between mu+ and mu-
+            if mu >= mu_minu and mu <= mu_plus:
+                coverage += 1
+        return coverage
+
+    def compute_score1(self, mu_score, delta_mu_score):
+
+        return mu_score + delta_mu_score
 
     def write_scores(self):
         print("[*] Writing scores")
