@@ -31,7 +31,7 @@ from sklearn.metrics import (
 # ------------------------------------------
 # Codabench Directories
 # ------------------------------------------
-# Directory read predictions and solutions from
+# # Directory read predictions and solutions from
 input_dir = '/app/input'
 
 # Directory to output computed score into
@@ -111,22 +111,31 @@ class Scoring():
 
         print("[✔]")
 
-    def compute_score(self):
+    def compute_scores(self):
         print("[*] Computing scores")
 
+        C = 0.02
         mus = [test_setting['ground_truth_mu'] for test_setting in self.test_settings]
         mu_hats = self.ingestion_results['mu_hats']
         delta_mus = [mu-mu_hat for mu, mu_hat in zip(mus, mu_hats)]
         delta_mu_hat = self.ingestion_results["delta_mu_hat"]
         delta_mu_hats = np.repeat(delta_mu_hat, len(delta_mus))
 
+        # Compute MAE
         mae_mu = self.compute_MAE(mus, mu_hats)
         mae_delta_mu = self.compute_MAE(delta_mus, delta_mu_hats)
+
+        # Compute MSE
         mse_mu = self.compute_MSE(mus, mu_hats)
         mse_delta_mu = self.compute_MSE(delta_mus, delta_mu_hats)
-        coverage = self.compute_coverage(mus, mu_hats, delta_mu_hat)
-        score1_mae = self.compute_score1(mae_mu, mae_delta_mu)
-        score1_mse = self.compute_score1(mse_mu, mse_delta_mu)
+
+        # Compute Coverage
+        coverage_mu = self.compute_coverage(mus, mu_hats, delta_mu_hat, None)
+        coverage_C = self.compute_coverage(mus, mu_hats, None, C)
+
+        # Compute Score
+        score_mae = self.compute_score(mae_mu, mae_delta_mu)
+        score_mse = self.compute_score(mse_mu, mse_delta_mu)
 
         self.scores_dict = {
             "mu_hat": np.mean(mu_hats),
@@ -135,18 +144,20 @@ class Scoring():
             "mse_mu": mse_mu,
             "mae_delta_mu": mae_delta_mu,
             "mse_delta_mu": mse_delta_mu,
-            "coverage": coverage,
-            "score1_mae": score1_mae,
-            "score1_mse": score1_mse
+            "coverage_mu": coverage_mu,
+            "coverage_C": coverage_C,
+            "score1_mae": score_mae,
+            "score1_mse": score_mse
         }
         print(f"[*] --- delta_mu_hat: {round(delta_mu_hat, 3)}")
         print(f"[*] --- MAE (mu): {round(mae_mu, 3)}")
         print(f"[*] --- MSE (mu): {round(mse_mu, 3)}")
         print(f"[*] --- MAE (delta mu): {round(mae_delta_mu, 3)}")
         print(f"[*] --- MSE (delta mu): {round(mse_delta_mu, 3)}")
-        print(f"[*] --- coverage: {coverage}")
-        print(f"[*] --- score1 (MAE): {round(score1_mae, 3)}")
-        print(f"[*] --- score1 (MSE): {round(score1_mse, 3)}")
+        print(f"[*] --- coverage (mu): {coverage_mu}")
+        print(f"[*] --- coverage (C): {coverage_C}")
+        print(f"[*] --- score (MAE): {round(score_mae, 3)}")
+        print(f"[*] --- score (MSE): {round(score_mse, 3)}")
 
         print("[✔]")
 
@@ -156,18 +167,27 @@ class Scoring():
     def compute_MSE(self, actual, calculated):
         return mse(actual, calculated)
 
-    def compute_coverage(self, mus, mu_hats, delta_mu_hat):
+    def compute_coverage(self, mus, mu_hats, delta_mu_hat=None, C=None):
+
         coverage = 0
+        n = len(mus)
+
         for mu, mu_hat in zip(mus, mu_hats):
             # calculate mu+ and mu-
-            mu_plus = mu_hat + np.abs(delta_mu_hat)
-            mu_minu = mu_hat - np.abs(delta_mu_hat)
+            if C is None:
+                mu_plus = mu_hat + delta_mu_hat
+                mu_minu = mu_hat - delta_mu_hat
+            else:
+                mu_plus = mu_hat + (C/2)
+                mu_minu = mu_hat - (C/2)
+
             # calculate how many times the groundtruth mu is between mu+ and mu-
             if mu >= mu_minu and mu <= mu_plus:
                 coverage += 1
-        return coverage
 
-    def compute_score1(self, mu_score, delta_mu_score):
+        return coverage/n
+
+    def compute_score(self, mu_score, delta_mu_score):
 
         return mu_score + delta_mu_score
 
@@ -203,7 +223,7 @@ if __name__ == '__main__':
     scoring.load_ingestion_results()
 
     # Compute Scores
-    scoring.compute_score()
+    scoring.compute_scores()
 
     # Write scores
     scoring.write_scores()
