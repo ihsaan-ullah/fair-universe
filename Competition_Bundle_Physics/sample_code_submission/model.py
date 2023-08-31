@@ -37,12 +37,12 @@ class Model:
 
     def __init__(
             self,
-            model_name="NB",
-            preprocessing=False,
-            augmentation=False,
             data_gen=None,
             test_sets=[],
             SEED=None,
+            model_name="NB",
+            preprocessing=False,
+            augmentation=False,
             use_systematics=True
     ):
         """
@@ -393,8 +393,8 @@ class Model:
             # Compute mu_hat
             mu_hat = (n_roi - beta_roi)/gamma_roi
 
-            # Compute delta mu hat
-            delta_mu_hat = valid_set["settings"]["ground_truth_mu"] - mu_hat
+            # Compute delta mu hat (absolute value)
+            delta_mu_hat = np.abs(valid_set["settings"]["ground_truth_mu"] - mu_hat)
 
             delta_mu_hats.append(delta_mu_hat)
 
