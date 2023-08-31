@@ -11,7 +11,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 
-SEED = 1
+SEED = None
 
 # ------------------------------------------
 # Default Directories
