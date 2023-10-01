@@ -262,7 +262,7 @@ class Model:
         # Compute mu_hat
         mu_hat = (n_roi - beta_roi)/gamma_roi
 
-        # print(f"n_roi: {n_roi} --- nu_roi: {nu_roi} --- gamma_roi: {gamma_roi}")
+        print(f"n_roi: {n_roi} --- nu_roi: {nu_roi} --- gamma_roi: {gamma_roi} --- beta_roi: {beta_roi}")
 
         return mu_hat
 
