@@ -21,7 +21,7 @@ from sklearn.metrics import (
 # # root directory
 # root_dir = "./"
 # # Input data directory to read training data from
-# input_dir = root_dir + "input_data"
+# input_dir = root_dir + "input_data/svm"
 # # Output data directory to write predictions to
 # output_dir = root_dir + "sample_result_submission"
 # # Program directory
@@ -153,8 +153,8 @@ class Ingestion():
             "mse_delta_mu": mse_delta_mu,
             "coverage_mu": coverage_mu,
             "coverage_C": coverage_C,
-            "score1_mae": score_mae,
-            "score1_mse": score_mse
+            "score_mae": score_mae,
+            "score_mse": score_mse
         }
         print(f"[*] --- mu (avg): {round(delta_mu_hat, 3)}")
         print(f"[*] --- delta_mu_hat: {round(np.mean(mu_hats), 3)}")
