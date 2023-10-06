@@ -36,4 +36,4 @@ for i, test_df in enumerate(test_dfs):
 train_df.to_csv('./input_data/train/data/data.csv', index=False)
 
 print (np.shape(test_df))
-print
+print (np.shape(train_df)) 
