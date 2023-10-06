@@ -21,7 +21,7 @@ if not os.path.exists('./input_data/train/weights'):
     os.makedirs('./input_data/train/weights')
 
 # Save the label and weight files for the training set
-train_label.to_csv('./input_data/train/labels/data.label', index=False)
+train_label.to_csv('./input_data/train/labels/data.labels', index=False)
 train_weights.to_csv('./input_data/train/weights/data.weights', index=False)
 
 
