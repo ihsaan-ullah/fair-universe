@@ -14,7 +14,7 @@ weights = df.pop('Weight')
 train_df, test_df, train_label, test_label, train_weights, test_weights = train_test_split(df, label, weights, test_size=0.3)
 
 # Create directories to store the label and weight files
-if not os.path.exists('./input_data/train/label'):
+if not os.path.exists('./input_data/train/labels'):
     os.makedirs('./input_data/train/labels')
 
 if not os.path.exists('./input_data/train/weights'):
