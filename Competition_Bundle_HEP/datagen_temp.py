@@ -7,8 +7,8 @@ import os
 df = pd.read_csv('./reference_data.csv')
 
 # Remove the "label" and "weights" columns from the data
-label = df.pop('label')
-weights = df.pop('weights')
+label = df.pop('Label')
+weights = df.pop('Weights')
 
 # Split the data into training and testing sets
 train_df, test_df, train_label, test_label, train_weights, test_weights = train_test_split(df, label, weights, test_size=0.3)
