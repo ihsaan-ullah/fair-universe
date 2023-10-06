@@ -8,7 +8,7 @@ from sklearn.linear_model import RidgeClassifier
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.svm import SVC
-from sklearn.ensemble import GradientBoostingClassifier
+from xgboost import XGBClassifier
 
 EPSILON = np.finfo(float).eps
 
@@ -18,7 +18,7 @@ MODELS = {
     "LDA": LinearDiscriminantAnalysis,
     "DTC": DecisionTreeClassifier,
     "SVM": SVC,
-    "XG": GradientBoostingClassifier
+    "XG": XGBClassifier
 }
 
 
@@ -141,16 +141,15 @@ class Model:
         if self.model_name == "SVM":
             self.clf = SVC(kernel='linear')
         elif self.model_name == "XG":
-            self.clf = GradientBoostingClassifier()
+            self.clf = XGBClassifier(tree_method="hist")
         else:
             model = MODELS[self.model_name]
             self.clf = model()
 
     def _fit(self, X, y):
         if self.model_name == "XG":
-            weights = X["New_Weight"]
+            weights = X["Weight"]
             X = X.drop("Weight", axis=1)
-            X = X.drop("New_Weight", axis=1)
             self.clf.fit(X, y, sample_weight=weights)
         else:
             self.clf.fit(X, y)
@@ -158,8 +157,6 @@ class Model:
     def _predict(self, X, theta):
         if self.model_name == "XG":
             X = X.drop("Weight", axis=1)
-            if "New_Weight" in X.columns:
-                X = X.drop("New_Weight", axis=1)
         predictions = np.zeros(X.shape[0])
         decisions = self._decision_function(X, theta)
 
@@ -178,7 +175,7 @@ class Model:
         # 0 is the neutral point between the 2 classes which is on the decision boundary
 
         decisions = None
-        if self.model_name in ["Ridge R", "LDA", "SVM", "XG"]:
+        if self.model_name in ["Ridge R", "LDA", "SVM"]:
             decisions = self.clf.decision_function(X)
         else:
             # to make the output of both decision funciton and predict proba the same
@@ -327,7 +324,6 @@ class Model:
 
             mu_hat = self.compute_mu_hat(
                 train_set=self.train_set,
-                test_set=valid_set,
                 Y_hat_train=self.train_set["predictions"],
                 Y_train=self.train_set["labels"],
                 Y_hat_test=valid_set["predictions"]
@@ -339,7 +335,7 @@ class Model:
             delta_mu_hats.append(delta_mu_hat)
 
             # print(f"[*] --- n_roi: {n_roi} --- nu_roi: {nu_roi} --- beta_roi: {beta_roi} --- gamma_roi: {gamma_roi}")
-            print(f"[*] --- mu: {np.round(valid_set['settings']['ground_truth_mu'], 3)} --- mu_hat: {np.round(mu_hat, 3)} --- delta_mu_hat: {np.round(delta_mu_hat, 3)}")
+            print(f"[*] --- mu: {np.round(valid_set['settings']['ground_truth_mu'], 2)} --- mu_hat: {np.round(mu_hat, 2)} --- delta_mu_hat: {np.round(delta_mu_hat, 2)}")
 
         # Average delta mu_hat
         self.delta_mu_hat = np.mean(delta_mu_hats)
@@ -352,12 +348,12 @@ class Model:
             test_set["predictions"] = self._predict(test_set['data'], self.best_theta)
             test_set["decisions"] = self._decision_function(test_set['data'], self.best_theta)
 
-    def compute_mu_hat(self, train_set, test_set, Y_hat_train, Y_train, Y_hat_test):
+    def compute_mu_hat(self, train_set, Y_hat_train, Y_train, Y_hat_test):
 
         # n_roi = len(Y_hat_test[Y_hat_test == 1])
         # n_roi is sum of weights of the predicted signals in train
         roi_indexes_test = np.argwhere(Y_hat_test == 1).flatten()
-        n_roi = test_set['data'].iloc[roi_indexes_test]["Weight"].sum()
+        n_roi = train_set['data'].iloc[roi_indexes_test]["Weight"].sum()
 
         # get region of interest from train
 
@@ -389,8 +385,6 @@ class Model:
         # Compute mu_hat
         mu_hat = (n_roi - beta_roi)/gamma_roi
 
-        # print(f"n_roi: {n_roi} --- nu_roi: {nu_roi} --- gamma_roi: {gamma_roi}")
-
         return mu_hat
 
     def compute_test_result(self):
@@ -402,13 +396,12 @@ class Model:
 
             mu_hat = self.compute_mu_hat(
                 train_set=self.train_set,
-                test_set=test_set,
                 Y_hat_train=self.train_set["predictions"],
                 Y_train=self.train_set["labels"],
                 Y_hat_test=test_set["predictions"]
                 )
             mu_hats.append(mu_hat)
-            print(f"[*] --- mu_hat: {np.round(mu_hat, 3)}")
+            print(f"[*] --- mu_hat: {np.round(mu_hat, 2)}")
 
         # Save mu_hat from test
         self.mu_hats = mu_hats
