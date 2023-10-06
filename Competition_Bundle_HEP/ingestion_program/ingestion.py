@@ -15,7 +15,7 @@ warnings.filterwarnings("ignore")
 # Default Directories
 # ------------------------------------------
 # root directory
-root_dir = "X/Fair Universe 2023/fair-universe/Competition_Bundle_HEP/"
+root_dir = "../"
 # Input data directory to read training data from
 input_dir = root_dir + "input_data"
 # Output data directory to write predictions to
