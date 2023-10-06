@@ -1,0 +1,10 @@
+,train_set 1,train_set 2,train_set 3,train_set 4,train_set 5,train_set 6,avg,std_err
+constant model,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.03
+NB plain,0.92,0.93,0.93,0.92,0.94,0.94,0.93,0.01
+NB preprocessing,0.92,0.93,0.93,0.92,0.94,0.94,0.93,0.01
+LDA plain,0.67,0.74,0.76,0.72,0.74,0.73,0.73,0.02
+RR plain,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.03
+NB data augmentation,0.72,0.76,0.5,0.5,0.5,0.5,0.58,0.05
+LDA data augmentation,0.52,0.54,0.5,0.5,0.5,0.5,0.51,0.03
+RR data augmentation,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.03
+Gaussian Discriminative Analysis,0.92,0.93,0.93,0.92,0.95,0.94,0.93,0.01

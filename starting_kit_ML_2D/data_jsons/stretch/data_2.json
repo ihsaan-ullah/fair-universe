@@ -1,0 +1,38 @@
+{
+    "case" : 2,
+    "problem_dimension" : 2,
+    "total_number_of_events" : 2000,
+    "p_b" : 0.9, 
+    "theta" : 45,
+    "L" : 2,
+    "generator" : "multivariate",
+    "angle_rotation": 45,
+    "background_distribution":{
+        "name": "Gaussian",
+        "mu": [0,0],
+        "sigma": [2,4]
+    },
+    "signal_from_background": true,
+    "signal_sigma_scale" : 0.3,
+    "systematics" : [
+        {
+            "name" : "Translation",
+            "z_magnitude" : 0,
+            "alpha" : 90
+        },
+        {
+            "name" : "Scaling",
+            "scaling_factor" : 1
+        },
+        {
+            "name" : "Box",
+            "box_l" : 0
+        },
+        {
+            "name" : "Rotation",
+            "rotation_degree" : 0
+        }
+    ],
+    "train_comment": "no translation",
+    "test_comment": "no translation"
+}

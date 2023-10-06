@@ -455,16 +455,13 @@ class DataGenerator:
             self.logger.error("Visualization not implemented for dimension other than 2")
             exit()
 
-        
         signal_points = self.generated_dataframe[self.generated_dataframe['y'] == SIGNAL_LABEL].drop('y', axis=1)
         background_points = self.generated_dataframe[self.generated_dataframe['y'] == BACKGROUND_LABEL].drop('y', axis=1)
-        
 
         figure = plt.figure(figsize=(10,8))
-        
+
         plt.scatter(signal_points['x1'], signal_points['x2'], color = 'red', alpha=0.7, label="Signal")
         plt.scatter(background_points['x1'], background_points['x2'], color = 'green', alpha=0.7, label="Background")
-     
 
         # Signal contours
         xx,yy,f,levels = self._get_contours(
@@ -486,12 +483,12 @@ class DataGenerator:
             xmax= np.max(background_points["x1"]),
             ymin= np.min(background_points["x2"]),
             ymax= np.max(background_points["x2"])
-            
+
         )
         plt.contourf(xx, yy, f, levels, cmap=cm.Greens, alpha=0.4)
 
 
-        
+
         plt.xlabel("feature 1")
         plt.ylabel("feature 2")
         plt.title("Signal and Background points")

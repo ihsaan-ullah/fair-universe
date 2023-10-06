@@ -1,0 +1,46 @@
+{
+    "case" : 5.1,
+    "problem_dimension" : 2,
+    "total_number_of_events" : 2000,
+    "p_b" : 0.9, 
+    "theta" : 0,
+    "L" : 2,
+    "generator" : "normal",
+    "angle_rotation": 0,
+    "background_distribution":{
+        "name": "Gaussian",
+        "mu": [0,0],
+        "sigma": [1,1]
+    },
+    "apply_copula": true,
+    "alpha": [7.5,7.5],
+    "beta": [0.4,0.4],
+    "signal_from_background": false,
+    "signal_sigma_scale" : 0.3,
+    "signal_distribution":{
+        "name": "Gaussian",
+        "mu": [11.8,7.8],
+        "sigma": [0.3,0.3]
+    },
+    "systematics" : [
+        {
+            "name" : "Translation",
+            "z_magnitude" : 0,
+            "alpha" : 90
+        },
+        {
+            "name" : "Scaling",
+            "scaling_factor" : 1.3
+        },
+        {
+            "name" : "Box",
+            "box_l" : 0
+        },
+        {
+            "name" : "Rotation",
+            "rotation_degree" : 30
+        }
+    ],
+    "train_comment": "no systematics",
+    "test_comment": "translation, scaling, box"
+}
