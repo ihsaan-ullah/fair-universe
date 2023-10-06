@@ -15,7 +15,7 @@ train_df, test_df, train_label, test_label, train_weights, test_weights = train_
 
 # Create directories to store the label and weight files
 if not os.path.exists('./input_data/train/label'):
-    os.makedirs('./input_data/train/label')
+    os.makedirs('./input_data/train/labels')
 
 if not os.path.exists('./train/weights'):
     os.makedirs('./input_data/train/weights')
