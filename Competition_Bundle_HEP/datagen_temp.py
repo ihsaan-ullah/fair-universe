@@ -1,5 +1,5 @@
 import pandas as pd
-
+import numpy as np
 from sklearn.model_selection import train_test_split
 import os
 
@@ -34,3 +34,6 @@ for i, test_df in enumerate(test_dfs):
 
 # Save the training set as a CSV file
 train_df.to_csv('./input_data/train/data/data.csv', index=False)
+
+print (np.shape(test_df))
+print
