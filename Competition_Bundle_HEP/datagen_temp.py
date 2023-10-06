@@ -24,9 +24,6 @@ if not os.path.exists('./train/weights'):
 train_label.to_csv('./input_data/train/label/data.label', index=False)
 train_weights.to_csv('./input_data/train/weights/data.weights', index=False)
 
-# Remove the "label" and "weights" columns from the test data
-test_df.pop('Label')
-test_df.pop('Weight')
 
 # Divide the test set into 10 equal parts and save each part as a separate CSV file
 test_dfs = [test_df[i:i+len(test_df)//10] for i in range(0, len(test_df), len(test_df)//10)]
