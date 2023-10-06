@@ -7,8 +7,6 @@ run2.py
 
 .ipynb_checkpoints/
 ML_Stuff/
-
-Competition_Bundle_HEP/input_data/
 Competition_Bundle_HEP/reference_data/
 Competition_Bundle_HEP/*.ipynb
 
