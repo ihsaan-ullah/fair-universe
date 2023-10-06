@@ -1,4 +1,5 @@
 import pandas as pd
+
 from sklearn.model_selection import train_test_split
 import os
 
@@ -21,8 +22,8 @@ if not os.path.exists('./input_data/train/weights'):
     os.makedirs('./input_data/train/weights')
 
 # Save the label and weight files for the training set
-train_label.to_csv('./input_data/train/labels/data.labels', index=False)
-train_weights.to_csv('./input_data/train/weights/data.weights', index=False)
+train_label.to_csv('./input_data/train/labels/data.labels', index=False, header=False)
+train_weights.to_csv('./input_data/train/weights/data.weights', index=False, header=False)
 
 
 # Divide the test set into 10 equal parts and save each part as a separate CSV file
