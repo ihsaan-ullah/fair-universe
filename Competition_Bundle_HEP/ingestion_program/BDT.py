@@ -274,6 +274,8 @@ class Model():
             beta_roi = nu_roi - gamma_roi
 
             print(nu_roi, gamma_roi, nu_roi/np.square(gamma_roi))
+            print(f"[*] --- n_roi: {n_roi} --- nu_roi: {nu_roi} --- beta_roi: {beta_roi} --- gamma_roi: {gamma_roi}")
+
 
             # Compute sigma squared mu hat
             sigma_squared_mu_hat = nu_roi/np.square(gamma_roi)
