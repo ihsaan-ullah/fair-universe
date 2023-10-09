@@ -225,14 +225,17 @@ class Model():
 
         meta_validation_data = []
         meta_validation_labels = []
+        meta_validation_weights = []
 
         for valid_set in self.validation_sets:
             meta_validation_data.append(valid_set['data'])
             meta_validation_labels = np.concatenate((meta_validation_labels, valid_set['labels']))
+            meta_validation_weights = np.concatenate((meta_validation_weights, valid_set['weights']))
 
         return {
             'data': pd.concat(meta_validation_data),
-            'labels': meta_validation_labels
+            'labels': meta_validation_labels,
+            'weights': meta_validation_weights
         }
 
     def _choose_theta(self):
@@ -251,18 +254,20 @@ class Model():
             Y_hat_valid = self._predict(meta_validation_set['data'], theta)
             Y_valid = meta_validation_set["labels"]
 
+
             # get region of interest
             roi_indexes = np.argwhere(Y_hat_valid == 1)
             roi_points = Y_valid[roi_indexes]
             # compute nu_roi
-            nu_roi = len(roi_points)
+            nu_roi = meta_validation_set["weights"][roi_indexes].sum()
 
             # compute gamma_roi
             indexes = np.argwhere(roi_points == 1)
 
             # get signal class predictions
-            signal_predictions = roi_points[indexes]
-            gamma_roi = len(signal_predictions)
+            
+            signal_indexes = np.where(Y_hat_valid == 1 and Y_valid == 1)
+            gamma_roi = meta_validation_set["weights"][signal_indexes].sum()
 
             # compute beta_roi
             beta_roi = nu_roi - gamma_roi
@@ -282,7 +287,8 @@ class Model():
             print("[!] - WARNING! All sigma squared are nan")
             index_of_least_sigma_squared = np.argmin(theta_sigma_squared)
 
-        self.best_theta = self.theta_candidates[index_of_least_sigma_squared]
+        # self.best_theta = self.theta_candidates[index_of_least_sigma_squared]
+        self.best_theta = 0.95
 
         print(f"[*] --- Best theta : {self.best_theta}")
 
@@ -308,14 +314,14 @@ class Model():
             roi_points = Y_train[roi_indexes]
 
             # compute nu_roi
-            nu_roi = len(roi_points)
+            nu_roi = valid_set["weights"][roi_indexes].sum()
 
             # compute gamma_roi
             indexes = np.argwhere(roi_points == 1)
 
             # get signal class predictions
-            signal_predictions = roi_points[indexes]
-            gamma_roi = len(signal_predictions)
+            signal_predictions = np.where(Y_hat_valid == 1 and Y_train == 1)
+            gamma_roi = valid_set["weights"][signal_predictions].sum()
 
             # compute beta_roi
             beta_roi = nu_roi - gamma_roi
