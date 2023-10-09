@@ -52,7 +52,7 @@ from systematics import Systematics
 # Import Model
 # ------------------------------------------
 
-from NN import Model
+from model import Model
 
 
 class Ingestion():
