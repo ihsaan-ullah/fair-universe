@@ -75,15 +75,6 @@ for i, (test_df, test_weights) in enumerate(zip(test_dfs, test_weights_)):
     print ("sum of signal" , np.sum(test_weights[test_label==1]))
     print ("sum of background" , np.sum(test_weights[test_label==0]))
 
-    
-
-# Save the training set as a CSV file
-train_df.to_csv('./input_data/train/data/data.csv', index=False)
-
-print ("Shape of test set : ",np.shape(test_df))
-print ("Shape of train set : ",np.shape(train_df)) 
-    
-
 # Save the training set as a CSV file
 train_df.to_csv('./input_data/train/data/data.csv', index=False)
 

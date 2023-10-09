@@ -270,6 +270,8 @@ class Model():
             Y_hat_valid = self._predict(meta_validation_set['data'], theta)
             Y_valid = meta_validation_set["labels"]
 
+            print("sum of signal" , meta_validation_set["weights"][Y_hat_valid == 1].sum())
+            print("sum of background" , meta_validation_set["weights"][Y_hat_valid == 0].sum()) 
 
             # get region of interest
             roi_indexes = np.argwhere(Y_hat_valid == 1)
