@@ -210,7 +210,7 @@ class Model():
         self.train_set['predictions'] = self._predict(self.train_set['data'], 0.95)
 
     def _fit(self, X, y,w):
-        self.model.fit(X, y.values,sample_weight = w.values) 
+        self.model.fit(X, y,sample_weight = w) 
     
     def _calculate_nu_hat(self, y,label, weights):
         events = weights[y == 1].sum()
