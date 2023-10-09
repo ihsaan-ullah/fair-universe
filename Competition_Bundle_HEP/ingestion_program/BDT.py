@@ -33,19 +33,19 @@ EPSILON = np.finfo(float).eps
 # ------------------------------
 # Custom Dataset
 # ------------------------------
-class CustomDataset(Dataset):
-    def __init__(self, data, labels=None):
-        self.data = data
-        self.labels = labels
+# class CustomDataset(Dataset):
+#     def __init__(self, data, labels=None):
+#         self.data = data
+#         self.labels = labels
 
-    def __len__(self):
-        return len(self.data)
+#     def __len__(self):
+#         return len(self.data)
 
-    def __getitem__(self, idx):
-        sample = {'data': self.data[idx]}
-        if self.labels is not None:
-            sample['labels'] = self.labels[idx]
-        return sample
+#     def __getitem__(self, idx):
+#         sample = {'data': self.data[idx]}
+#         if self.labels is not None:
+#             sample['labels'] = self.labels[idx]
+#         return sample
 
 
 # ------------------------------
@@ -206,14 +206,14 @@ class Model():
         self.train_set['predictions'] = self._predict(self.train_set['data'], 0.95)
 
     def _fit(self, X, y):
-        self.model.fit(X, y.values) 
+        self.model.fit(X, y) 
 
     def _calculate_Events(self, y, weights):
         events = weights[y == 1].sum()
         return events
 
     def _predict(self, X, theta):
-        y_predict = self.models.predict_proba(X)[:,1]
+        y_predict = self.model.predict_proba(X)[:,1]
         predictions = np.where(y_predict > theta, 1, 0) 
         return predictions
 
