@@ -212,7 +212,7 @@ class Model():
     def _fit(self, X, y,w):
         self.model.fit(X, y.values,sample_weight = w.values) 
     
-	def _calculate_nu_hat(self, y,label, weights):
+    def _calculate_nu_hat(self, y,label, weights):
         events = weights[y == 1].sum()
         return events
 
