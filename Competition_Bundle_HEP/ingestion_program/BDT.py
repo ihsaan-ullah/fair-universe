@@ -70,6 +70,7 @@ class Model():
             self,
             train_set=None,
             test_sets=[],
+            test_sets_weights=[],
             systematics=None,
             model_name="BDT",
             
@@ -265,9 +266,9 @@ class Model():
             indexes = np.argwhere(roi_points == 1)
 
             # get signal class predictions
-            
-            signal_indexes = np.where(Y_hat_valid == 1 and Y_valid == 1)
-            gamma_roi = meta_validation_set["weights"][signal_indexes].sum()
+            signal_predictions = roi_points[indexes]
+
+            gamma_roi = meta_validation_set["weights"][signal_predictions].sum()
 
             # compute beta_roi
             beta_roi = nu_roi - gamma_roi
@@ -320,7 +321,7 @@ class Model():
             indexes = np.argwhere(roi_points == 1)
 
             # get signal class predictions
-            signal_predictions = np.where(Y_hat_valid == 1 and Y_train == 1)
+            signal_predictions = roi_points[indexes]
             gamma_roi = valid_set["weights"][signal_predictions].sum()
 
             # compute beta_roi
@@ -349,6 +350,9 @@ class Model():
         # Get predictions from trained model
         for test_set in self.test_sets:
             test_set['predictions'] = self._predict(test_set['data'], self.best_theta)
+        for test_set, test_set_weights in zip(self.test_sets, self.test_sets_weights):
+            test_set['weights'] = test_set_weights
+
 
     def _compute_test_result(self):
 
@@ -369,12 +373,15 @@ class Model():
             # compute nu_roi
             nu_roi = len(roi_points)
 
+            nu_roi = test_set["weights"][roi_indexes].sum()
+
             # compute gamma_roi
             indexes = np.argwhere(roi_points == 1)
 
             # get signal class predictions
             signal_predictions = roi_points[indexes]
-            gamma_roi = len(signal_predictions)
+            gamma_roi = test_set["weights"][signal_predictions].sum()
+
 
             # compute beta_roi
             beta_roi = nu_roi - gamma_roi
