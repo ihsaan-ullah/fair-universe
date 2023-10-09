@@ -94,6 +94,7 @@ class Ingestion():
         train_data_file = os.path.join(input_dir, 'train', 'data', 'data.csv')
         train_labels_file = os.path.join(input_dir, 'train', 'labels', "data.labels")
         train_settings_file = os.path.join(input_dir, 'train', 'settings', "data.json")
+        train_weights_file = os.path.join(input_dir, 'train', 'weights', "data.weights")
 
         # read train data
         train_data = pd.read_csv(train_data_file)
@@ -105,11 +106,16 @@ class Ingestion():
         # read train settings
         with open(train_settings_file) as f:
             train_settings = json.load(f)
+        
+        # with open(train_weights_file) as f:
+        #     train_weights = np.array(f.read().splitlines(), dtype=float)
+
 
         self.train_set = {
             "data": train_data,
             "labels": train_labels,
             "settings": train_settings
+            # "weights": train_weights
         }
 
     def load_test_sets(self):
