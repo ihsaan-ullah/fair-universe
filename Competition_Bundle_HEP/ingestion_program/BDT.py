@@ -100,8 +100,13 @@ class Model():
         self.model_name = model_name
         self.train_set = train_set
         self.test_sets = []
+        self.test_sets_weights = []
         for test_set in test_sets:
             self.test_sets.append({"data": test_set})
+
+        for test_set_weights in test_sets_weights:
+            self.test_sets_weights.append(test_set_weights) 
+            
         self.systematics = systematics
 
         # Intialize class variables
