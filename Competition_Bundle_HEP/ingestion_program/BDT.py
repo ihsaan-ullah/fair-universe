@@ -167,16 +167,18 @@ class Model():
 
         # create a df for train test split
         train_df = self.train_set["data"]
-        train_df["Label"] = self.train_set["labels"]
-        train_df["Weight"] = self.train_set["weights"]  
+        train_Label = self.train_set["labels"]
+        train_weights = self.train_set["weights"]  
 
         # train: 70%
         # valid: 30%
-        train, valid = train_test_split(train_df, test_size=0.3)
+
+        train_df, valid_df, train_label, valid_label, train_weights, valid_weights = train_test_split(train_df, train_Label, train_weights, test_size=0.3)
 
         self.train_set = {
-            "data": train.drop('Label', axis=1),
-            "labels": train["Label"].values,
+            "data": train_df,
+            "labels": train_label,
+            "weights": train_weights,
             "settings": self.train_set["settings"]
         }
 
@@ -186,12 +188,13 @@ class Model():
             tes = round(np.random.uniform(0.9, 1.10), 2)
             # apply systematics
             valid_with_systematics = self.systematics(
-                data=valid,
+                data=valid_df,
                 tes=tes
             ).data
             self.validation_sets.append({
-                "data": valid_with_systematics.drop('Label', axis=1),
-                "labels": valid["Label"].values,
+                "data": valid_with_systematics,
+                "labels": valid_label,
+                "weights": valid_weights,
                 "settings": self.train_set["settings"]
             })
 
@@ -201,15 +204,15 @@ class Model():
         self._init_model()
 
         print("[*] --- Training Model")
-        self._fit(self.train_set['data'], self.train_set['labels'], sample_weight = self.train_set['weights'])
+        self._fit(self.train_set['data'], self.train_set['labels'], self.train_set['weights'])
 
         print("[*] --- Predicting Train set")
         self.train_set['predictions'] = self._predict(self.train_set['data'], 0.95)
 
-    def _fit(self, X, y):
-        self.model.fit(X, y) 
-
-    def _calculate_Events(self, y, weights):
+    def _fit(self, X, y,w):
+        self.model.fit(X, y.values,sample_weight = w.values) 
+    
+    def _calculate_nu_hat(self, y,label, weights):
         events = weights[y == 1].sum()
         return events
 
