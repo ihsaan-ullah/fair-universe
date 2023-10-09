@@ -100,8 +100,13 @@ class Model():
         self.model_name = model_name
         self.train_set = train_set
         self.test_sets = []
+        self.test_sets_weights = []
         for test_set in test_sets:
             self.test_sets.append({"data": test_set})
+
+        for test_set_weights in test_sets_weights:
+            self.test_sets_weights.append(test_set_weights) 
+
         self.systematics = systematics
 
         # Intialize class variables
@@ -311,25 +316,25 @@ class Model():
             Y_train = self.train_set["labels"]
             Y_hat_valid = valid_set["predictions"]
 
-            n_roi = len(Y_hat_valid[Y_hat_valid == 1])
+            n_roi = valid_set["weights"].sum()
 
             # get region of interest
             roi_indexes = np.argwhere(Y_hat_train == 1)
             roi_points = Y_train[roi_indexes]
 
             # compute nu_roi
-            nu_roi = valid_set["weights"][roi_indexes].sum()
+            nu_roi = self.train_set["weights"][roi_indexes].sum()
 
             # compute gamma_roi
             indexes = np.argwhere(roi_points == 1)
 
             # get signal class predictions
             signal_predictions = roi_points[indexes]
-            gamma_roi = valid_set["weights"][indexes].sum()
+            gamma_roi = self.train_set["weights"][indexes].sum()
 
             # compute beta_roi
             bkg_indexes = np.argwhere(roi_points == 0)
-            beta_roi = valid_set["weights"][bkg_indexes].sum()
+            beta_roi = self.train_set["weights"][bkg_indexes].sum()
 
             if gamma_roi == 0:
                 gamma_roi = EPSILON
@@ -342,7 +347,7 @@ class Model():
 
             delta_mu_hats.append(delta_mu_hat)
 
-            print(f"[*] --- nu_roi: {nu_roi} --- beta_roi: {beta_roi} --- gamma_roi: {gamma_roi}")
+            print(f"[*] --- n_roi : {n_roi} --- nu_roi: {nu_roi} --- beta_roi: {beta_roi} --- gamma_roi: {gamma_roi}")
             print(f"[*] --- mu: {np.round(valid_set['settings']['ground_truth_mu'], 2)} --- mu_hat: {np.round(mu_hat, 2)} --- delta_mu_hat: {np.round(delta_mu_hat, 2)}")
 
         # Average delta mu_hat
@@ -369,27 +374,28 @@ class Model():
             Y_train = self.train_set["labels"]
             Y_hat_test = test_set["predictions"]
 
-            n_roi = len(Y_hat_test[Y_hat_test == 1])
+            n_roi = test_set["weights"].sum()
+
 
             # get region of interest
             roi_indexes = np.argwhere(Y_hat_train == 1)
             roi_points = Y_train[roi_indexes]
             # compute nu_roi
-            nu_roi = len(roi_points)
 
-            nu_roi = test_set["weights"][roi_indexes].sum()
+
+            nu_roi = self.train_set["weights"][roi_indexes].sum()
 
             # compute gamma_roi
             indexes = np.argwhere(roi_points == 1)
 
             # get signal class predictions
             signal_predictions = roi_points[indexes]
-            gamma_roi = test_set["weights"][indexes].sum()
+            gamma_roi = self.train_set["weights"][indexes].sum()
 
 
             # compute beta_roi
             bkg_indexes = np.argwhere(roi_points == 0)
-            beta_roi = test_set["weights"][bkg_indexes].sum()
+            beta_roi = self.train_set["weights"][bkg_indexes].sum()
 
             if gamma_roi == 0:
                 gamma_roi = EPSILON
