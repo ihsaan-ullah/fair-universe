@@ -11,6 +11,12 @@ df = pd.read_csv('./reference_data.csv')
 label = df.pop('Label')
 weights = df.pop('Weight')
 
+print ("sum of weights : ", np.sum(weights))
+print ("sum of signal" , np.sum(weights[label==1]))
+print ("sum of background" , np.sum(weights[label==0]))
+       
+       
+
 # Split the data into training and testing sets
 train_df, test_df, train_label, test_label, train_weights, test_weights = train_test_split(df, label, weights, test_size=0.3)
 
