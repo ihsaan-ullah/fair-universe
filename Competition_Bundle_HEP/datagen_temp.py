@@ -39,7 +39,7 @@ subset_background_weight = np.sum(train_weights[train_label==0])
 
 
 # Adjust the weights of the training set to match the weights of the whole data
-train_weights *= total_weight / subset_weight
+
 train_weights[train_label==1] *= total_signal_weight / subset_signal_weight
 train_weights[train_label==0] *= total_background_weight / subset_background_weight
 
@@ -64,7 +64,7 @@ for i, (test_df, test_weights) in enumerate(zip(test_dfs, test_weights_)):
     subset_background_weight = np.sum(test_weights[test_label==0])
     
     # Adjust the weights of the current subset to match the weights of the whole data
-    test_weights *= total_weight / subset_weight
+    
     test_weights[test_label==1] *= total_signal_weight / subset_signal_weight
     test_weights[test_label==0] *= total_background_weight / subset_background_weight
     
