@@ -271,7 +271,8 @@ class Model():
             gamma_roi = meta_validation_set["weights"][indexes].sum()
 
             # compute beta_roi
-            beta_roi = nu_roi - gamma_roi
+            bkg_indexes = np.argwhere(roi_points == 0)
+            beta_roi = meta_validation_set["weights"][bkg_indexes].sum()
 
             print(nu_roi, gamma_roi, nu_roi/np.square(gamma_roi))
             print(f"[*] --- nu_roi: {nu_roi} --- beta_roi: {beta_roi} --- gamma_roi: {gamma_roi}")
@@ -327,7 +328,8 @@ class Model():
             gamma_roi = valid_set["weights"][indexes].sum()
 
             # compute beta_roi
-            beta_roi = nu_roi - gamma_roi
+            bkg_indexes = np.argwhere(roi_points == 0)
+            beta_roi = valid_set["weights"][bkg_indexes].sum()
 
             if gamma_roi == 0:
                 gamma_roi = EPSILON
@@ -340,7 +342,7 @@ class Model():
 
             delta_mu_hats.append(delta_mu_hat)
 
-            # print(f"[*] --- n_roi: {n_roi} --- nu_roi: {nu_roi} --- beta_roi: {beta_roi} --- gamma_roi: {gamma_roi}")
+            print(f"[*] --- nu_roi: {nu_roi} --- beta_roi: {beta_roi} --- gamma_roi: {gamma_roi}")
             print(f"[*] --- mu: {np.round(valid_set['settings']['ground_truth_mu'], 2)} --- mu_hat: {np.round(mu_hat, 2)} --- delta_mu_hat: {np.round(delta_mu_hat, 2)}")
 
         # Average delta mu_hat
@@ -386,7 +388,8 @@ class Model():
 
 
             # compute beta_roi
-            beta_roi = nu_roi - gamma_roi
+            bkg_indexes = np.argwhere(roi_points == 0)
+            beta_roi = test_set["weights"][bkg_indexes].sum()
 
             if gamma_roi == 0:
                 gamma_roi = EPSILON
