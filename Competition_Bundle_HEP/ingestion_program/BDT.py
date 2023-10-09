@@ -164,22 +164,34 @@ class Model():
 
         self.model = XGBClassifier(tree_method="hist",use_label_encoder=False,eval_metric='logloss')
 
+
     def _generate_validation_sets(self):
         print("[*] - Generating Validation sets")
 
-        # Keep 70% of train set for training
-        # Use the remaining 30% as validation set
-        # Add systematics to validation set and create multiple validation sets
+        # Calculate the sum of weights for signal and background in the original dataset
+        signal_weights = self.train_set["weights"][self.train_set["labels"] == 1].sum()
+        background_weights = self.train_set["weights"][self.train_set["labels"] == 0].sum()
 
-        # create a df for train test split
-        train_df = self.train_set["data"]
-        train_Label = self.train_set["labels"]
-        train_weights = self.train_set["weights"]  
+        # Split the data into training and validation sets while preserving the proportion of samples with respect to the target variable
+        train_df, valid_df, train_label, valid_label, train_weights, valid_weights = train_test_split(
+            self.train_set["data"],
+            self.train_set["labels"],
+            self.train_set["weights"],
+            test_size=0.3,
+            stratify=self.train_set["labels"]
+        )
 
-        # train: 70%
-        # valid: 30%
+        # Calculate the sum of weights for signal and background in the training and validation sets
+        train_signal_weights = train_weights[train_label == 1].sum()
+        train_background_weights = train_weights[train_label == 0].sum()
+        valid_signal_weights = valid_weights[valid_label == 1].sum()
+        valid_background_weights = valid_weights[valid_label == 0].sum()
 
-        train_df, valid_df, train_label, valid_label, train_weights, valid_weights = train_test_split(train_df, train_Label, train_weights, test_size=0.3)
+        # Balance the sum of weights for signal and background in the training and validation sets
+        train_weights[train_label == 1] *= signal_weights / train_signal_weights
+        train_weights[train_label == 0] *= background_weights / train_background_weights
+        valid_weights[valid_label == 1] *= signal_weights / valid_signal_weights
+        valid_weights[valid_label == 0] *= background_weights / valid_background_weights
 
         self.train_set = {
             "data": train_df,
@@ -218,14 +230,12 @@ class Model():
     def _fit(self, X, y,w):
         self.model.fit(X, y,sample_weight = w) 
     
-    def _calculate_nu_hat(self, y,label, weights):
-        events = weights[y == 1].sum()
-        return events
 
     def _predict(self, X, theta):
         y_predict = self.model.predict_proba(X)[:,1]
         predictions = np.where(y_predict > theta, 1, 0) 
         return predictions
+
 
     def get_meta_validation_set(self):
 
