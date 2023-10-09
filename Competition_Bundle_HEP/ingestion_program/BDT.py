@@ -33,19 +33,19 @@ EPSILON = np.finfo(float).eps
 # ------------------------------
 # Custom Dataset
 # ------------------------------
-class CustomDataset(Dataset):
-    def __init__(self, data, labels=None):
-        self.data = data
-        self.labels = labels
+# class CustomDataset(Dataset):
+#     def __init__(self, data, labels=None):
+#         self.data = data
+#         self.labels = labels
 
-    def __len__(self):
-        return len(self.data)
+#     def __len__(self):
+#         return len(self.data)
 
-    def __getitem__(self, idx):
-        sample = {'data': self.data[idx]}
-        if self.labels is not None:
-            sample['labels'] = self.labels[idx]
-        return sample
+#     def __getitem__(self, idx):
+#         sample = {'data': self.data[idx]}
+#         if self.labels is not None:
+#             sample['labels'] = self.labels[idx]
+#         return sample
 
 
 # ------------------------------
