@@ -268,7 +268,7 @@ class Model():
             # get signal class predictions
             signal_predictions = roi_points[indexes]
 
-            gamma_roi = meta_validation_set["weights"][signal_predictions].sum()
+            gamma_roi = meta_validation_set["weights"][indexes].sum()
 
             # compute beta_roi
             beta_roi = nu_roi - gamma_roi
@@ -322,7 +322,7 @@ class Model():
 
             # get signal class predictions
             signal_predictions = roi_points[indexes]
-            gamma_roi = valid_set["weights"][signal_predictions].sum()
+            gamma_roi = valid_set["weights"][indexes].sum()
 
             # compute beta_roi
             beta_roi = nu_roi - gamma_roi
@@ -380,7 +380,7 @@ class Model():
 
             # get signal class predictions
             signal_predictions = roi_points[indexes]
-            gamma_roi = test_set["weights"][signal_predictions].sum()
+            gamma_roi = test_set["weights"][indexes].sum()
 
 
             # compute beta_roi
