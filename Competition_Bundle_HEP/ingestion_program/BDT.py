@@ -289,8 +289,8 @@ class Model():
             bkg_indexes = np.argwhere(roi_points == 0)
             beta_roi = meta_validation_set["weights"][bkg_indexes].sum()
 
-            print(nu_roi, gamma_roi, nu_roi/np.square(gamma_roi))
-            print(f"[*] --- nu_roi: {nu_roi} --- beta_roi: {beta_roi} --- gamma_roi: {gamma_roi}")
+            # print(nu_roi, gamma_roi, nu_roi/np.square(gamma_roi))
+            print(f"\n[*] --- nu_roi: {nu_roi} --- beta_roi: {beta_roi} --- gamma_roi: {gamma_roi}")
 
 
             # Compute sigma squared mu hat
