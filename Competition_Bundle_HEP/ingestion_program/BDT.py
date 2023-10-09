@@ -326,7 +326,7 @@ class Model():
             Y_train = self.train_set["labels"]
             Y_hat_valid = valid_set["predictions"]
 
-            n_roi = valid_set["weights"].sum()
+            n_roi = valid_set["weights"][Y_hat_valid].sum()
 
             # get region of interest
             roi_indexes = np.argwhere(Y_hat_train == 1)
@@ -384,7 +384,7 @@ class Model():
             Y_train = self.train_set["labels"]
             Y_hat_test = test_set["predictions"]
 
-            n_roi = test_set["weights"].sum()
+            n_roi = test_set["weights"][Y_hat_test == 1].sum()
 
 
             # get region of interest
