@@ -21,6 +21,9 @@ if not os.path.exists('./input_data/train/labels'):
 if not os.path.exists('./input_data/train/weights'):
     os.makedirs('./input_data/train/weights')
 
+if not os.path.exists('./input_data/test/weights'):
+    os.makedirs('./input_data/test/weights')
+
 # Save the label and weight files for the training set
 train_label.to_csv('./input_data/train/labels/data.labels', index=False, header=False)
 train_weights.to_csv('./input_data/train/weights/data.weights', index=False, header=False)
@@ -31,9 +34,13 @@ test_dfs = [test_df[i:i+len(test_df)//10] for i in range(0, len(test_df), len(te
 for i, test_df in enumerate(test_dfs):
     test_df.to_csv(f'./input_data/test/data/data_{i}.csv', index=False)
 
+test_weights_ = [test_weights[i:i+len(test_weights)//10] for i in range(0, len(test_weights), len(test_weights)//10)]
+for i, test_weights in enumerate(test_weights_):
+    test_weights.to_csv(f'./input_data/test/weights/data_{i}.weights', index=False, header=False)
+    
 
 # Save the training set as a CSV file
 train_df.to_csv('./input_data/train/data/data.csv', index=False)
 
-print (np.shape(test_df))
-print (np.shape(train_df)) 
+print ("Shape of test set : ",np.shape(test_df))
+print ("Shape of train set : ",np.shape(train_df)) 
