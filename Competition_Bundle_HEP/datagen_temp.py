@@ -34,8 +34,9 @@ if not os.path.exists('./input_data/test/weights'):
     os.makedirs('./input_data/test/weights')
 
 subset_weight = np.sum(train_weights)
-subset_signal_weight = np.sum(train_weights[test_label==1])
-subset_background_weight = np.sum(train_weights[test_label==0])
+subset_signal_weight = np.sum(train_weights[train_label==1])
+subset_background_weight = np.sum(train_weights[train_label==0])
+
 
 # Adjust the weights of the training set to match the weights of the whole data
 train_weights *= total_weight / subset_weight
