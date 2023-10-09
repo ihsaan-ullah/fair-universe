@@ -221,8 +221,20 @@ class Model():
 
         self._init_model()
 
+        weights_train = self.train_set["weights"].copy()
+
+            
+                
+        class_weights_train = (weights_train[self.train_set['labels'] == 0].sum(), weights_train[self.train_set['labels'] == 1].sum())
+
+        for i in range(len(class_weights_train)): # loop on B then S target
+            #training dataset: equalize number of background and signal
+            weights_train[self.train_set['labels'] == i] *= max(class_weights_train)/ class_weights_train[i] 
+            #test dataset : increase test weight to compensate for sampling
+
+
         print("[*] --- Training Model")
-        self._fit(self.train_set['data'], self.train_set['labels'], self.train_set['weights'])
+        self._fit(self.train_set['data'], self.train_set['labels'], weights_train)
 
         print("[*] --- Predicting Train set")
         self.train_set['predictions'] = self._predict(self.train_set['data'], 0.95)
@@ -270,24 +282,25 @@ class Model():
             Y_hat_valid = self._predict(meta_validation_set['data'], theta)
             Y_valid = meta_validation_set["labels"]
 
+            # print("sum of signal" , meta_validation_set["weights"][Y_hat_valid == 1].sum())
+            # print("sum of background" , meta_validation_set["weights"][Y_hat_valid == 0].sum()) 
 
             # get region of interest
             roi_indexes = np.argwhere(Y_hat_valid == 1)
             roi_points = Y_valid[roi_indexes]
             # compute nu_roi
-            nu_roi = meta_validation_set["weights"][roi_indexes].sum()
+            nu_roi = meta_validation_set["weights"][roi_indexes].sum()/10
 
             # compute gamma_roi
             indexes = np.argwhere(roi_points == 1)
-
             # get signal class predictions
             signal_predictions = roi_points[indexes]
 
-            gamma_roi = meta_validation_set["weights"][indexes].sum()
+            gamma_roi = meta_validation_set["weights"][indexes].sum()/10
 
             # compute beta_roi
             bkg_indexes = np.argwhere(roi_points == 0)
-            beta_roi = meta_validation_set["weights"][bkg_indexes].sum()
+            beta_roi = meta_validation_set["weights"][bkg_indexes].sum()/10
 
             # print(nu_roi, gamma_roi, nu_roi/np.square(gamma_roi))
             print(f"\n[*] --- nu_roi: {nu_roi} --- beta_roi: {beta_roi} --- gamma_roi: {gamma_roi}")
@@ -326,7 +339,8 @@ class Model():
             Y_train = self.train_set["labels"]
             Y_hat_valid = valid_set["predictions"]
 
-            n_roi = valid_set["weights"][Y_hat_valid].sum()
+            Y_index = np.argwhere(Y_hat_valid == 1)
+            n_roi = valid_set["weights"][Y_index].sum()
 
             # get region of interest
             roi_indexes = np.argwhere(Y_hat_train == 1)
