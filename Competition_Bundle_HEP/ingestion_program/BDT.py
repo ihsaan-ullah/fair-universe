@@ -204,15 +204,15 @@ class Model():
         self._init_model()
 
         print("[*] --- Training Model")
-        self._fit(self.train_set['data'], self.train_set['labels'], sample_weight = self.train_set['weights'])
+        self._fit(self.train_set['data'], self.train_set['labels'], self.train_set['weights'])
 
         print("[*] --- Predicting Train set")
         self.train_set['predictions'] = self._predict(self.train_set['data'], 0.95)
 
-    def _fit(self, X, y):
-        self.model.fit(X, y) 
-
-    def _calculate_nu_hat(self, y,label, weights):
+    def _fit(self, X, y,w):
+        self.model.fit(X, y.values,sample_weight = w.values) 
+    
+	def _calculate_nu_hat(self, y,label, weights):
         events = weights[y == 1].sum()
         return events
 
