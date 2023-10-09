@@ -154,7 +154,7 @@ class Model():
         }
 
     def _init_model(self):
-        print("[*] - Intialize Neural Network")
+        print("[*] - Intialize BDT")
 
         self.model = XGBClassifier(tree_method="hist",use_label_encoder=False,eval_metric='logloss')
 
@@ -168,6 +168,7 @@ class Model():
         # create a df for train test split
         train_df = self.train_set["data"]
         train_df["Label"] = self.train_set["labels"]
+        train_df["Weight"] = self.train_set["weights"]  
 
         # train: 70%
         # valid: 30%
@@ -200,7 +201,7 @@ class Model():
         self._init_model()
 
         print("[*] --- Training Model")
-        self._fit(self.train_set['data'], self.train_set['labels'])
+        self._fit(self.train_set['data'], self.train_set['labels'], sample_weight = self.train_set['weights'])
 
         print("[*] --- Predicting Train set")
         self.train_set['predictions'] = self._predict(self.train_set['data'], 0.95)

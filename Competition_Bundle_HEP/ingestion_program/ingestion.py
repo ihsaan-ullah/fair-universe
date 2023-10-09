@@ -107,17 +107,19 @@ class Ingestion():
         with open(train_settings_file) as f:
             train_settings = json.load(f)
         
-        # with open(train_weights_file) as f:
-        #     train_weights = np.array(f.read().splitlines(), dtype=float)
+        # read train weights
+        with open(train_weights_file) as f:
+            train_weights = np.array(f.read().splitlines(), dtype=float)
 
 
         self.train_set = {
             "data": train_data,
             "labels": train_labels,
-            "settings": train_settings
-            # "weights": train_weights
+            "settings": train_settings,
+            "weights": train_weights
         }
 
+    
     def load_test_sets(self):
         print("[*] Loading Test data")
         self.test_sets = []
