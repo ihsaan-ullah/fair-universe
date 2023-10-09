@@ -193,8 +193,8 @@ class Model():
             ).data
             self.validation_sets.append({
                 "data": valid_with_systematics,
-                "labels": valid_label.values,
-                "weights": valid_weights.values,
+                "labels": valid_label,
+                "weights": valid_weights,
                 "settings": self.train_set["settings"]
             })
 
