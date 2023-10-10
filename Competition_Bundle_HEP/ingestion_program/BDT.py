@@ -237,7 +237,7 @@ class Model():
         self._fit(self.train_set['data'], self.train_set['labels'], weights_train)
 
         print("[*] --- Predicting Train set")
-        self.train_set['predictions'] = self._predict(self.train_set['data'], 0.95)
+        self.train_set['predictions'] = self._predict(self.train_set['data'], 0.9)
 
     def _fit(self, X, y,w):
         self.model.fit(X, y,sample_weight = w) 
