@@ -221,11 +221,23 @@ class Model():
 
         self._init_model()
 
-        print("[*] --- Training Model")
-        self._fit(self.train_set['data'], self.train_set['labels'], self.train_set['weights'])
+        weights_train = self.train_set["weights"].deepcopy()
 
-        print("[*] --- Predicting Train set")
-        self.train_set['predictions'] = self._predict(self.train_set['data'], 0.95)
+            
+                
+        class_weights_train = (weights_train[self.train_set['labels'] == 0].sum(), weights_train[self.train_set['labels'] == 1].sum())
+
+        for i in range(len(class_weights_train)): # loop on B then S target
+            #training dataset: equalize number of background and signal
+            weights_train[self.train_set['labels'] == i] *= max(class_weights_train)/ class_weights_train[i] 
+            #test dataset : increase test weight to compensate for sampling
+
+
+            print("[*] --- Training Model")
+            self._fit(self.train_set['data'], self.train_set['labels'], weights_train)
+
+            print("[*] --- Predicting Train set")
+            self.train_set['predictions'] = self._predict(self.train_set['data'], 0.95)
 
     def _fit(self, X, y,w):
         self.model.fit(X, y,sample_weight = w) 
