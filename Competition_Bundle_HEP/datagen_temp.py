@@ -72,6 +72,7 @@ train_weights.to_csv('./input_data/train/weights/data.weights', index=False, hea
 # Divide the test set into 10 equal parts and save each part as a separate CSV file
 test_dfs = [test_df[i:i+len(test_df)//10] for i in range(0, len(test_df), len(test_df)//10)]
 test_weights_ = [test_weights[i:i+len(test_weights)//10] for i in range(0, len(test_weights), len(test_weights)//10)]
+test_label_ = [test_label[i:i+len(test_label)//10] for i in range(0, len(test_label), len(test_label)//10)]
 
 for i, (test_df, test_weights) in enumerate(zip(test_dfs, test_weights_)):
     # Calculate the sum of weights of signal and background for the current subset
@@ -87,9 +88,11 @@ for i, (test_df, test_weights) in enumerate(zip(test_dfs, test_weights_)):
     # Save the current subset as a CSV file
     test_df.to_csv(f'./input_data/test/data/data_{i}.csv', index=False)
     test_weights.to_csv(f'./input_data/test/weights/data_{i}.weights', index=False, header=False)
+    test_label.to_csv(f'./input_data/test/labels/data_{i}.labels', index=False, header=False)
 
-    print ("sum of signal" , np.sum(test_weights[test_label==1]))
-    print ("sum of background" , np.sum(test_weights[test_label==0]))
+
+    # print ("sum of signal" , np.sum(test_weights[test_label==1]))
+    # print ("sum of background" , np.sum(test_weights[test_label==0]))
 
 # Save the training set as a CSV file
 train_df.to_csv('./input_data/train/data/data.csv', index=False)
