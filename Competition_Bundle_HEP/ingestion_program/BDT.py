@@ -342,27 +342,21 @@ class Model():
             Y_train = self.train_set["labels"]
             Y_hat_valid = valid_set["predictions"]
 
-            Y_index = np.argwhere(Y_hat_valid == 1)
-            n_roi = valid_set["weights"][Y_index].sum()
+            weights_train = self.train_set["weights"].copy()
+            weights_valid = valid_set["weights"].copy()
+
+            # get n_roi
+            n_roi = weights_valid[Y_hat_valid == 1].sum()
 
             # get region of interest
-            roi_indexes = np.argwhere(Y_hat_train == 1)
-            roi_points = Y_train[roi_indexes]
-
-            # compute nu_roi
-            nu_roi = self.train_set["weights"][roi_indexes].sum()
+            nu_roi = weights_train[Y_hat_train == 1].sum()
 
             # compute gamma_roi
-            indexes = np.argwhere(roi_points == 1)
-
-            # get signal class predictions
-            signal_predictions = roi_points[indexes]
-            gamma_roi = self.train_set["weights"][indexes].sum()
+            gamma_roi = weights_train[Y_hat_train == 1 and Y_train == 1].sum()
 
             # compute beta_roi
-            bkg_indexes = np.argwhere(roi_points == 0)
-            beta_roi = self.train_set["weights"][bkg_indexes].sum()
-
+            beta_roi = weights_train[Y_hat_train == 1 and Y_train == 0].sum()
+            
             if gamma_roi == 0:
                 gamma_roi = EPSILON
 
