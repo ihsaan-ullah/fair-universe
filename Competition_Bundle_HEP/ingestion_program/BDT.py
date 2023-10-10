@@ -292,7 +292,10 @@ class Model():
             nu_roi = meta_validation_set["weights"][roi_indexes].sum()/10
 
             # compute gamma_roi
-            indexes = np.argwhere(roi_points == 1)
+            indexes = np.argwhere(roi_points == 0)
+            print(roi_points)
+            print(len(indexes))
+
             # get signal class predictions
             signal_predictions = roi_points[indexes]
 
