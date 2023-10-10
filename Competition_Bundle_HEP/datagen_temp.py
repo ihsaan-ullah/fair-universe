@@ -8,6 +8,7 @@ import os
 df = pd.read_csv('./reference_data.csv')
 
 # Remove the "label" and "weights" columns from the data
+flag = df.pop('Process_flag')
 label = df.pop('Label')
 weights = df.pop('Weight')
 
