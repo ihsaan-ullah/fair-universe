@@ -285,11 +285,11 @@ class Model():
             # get signal class predictions
             signal_predictions = roi_points[indexes]
 
-            gamma_roi = meta_validation_set["weights"][roi_points == 1].sum()/10
+            gamma_roi = meta_validation_set["weights"][indexes].sum()/10
 
             # compute beta_roi
             bkg_indexes = np.argwhere(roi_points == 0)
-            beta_roi = meta_validation_set["weights"][roi_points == 0].sum()/10
+            beta_roi = meta_validation_set["weights"][bkg_indexes].sum()/10
 
             # print(nu_roi, gamma_roi, nu_roi/np.square(gamma_roi))
             print(f"\n[*] --- nu_roi: {nu_roi} --- beta_roi: {beta_roi} --- gamma_roi: {gamma_roi}")
@@ -328,7 +328,8 @@ class Model():
             Y_train = self.train_set["labels"]
             Y_hat_valid = valid_set["predictions"]
 
-            n_roi = valid_set["weights"].sum()
+            Y_index = np.argwhere(Y_hat_valid == 1)
+            n_roi = valid_set["weights"][Y_index].sum()
 
             # get region of interest
             roi_indexes = np.argwhere(Y_hat_train == 1)
