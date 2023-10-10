@@ -8,9 +8,13 @@ import os
 df = pd.read_csv('./reference_data.csv')
 
 # Remove the "label" and "weights" columns from the data
+
+
 flag = df.pop('Process_flag')
 label = df.pop('Label')
 weights = df.pop('Weight')
+
+print(df.columns.tolist())
 
 print ("sum of weights : ", np.sum(weights))
 print ("sum of signal" , np.sum(weights[label==1]))
