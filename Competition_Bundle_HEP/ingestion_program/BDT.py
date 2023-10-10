@@ -342,6 +342,9 @@ class Model():
             Y_train = self.train_set["labels"]
             Y_hat_valid = valid_set["predictions"]
 
+            auc_trains = roc_auc_score(y_true=self.valid_set["labels"], y_score=valid_set['predictions'],sample_weight=valid_set['weights'])
+            print(f"[*] --- AUC: {auc_trains}")
+
             weights_train = self.train_set["weights"].copy()
             weights_valid = valid_set["weights"].copy()
 
@@ -387,8 +390,7 @@ class Model():
         for test_set, test_set_weights in zip(self.test_sets, self.test_sets_weights):
             test_set['weights'] = test_set_weights
 
-            auc_trains = roc_auc_score(y_true=self.train_set["labels"], y_score=test_set['predictions'],sample_weight=test_set['weights'])
-            print(f"[*] --- AUC: {auc_trains}")
+
 
 
     def _compute_test_result(self):
@@ -401,6 +403,8 @@ class Model():
             Y_hat_train = self.train_set["predictions"]
             Y_train = self.train_set["labels"]
             Y_hat_test = test_set["predictions"]
+
+            
 
             weights_train = self.train_set["weights"].copy()
             weights_test = test_set["weights"].copy()
