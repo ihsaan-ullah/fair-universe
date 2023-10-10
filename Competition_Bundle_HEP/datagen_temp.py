@@ -14,7 +14,12 @@ flag = df.pop('Process_flag')
 label = df.pop('Label')
 weights = df.pop('Weight')
 entry = df.pop('entry')
-eventid = df.pop('EventID')
+eventid = df.pop('EventId')
+df.pop('PRI_lep_charge')
+df.pop('PRI_had_charge')    
+df.pop('PRI_jet_leading_charge')    
+df.pop('PRI_jet_subleading_charge')
+
 # Print the features of the data
 features = df.columns.tolist()
 for feature in features:
