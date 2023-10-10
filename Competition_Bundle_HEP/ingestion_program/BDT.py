@@ -237,7 +237,7 @@ class Model():
         self._fit(self.train_set['data'], self.train_set['labels'], weights_train)
 
         print("[*] --- Predicting Train set")
-        self.train_set['predictions'] = self._predict(self.train_set['data'], 0.95)
+        self.train_set['predictions'] = self._predict(self.train_set['data'], 0.9)
 
     def _fit(self, X, y,w):
         self.model.fit(X, y,sample_weight = w) 
@@ -322,8 +322,8 @@ class Model():
             print("[!] - WARNING! All sigma squared are nan")
             index_of_least_sigma_squared = np.argmin(theta_sigma_squared)
 
-        self.best_theta = self.theta_candidates[index_of_least_sigma_squared]
-        # self.best_theta = 0.95
+        # self.best_theta = self.theta_candidates[index_of_least_sigma_squared]
+        self.best_theta = 0.95
 
         print(f"[*] --- Best theta : {self.best_theta}")
 
@@ -346,8 +346,10 @@ class Model():
             print(f"[*] --- Y_hat_train: {Y_hat_train.sum()} --- Y_hat_valid: {Y_hat_valid.sum()} --- Y_train: {Y_train.sum()} --- Y_valid: {Y_valid.sum()}")
             print(f"[*] --- Y_hat_train: {Y_hat_train.shape} --- Y_hat_valid: {Y_hat_valid.shape} --- Y_train: {Y_train.shape} --- Y_valid: {Y_valid.shape}")
 
+            auc_train = roc_auc_score(y_true=Y_train, y_score=Y_hat_train,sample_weight=self.train_set['weights'])      
+            print(f"[*] --- AUC train : {auc_train}")
             auc_valid = roc_auc_score(y_true=valid_set["labels"], y_score=valid_set['predictions'],sample_weight=valid_set['weights'])
-            print(f"[*] --- AUC: {auc_valid}")
+            print(f"[*] --- AUC validation : {auc_valid}")
 
             weights_train = self.train_set["weights"].copy()
             weights_valid = valid_set["weights"].copy()
