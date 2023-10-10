@@ -305,7 +305,7 @@ class Model():
             beta_roi = weights_valid_bkg[Y_hat_valid_bkg == 1].sum()/10
 
 
-            # print(nu_roi, gamma_roi, nu_roi/np.square(gamma_roi))
+            print(nu_roi, gamma_roi, nu_roi/np.square(gamma_roi))
             print(f"\n[*] --- nu_roi: {nu_roi} --- beta_roi: {beta_roi} --- gamma_roi: {gamma_roi}")
 
 
@@ -381,6 +381,8 @@ class Model():
             delta_mu_hat = np.abs(valid_set["settings"]["ground_truth_mu"] - mu_hat)
 
             delta_mu_hats.append(delta_mu_hat)
+
+            print(f"[*] --- n_roi: {n_roi} --- beta_roi: {beta_roi} --- gamma_roi: {gamma_roi}")
 
             print(f"\n[*] --- mu: {np.round(valid_set['settings']['ground_truth_mu'], 4)} --- mu_hat: {np.round(mu_hat, 4)} --- delta_mu_hat: {np.round(delta_mu_hat, 4)}")
 
