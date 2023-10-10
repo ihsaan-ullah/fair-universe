@@ -352,11 +352,16 @@ class Model():
             nu_roi = weights_train[Y_hat_train == 1].sum()
 
             # compute gamma_roi
-            gamma_roi = weights_train[Y_hat_train == 1 and Y_train == 1].sum()
+            weights_train_signal = weights_train[Y_train == 1]
+            weights_train_bkg = weights_train[Y_train == 0]
+
+            Y_hat_train_signal = Y_hat_train[Y_train == 1]
+            Y_hat_train_bkg = Y_hat_train[Y_train == 0]
+
+            gamma_roi = weights_train_signal[Y_hat_train_signal == 1].sum()
 
             # compute beta_roi
-            beta_roi = weights_train[Y_hat_train == 1 and Y_train == 0].sum()
-            
+            beta_roi = weights_train_bkg[Y_hat_train_bkg == 1].sum()
             if gamma_roi == 0:
                 gamma_roi = EPSILON
 
