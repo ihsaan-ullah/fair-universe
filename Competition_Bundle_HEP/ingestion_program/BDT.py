@@ -377,7 +377,7 @@ class Model():
 
         # Average delta mu_hat
         self.delta_mu_hat = np.mean(delta_mu_hats)
-        print(f"[*] --- delta_mu_hat (avg): {np.round(self.delta_mu_hat, 2)}")
+        print(f"[*] --- delta_mu_hat (avg): {np.round(self.delta_mu_hat, 4)}")
 
     def _test(self):
         print("[*] - Testing")
@@ -424,7 +424,7 @@ class Model():
             mu_hat = (n_roi - beta_roi)/gamma_roi
 
             mu_hats.append(mu_hat)
-            print(f"[*] --- mu_hat: {np.round(mu_hat, 2)}")
+            print(f"[*] --- mu_hat: {np.round(mu_hat, 4)}")
 
         # Save mu_hat from test
         self.mu_hats = mu_hats
