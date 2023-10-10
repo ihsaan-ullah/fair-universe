@@ -112,7 +112,7 @@ class Model():
         # Intialize class variables
         self.validation_sets = None
         self.theta_candidates = np.arange(0, 1, 0.1)
-        self.best_theta = None
+        self.best_theta = 0.95
 
         # Hyper params
         self.num_epochs = 10
@@ -237,7 +237,7 @@ class Model():
         self._fit(self.train_set['data'], self.train_set['labels'], weights_train)
 
         print("[*] --- Predicting Train set")
-        self.train_set['predictions'] = self._predict(self.train_set['data'], 0.9)
+        self.train_set['predictions'] = self._predict(self.train_set['data'], self.best_theta)
 
     def _fit(self, X, y,w):
         self.model.fit(X, y,sample_weight = w) 
@@ -305,7 +305,7 @@ class Model():
             beta_roi = weights_valid_bkg[Y_hat_valid_bkg == 1].sum()/10
 
 
-            # print(nu_roi, gamma_roi, nu_roi/np.square(gamma_roi))
+            print(nu_roi, gamma_roi, nu_roi/np.square(gamma_roi))
             print(f"\n[*] --- nu_roi: {nu_roi} --- beta_roi: {beta_roi} --- gamma_roi: {gamma_roi}")
 
 
@@ -322,8 +322,8 @@ class Model():
             print("[!] - WARNING! All sigma squared are nan")
             index_of_least_sigma_squared = np.argmin(theta_sigma_squared)
 
-        # self.best_theta = self.theta_candidates[index_of_least_sigma_squared]
-        self.best_theta = 0.95
+        self.best_theta = self.theta_candidates[index_of_least_sigma_squared]
+        # self.best_theta = 0.95
 
         print(f"[*] --- Best theta : {self.best_theta}")
 
@@ -381,6 +381,8 @@ class Model():
             delta_mu_hat = np.abs(valid_set["settings"]["ground_truth_mu"] - mu_hat)
 
             delta_mu_hats.append(delta_mu_hat)
+
+            print(f"[*] ---nu_roi: {nu_roi} --- n_roi: {n_roi} --- beta_roi: {beta_roi} --- gamma_roi: {gamma_roi}")
 
             print(f"\n[*] --- mu: {np.round(valid_set['settings']['ground_truth_mu'], 4)} --- mu_hat: {np.round(mu_hat, 4)} --- delta_mu_hat: {np.round(delta_mu_hat, 4)}")
 
