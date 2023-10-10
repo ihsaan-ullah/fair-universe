@@ -293,7 +293,6 @@ class Model():
 
             # compute gamma_roi
             indexes = np.argwhere(roi_points == 1)
-
             # get signal class predictions
             signal_predictions = roi_points[indexes]
 
