@@ -342,7 +342,7 @@ class Model():
             Y_train = self.train_set["labels"]
             Y_hat_valid = valid_set["predictions"]
 
-            auc_valid = roc_auc_score(y_true=self.valid_set["labels"], y_score=valid_set['predictions'],sample_weight=valid_set['weights'])
+            auc_valid = roc_auc_score(y_true=valid_set["labels"], y_score=valid_set['predictions'],sample_weight=valid_set['weights'])
             print(f"[*] --- AUC: {auc_valid}")
 
             weights_train = self.train_set["weights"].copy()
