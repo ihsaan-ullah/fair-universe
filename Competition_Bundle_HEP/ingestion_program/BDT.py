@@ -221,7 +221,7 @@ class Model():
 
         self._init_model()
 
-        weights_train = self.train_set["weights"].deepcopy()
+        weights_train = self.train_set["weights"].copy()
 
             
                 
