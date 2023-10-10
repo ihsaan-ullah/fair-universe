@@ -289,7 +289,7 @@ class Model():
             # print("sum of background" , meta_validation_set["weights"][Y_hat_valid == 0].sum()) 
 
             # get region of interest
-            nu_roi = weights_valid[Y_hat_valid == 1].sum()
+            nu_roi = weights_valid[Y_hat_valid == 1].sum()/10
 
             weights_valid_signal = weights_valid[Y_valid == 1]  
             weights_valid_bkg = weights_valid[Y_valid == 0]
@@ -298,11 +298,11 @@ class Model():
             Y_hat_valid_bkg = Y_hat_valid[Y_valid == 0] 
 
             # compute gamma_roi
-            gamma_roi = weights_valid_signal[Y_hat_valid_signal == 1].sum()
+            gamma_roi = weights_valid_signal[Y_hat_valid_signal == 1].sum()/10
 
 
             # compute beta_roi
-            beta_roi = weights_valid_bkg[Y_hat_valid_bkg == 1].sum()
+            beta_roi = weights_valid_bkg[Y_hat_valid_bkg == 1].sum()/10
 
 
             # print(nu_roi, gamma_roi, nu_roi/np.square(gamma_roi))
@@ -373,8 +373,7 @@ class Model():
 
             delta_mu_hats.append(delta_mu_hat)
 
-            print(f"[*] --- n_roi : {n_roi} --- nu_roi: {nu_roi} --- beta_roi: {beta_roi} --- gamma_roi: {gamma_roi}")
-            print(f"[*] --- mu: {np.round(valid_set['settings']['ground_truth_mu'], 2)} --- mu_hat: {np.round(mu_hat, 2)} --- delta_mu_hat: {np.round(delta_mu_hat, 2)}")
+            print(f"\n[*] --- mu: {np.round(valid_set['settings']['ground_truth_mu'], 4)} --- mu_hat: {np.round(mu_hat, 4)} --- delta_mu_hat: {np.round(delta_mu_hat, 4)}")
 
         # Average delta mu_hat
         self.delta_mu_hat = np.mean(delta_mu_hats)
