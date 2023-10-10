@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from xgboost import XGBClassifier
-
+from sklearn.metrics import roc_auc_score
 
 EPSILON = np.finfo(float).eps
 
@@ -386,6 +386,9 @@ class Model():
             test_set['predictions'] = self._predict(test_set['data'], self.best_theta)
         for test_set, test_set_weights in zip(self.test_sets, self.test_sets_weights):
             test_set['weights'] = test_set_weights
+
+            auc_trains = roc_auc_score(y_true=self.train_set["labels"], y_score=test_set['predictions'],sample_weight=test_set['weights'])
+            print(f"[*] --- AUC: {auc_trains}")
 
 
     def _compute_test_result(self):
