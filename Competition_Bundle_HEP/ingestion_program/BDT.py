@@ -346,8 +346,10 @@ class Model():
             print(f"[*] --- Y_hat_train: {Y_hat_train.sum()} --- Y_hat_valid: {Y_hat_valid.sum()} --- Y_train: {Y_train.sum()} --- Y_valid: {Y_valid.sum()}")
             print(f"[*] --- Y_hat_train: {Y_hat_train.shape} --- Y_hat_valid: {Y_hat_valid.shape} --- Y_train: {Y_train.shape} --- Y_valid: {Y_valid.shape}")
 
+            auc_train = roc_auc_score(y_true=Y_train, y_score=Y_hat_train,sample_weight=self.train_set['weights'])      
+            print(f"[*] --- AUC train : {auc_train}")
             auc_valid = roc_auc_score(y_true=valid_set["labels"], y_score=valid_set['predictions'],sample_weight=valid_set['weights'])
-            print(f"[*] --- AUC: {auc_valid}")
+            print(f"[*] --- AUC validation : {auc_valid}")
 
             weights_train = self.train_set["weights"].copy()
             weights_valid = valid_set["weights"].copy()
