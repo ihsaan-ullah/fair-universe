@@ -112,7 +112,7 @@ class Model():
         # Intialize class variables
         self.validation_sets = None
         self.theta_candidates = np.arange(0, 1, 0.1)
-        self.best_theta = None
+        self.best_theta = 0.95
 
         # Hyper params
         self.num_epochs = 10
@@ -237,7 +237,7 @@ class Model():
         self._fit(self.train_set['data'], self.train_set['labels'], weights_train)
 
         print("[*] --- Predicting Train set")
-        self.train_set['predictions'] = self._predict(self.train_set['data'], 0.9)
+        self.train_set['predictions'] = self._predict(self.train_set['data'], self.best_theta)
 
     def _fit(self, X, y,w):
         self.model.fit(X, y,sample_weight = w) 
@@ -322,8 +322,8 @@ class Model():
             print("[!] - WARNING! All sigma squared are nan")
             index_of_least_sigma_squared = np.argmin(theta_sigma_squared)
 
-        # self.best_theta = self.theta_candidates[index_of_least_sigma_squared]
-        self.best_theta = 0.95
+        self.best_theta = self.theta_candidates[index_of_least_sigma_squared]
+        # self.best_theta = 0.95
 
         print(f"[*] --- Best theta : {self.best_theta}")
 
