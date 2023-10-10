@@ -282,25 +282,28 @@ class Model():
             Y_hat_valid = self._predict(meta_validation_set['data'], theta)
             Y_valid = meta_validation_set["labels"]
 
+            weights_valid = meta_validation_set["weights"].copy()
+            
+
             # print("sum of signal" , meta_validation_set["weights"][Y_hat_valid == 1].sum())
             # print("sum of background" , meta_validation_set["weights"][Y_hat_valid == 0].sum()) 
 
             # get region of interest
-            roi_indexes = np.argwhere(Y_hat_valid == 1)
-            roi_points = Y_valid[roi_indexes]
-            # compute nu_roi
-            nu_roi = meta_validation_set["weights"][roi_indexes].sum()/10
+            nu_roi = weights_valid[Y_hat_valid == 1].sum()
+
+            weights_valid_signal = weights_valid[Y_valid == 1]  
+            weights_valid_bkg = weights_valid[Y_valid == 0]
+
+            Y_hat_valid_signal = Y_hat_valid[Y_valid == 1]  
+            Y_hat_valid_bkg = Y_hat_valid[Y_valid == 0] 
 
             # compute gamma_roi
-            indexes = np.argwhere(roi_points == 1)
-            # get signal class predictions
-            signal_predictions = roi_points[indexes]
+            gamma_roi = weights_valid_signal[Y_hat_valid_signal == 1].sum()
 
-            gamma_roi = meta_validation_set["weights"][indexes].sum()/10
 
             # compute beta_roi
-            bkg_indexes = np.argwhere(roi_points == 0)
-            beta_roi = meta_validation_set["weights"][bkg_indexes].sum()/10
+            beta_roi = weights_valid_bkg[Y_hat_valid_bkg == 1].sum()
+
 
             # print(nu_roi, gamma_roi, nu_roi/np.square(gamma_roi))
             print(f"\n[*] --- nu_roi: {nu_roi} --- beta_roi: {beta_roi} --- gamma_roi: {gamma_roi}")
@@ -339,27 +342,26 @@ class Model():
             Y_train = self.train_set["labels"]
             Y_hat_valid = valid_set["predictions"]
 
-            Y_index = np.argwhere(Y_hat_valid == 1)
-            n_roi = valid_set["weights"][Y_index].sum()
+            weights_train = self.train_set["weights"].copy()
+            weights_valid = valid_set["weights"].copy()
+
+            # get n_roi
+            n_roi = weights_valid[Y_hat_valid == 1].sum()
 
             # get region of interest
-            roi_indexes = np.argwhere(Y_hat_train == 1)
-            roi_points = Y_train[roi_indexes]
-
-            # compute nu_roi
-            nu_roi = self.train_set["weights"][roi_indexes].sum()
+            nu_roi = weights_train[Y_hat_train == 1].sum()
 
             # compute gamma_roi
-            indexes = np.argwhere(roi_points == 1)
+            weights_train_signal = weights_train[Y_train == 1]
+            weights_train_bkg = weights_train[Y_train == 0]
 
-            # get signal class predictions
-            signal_predictions = roi_points[indexes]
-            gamma_roi = self.train_set["weights"][indexes].sum()
+            Y_hat_train_signal = Y_hat_train[Y_train == 1]
+            Y_hat_train_bkg = Y_hat_train[Y_train == 0]
+
+            gamma_roi = weights_train_signal[Y_hat_train_signal == 1].sum()
 
             # compute beta_roi
-            bkg_indexes = np.argwhere(roi_points == 0)
-            beta_roi = self.train_set["weights"][bkg_indexes].sum()
-
+            beta_roi = weights_train_bkg[Y_hat_train_bkg == 1].sum()
             if gamma_roi == 0:
                 gamma_roi = EPSILON
 
@@ -398,29 +400,24 @@ class Model():
             Y_train = self.train_set["labels"]
             Y_hat_test = test_set["predictions"]
 
-            n_roi = test_set["weights"][Y_hat_test == 1].sum()
+            weights_train = self.train_set["weights"].copy()
+            weights_test = test_set["weights"].copy()
+
+            # get n_roi
+
+            n_roi = weights_test[Y_hat_test == 1].sum()
 
 
-            # get region of interest
-            roi_indexes = np.argwhere(Y_hat_train == 1)
-            roi_points = Y_train[roi_indexes]
-            # compute nu_roi
+            weights_train_signal = weights_train[Y_train == 1]
+            weights_train_bkg = weights_train[Y_train == 0]
 
+            Y_hat_train_signal = Y_hat_train[Y_train == 1]
+            Y_hat_train_bkg = Y_hat_train[Y_train == 0]
 
-            nu_roi = self.train_set["weights"][roi_indexes].sum()
-
-            # compute gamma_roi
-            indexes = np.argwhere(roi_points == 1)
-
-            # get signal class predictions
-            signal_predictions = roi_points[indexes]
-            gamma_roi = self.train_set["weights"][indexes].sum()
-
+            gamma_roi = weights_train_signal[Y_hat_train_signal == 1].sum()
 
             # compute beta_roi
-            bkg_indexes = np.argwhere(roi_points == 0)
-            beta_roi = self.train_set["weights"][bkg_indexes].sum()
-
+            beta_roi = weights_train_bkg[Y_hat_train_bkg == 1].sum()
             if gamma_roi == 0:
                 gamma_roi = EPSILON
 
