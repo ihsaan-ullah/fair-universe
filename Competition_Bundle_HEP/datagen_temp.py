@@ -13,8 +13,14 @@ df = pd.read_csv('./reference_data.csv')
 flag = df.pop('Process_flag')
 label = df.pop('Label')
 weights = df.pop('Weight')
+entry = df.pop('entry')
+eventid = df.pop('EventID')
+# Print the features of the data
+features = df.columns.tolist()
+for feature in features:
+    print(feature)
 
-print(df.columns.tolist())
+
 
 print ("sum of weights : ", np.sum(weights))
 print ("sum of signal" , np.sum(weights[label==1]))
