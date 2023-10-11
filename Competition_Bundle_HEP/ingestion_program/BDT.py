@@ -233,8 +233,7 @@ class Model():
                 "labels": valid_label,
                 "weights": valid_weights,
                 "settings": self.train_set["settings"],
-                "tes" : tes,
-                "had_pt" : valid_with_systematics["PRI_had_pt"].sum()
+                "tes" : tes
             })
             del valid_with_systematics_temp
 
@@ -410,8 +409,8 @@ class Model():
             auc_valid = roc_auc_score(y_true=valid_set["labels"], y_score=Score_valid,sample_weight=valid_set['weights'])
             print(f"\n[*] --- AUC validation : {auc_valid} --- tes : {valid_set['tes']}")
 
-            print(f"[*] --- PRI_had_pt : {valid_set['had_pt']}")
-            del Score_valid
+            # print(f"[*] --- PRI_had_pt : {valid_set['had_pt']}")
+            # del Score_valid
 
             
 
