@@ -73,6 +73,7 @@ class Model():
             train_set=None,
             test_sets=[],
             test_sets_weights=[],
+            test_labels=[],
             systematics=None,
             model_name="BDT",
             
@@ -103,11 +104,16 @@ class Model():
         self.train_set = train_set
         self.test_sets = []
         self.test_sets_weights = []
+        self.test_labels = []
         for test_set in test_sets:
             self.test_sets.append({"data": test_set})
 
         for test_set_weights in test_sets_weights:
             self.test_sets_weights.append(test_set_weights) 
+
+        for test_label in test_labels:
+            self.test_labels.append(test_label)
+
 
         self.systematics = systematics
 
@@ -289,9 +295,9 @@ class Model():
         # try each theta on meta-validation set
         # choose best theta
         for theta in self.theta_candidates:
-            meta_validation_set["data"] = self.scaler.transform(meta_validation_set["data"])    
+            meta_validation_set_df = self.scaler.transform(meta_validation_set["data"])    
             # Get predictions from trained model
-            Y_hat_valid = self._predict(meta_validation_set['data'], theta)
+            Y_hat_valid = self._predict(meta_validation_set_df, theta)
             Y_valid = meta_validation_set["labels"]
 
             weights_valid = meta_validation_set["weights"].copy()
@@ -334,8 +340,8 @@ class Model():
             print("[!] - WARNING! All sigma squared are nan")
             index_of_least_sigma_squared = np.argmin(theta_sigma_squared)
 
-        self.best_theta = self.theta_candidates[index_of_least_sigma_squared]
-        # self.best_theta = 0.96
+        # self.best_theta = self.theta_candidates[index_of_least_sigma_squared]
+        self.best_theta = 0.96
 
         print(f"[*] --- Best theta : {self.best_theta}")
 
@@ -426,8 +432,11 @@ class Model():
             Y_hat_train = self.train_set["predictions"]
             Y_train = self.train_set["labels"]
             Y_hat_test = test_set["predictions"]
+            Y_test = test_set["labels"]
 
-            
+
+            AUC_test = roc_auc_score(y_true=Y_test, y_score=Y_hat_test,sample_weight=test_set['weights'])
+            print(f"[*] --- AUC test : {AUC_test}")
 
             weights_train = self.train_set["weights"].copy()
             weights_test = test_set["weights"].copy()
