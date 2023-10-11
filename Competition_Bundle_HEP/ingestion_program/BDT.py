@@ -231,6 +231,7 @@ class Model():
                 "labels": valid_label,
                 "weights": valid_weights,
                 "settings": self.train_set["settings"]
+                "tes" : tes
             })
 
     def _train(self):
@@ -258,6 +259,9 @@ class Model():
 
         print("[*] --- scoring Train set")
         self.train_set['score'] = self.model.predict_proba(self.train_set['data'])[:,1]
+
+        auc_train = roc_auc_score(y_true=self.train_set['labels'], y_score = train_set['score'],sample_weight=self.train_set['weights'])      
+        print(f"[*] --- AUC train : {auc_train}")
 
 
         
@@ -337,10 +341,6 @@ class Model():
 
             weights_valid = meta_validation_set["weights"].copy()
             
-
-            # print("sum of signal" , meta_validation_set["weights"][Y_hat_valid == 1].sum())
-            # print("sum of background" , meta_validation_set["weights"][Y_hat_valid == 0].sum()) 
-
             # get region of interest
             nu_roi = weights_valid[Y_hat_valid == 1].sum()/10
 
@@ -358,15 +358,14 @@ class Model():
             beta_roi = weights_valid_bkg[Y_hat_valid_bkg == 1].sum()/10
 
 
-            print(nu_roi, gamma_roi, nu_roi/np.square(gamma_roi))
-            print(f"\n[*] --- nu_roi: {nu_roi} --- beta_roi: {beta_roi} --- gamma_roi: {gamma_roi}")
-
-
             # Compute sigma squared mu hat
             sigma_squared_mu_hat = nu_roi/np.square(gamma_roi)
 
             # get N_ROI from predictions
             theta_sigma_squared.append(sigma_squared_mu_hat)
+
+            print(f"\n[*] --- nu_roi: {nu_roi} --- beta_roi: {beta_roi} --- gamma_roi: {gamma_roi} --- sigma squared: {sigma_squared_mu_hat}")
+
 
         # Choose theta with min sigma squared
         try:
@@ -404,11 +403,10 @@ class Model():
             Score_train = self.train_set["score"]
             Score_valid = valid_set["score"]
 
-            auc_train = roc_auc_score(y_true=Y_train, y_score=Score_train,sample_weight=self.train_set['weights'])      
-            print(f"[*] --- AUC train : {auc_train}")
 
             auc_valid = roc_auc_score(y_true=valid_set["labels"], y_score=Score_valid,sample_weight=valid_set['weights'])
-            print(f"[*] --- AUC validation : {auc_valid}")
+            print(f"\n[*] --- AUC validation : {auc_valid} --- tes : {valid_set['tes']}")
+
 
             weights_train = self.train_set["weights"].copy()
             weights_valid = valid_set["weights"].copy()
@@ -441,7 +439,7 @@ class Model():
 
             delta_mu_hats.append(delta_mu_hat)
 
-            print(f"[*] ---nu_roi: {nu_roi} --- n_roi: {n_roi} --- beta_roi: {beta_roi} --- gamma_roi: {gamma_roi}")
+            print(f"[*] --- nu_roi: {nu_roi} --- n_roi: {n_roi} --- beta_roi: {beta_roi} --- gamma_roi: {gamma_roi}")
 
             print(f"[*] --- mu: {np.round(valid_set['settings']['ground_truth_mu'], 4)} --- mu_hat: {np.round(mu_hat, 4)} --- delta_mu_hat: {np.round(delta_mu_hat, 4)}")
 
@@ -484,7 +482,7 @@ class Model():
             AUC_test = roc_auc_score(y_true=Y_test, y_score=Score_test,sample_weight=test_set['weights'])
 
 
-            print(f"[*] --- AUC test : {AUC_test}")
+            print(f"\n[*] --- AUC test : {AUC_test}")
 
             weights_train = self.train_set["weights"].copy()
             weights_test = test_set["weights"].copy()
@@ -533,6 +531,8 @@ class Model():
 
             mu_hats.append(mu_hat)
             print(f"[*] --- mu_hat: {np.round(mu_hat, 4)}")
+
+        print("\n")
 
         # Save mu_hat from test
         self.mu_hats = mu_hats
