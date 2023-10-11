@@ -115,6 +115,8 @@ class Model():
         self.validation_sets = None
         self.theta_candidates = np.arange(0, 1, 0.1)
         self.best_theta = 0.95
+        self.scalar = StandardScaler()
+
 
         # # Hyper params
         # self.num_epochs = 10
@@ -166,7 +168,6 @@ class Model():
 
         # self.model = XGBClassifier(tree_method="hist",use_label_encoder=False,eval_metric='logloss')
         self.model = LGBMClassifier()
-        self.scalar = StandardScaler()
 
 
     def _generate_validation_sets(self):
