@@ -482,7 +482,7 @@ class Model():
 
             print(f"[*] --- signal: {signal} --- background: {background}") 
             
-            significance = self.amsasimov_x(signal,background)
+            significance = self.amsasimov_x(10,20)
             print(f"[*] --- Significance : {significance}")
 
             delta_mu_stat = self.del_mu_stat(signal,background)
