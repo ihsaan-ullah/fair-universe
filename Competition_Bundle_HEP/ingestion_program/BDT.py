@@ -222,7 +222,6 @@ class Model():
             # apply systematics
             valid_with_systematics = self.systematics(
                 data=valid_df,
-                seed=i,
                 tes=tes
             ).data
 
@@ -430,7 +429,7 @@ class Model():
 
             delta_mu_stat = self.del_mu_stat(signal,background) 
             print(f"[*] --- delta_mu_stat : {delta_mu_stat}")
-            
+
 
             # get n_roi
             n_roi = weights_valid[Y_hat_valid == 1].sum()
