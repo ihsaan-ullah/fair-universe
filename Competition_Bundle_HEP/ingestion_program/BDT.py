@@ -406,7 +406,7 @@ class Model():
 
             auc_train = roc_auc_score(y_true=Y_train, y_score=Score_train,sample_weight=self.train_set['weights'])      
             print(f"[*] --- AUC train : {auc_train}")
-            
+
             auc_valid = roc_auc_score(y_true=valid_set["labels"], y_score=Score_valid,sample_weight=valid_set['weights'])
             print(f"[*] --- AUC validation : {auc_valid}")
 
@@ -479,8 +479,9 @@ class Model():
             Y_hat_test = test_set["predictions"]
             Y_test = test_set["labels"]
             Score_train = self.train_set["score"]
+            Score_test = test_set["score"]
 
-            AUC_test = roc_auc_score(y_true=Y_test, y_score=Score_train,sample_weight=test_set['weights'])
+            AUC_test = roc_auc_score(y_true=Y_test, y_score=Score_test,sample_weight=test_set['weights'])
 
 
             print(f"[*] --- AUC test : {AUC_test}")
