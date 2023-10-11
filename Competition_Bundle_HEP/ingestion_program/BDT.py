@@ -349,9 +349,9 @@ class Model():
             print(f"[*] --- Y_hat_train: {Y_hat_train.sum()} --- Y_hat_valid: {Y_hat_valid.sum()} --- Y_train: {Y_train.sum()} --- Y_valid: {Y_valid.sum()}")
             print(f"[*] --- Y_hat_train: {Y_hat_train.shape} --- Y_hat_valid: {Y_hat_valid.shape} --- Y_train: {Y_train.shape} --- Y_valid: {Y_valid.shape}")
 
-            auc_train = roc_auc_score(y_true=Y_train, y_score=Y_hat_train,sample_weight=self.train_set['weights'])      
+            auc_train = roc_auc_score(y_true=Y_train, y_score=Y_hat_train)      
             print(f"[*] --- AUC train : {auc_train}")
-            auc_valid = roc_auc_score(y_true=valid_set["labels"], y_score=valid_set['predictions'],sample_weight=valid_set['weights'])
+            auc_valid = roc_auc_score(y_true=valid_set["labels"], y_score=valid_set['predictions'])
             print(f"[*] --- AUC validation : {auc_valid}")
 
             weights_train = self.train_set["weights"].copy()
@@ -387,7 +387,7 @@ class Model():
 
             print(f"[*] ---nu_roi: {nu_roi} --- n_roi: {n_roi} --- beta_roi: {beta_roi} --- gamma_roi: {gamma_roi}")
 
-            print(f"\n[*] --- mu: {np.round(valid_set['settings']['ground_truth_mu'], 4)} --- mu_hat: {np.round(mu_hat, 4)} --- delta_mu_hat: {np.round(delta_mu_hat, 4)}")
+            print(f"[*] --- mu: {np.round(valid_set['settings']['ground_truth_mu'], 4)} --- mu_hat: {np.round(mu_hat, 4)} --- delta_mu_hat: {np.round(delta_mu_hat, 4)}")
 
         # Average delta mu_hat
         self.delta_mu_hat = np.mean(delta_mu_hats)
