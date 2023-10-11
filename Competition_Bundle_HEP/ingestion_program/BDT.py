@@ -327,8 +327,8 @@ class Model():
             print("[!] - WARNING! All sigma squared are nan")
             index_of_least_sigma_squared = np.argmin(theta_sigma_squared)
 
-        self.best_theta = self.theta_candidates[index_of_least_sigma_squared]
-        # self.best_theta = 0.95
+        # self.best_theta = self.theta_candidates[index_of_least_sigma_squared]
+        self.best_theta = 0.98
 
         print(f"[*] --- Best theta : {self.best_theta}")
 
