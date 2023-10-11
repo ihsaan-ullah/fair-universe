@@ -408,7 +408,8 @@ class Model():
             print(f"\n[*] --- AUC validation : {auc_valid} --- tes : {valid_set['tes']}")
 
             print(f"[*] --- PRI_had_pt : {valid_set['had_pt']}")
-
+            del Score_valid
+            
             
 
 
