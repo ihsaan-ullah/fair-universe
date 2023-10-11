@@ -260,7 +260,7 @@ class Model():
         print("[*] --- scoring Train set")
         self.train_set['score'] = self.model.predict_proba(self.train_set['data'])[:,1]
 
-        auc_train = roc_auc_score(y_true=self.train_set['labels'], y_score = train_set['score'],sample_weight=self.train_set['weights'])      
+        auc_train = roc_auc_score(y_true=self.train_set['labels'], y_score = self.train_set['score'],sample_weight=self.train_set['weights'])      
         print(f"[*] --- AUC train : {auc_train}")
 
 
