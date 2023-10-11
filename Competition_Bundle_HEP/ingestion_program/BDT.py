@@ -471,14 +471,27 @@ class Model():
 
             print(f"[*] --- Y_hat_train: {Y_hat_train.sum()} --- Y_hat_test: {Y_hat_test.sum()} --- Y_train: {Y_train.sum()} --- Y_test: {Y_test.sum()}")   
             print(f"[*] --- Y_hat_train: {Y_hat_train.shape} --- Y_hat_test: {Y_hat_test.shape} --- Y_train: {Y_train.shape} --- Y_test: {Y_test.shape}")   
+
+
             AUC_test = roc_auc_score(y_true=Y_test, y_score=Y_hat_test,sample_weight=test_set['weights'])
+
+            
             print(f"[*] --- AUC test : {AUC_test}")
 
             weights_train = self.train_set["weights"].copy()
             weights_test = test_set["weights"].copy()
 
-            signal = weights_test[Y_hat_test == 1].sum()
-            background = weights_test[Y_hat_test == 0].sum()
+            Y_hat_test_signal = Y_hat_test[Y_test == 1]
+            Y_hat_test_bkg = Y_hat_test[Y_test == 0]    
+
+            weights_test_signal = weights_test[Y_test == 1]
+            weights_test_bkg = weights_test[Y_test == 0]    
+
+            signal = weights_test_signal[Y_hat_test_signal == 1].sum()
+            background = weights_test_bkg[Y_hat_test_bkg == 1].sum()
+
+
+
 
             print(f"[*] --- signal: {signal} --- background: {background}") 
             
