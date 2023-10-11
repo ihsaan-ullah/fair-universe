@@ -225,7 +225,7 @@ class Model():
                 tes=tes
             ).data
 
-            
+            print(f"[*] --- shape of valid_with_systematics : {valid_with_systematics.shape}")
             self.validation_sets.append({
                 "data": valid_with_systematics,
                 "labels": valid_label,
@@ -257,7 +257,6 @@ class Model():
         print("[*] --- Predicting Train set")
         self.train_set['predictions'] = self._predict(self.train_set['data'], self.best_theta)
 
-        print("[*] --- scoring Train set")
         self.train_set['score'] = self.model.predict_proba(self.train_set['data'])[:,1]
 
         auc_train = roc_auc_score(y_true=self.train_set['labels'], y_score = self.train_set['score'],sample_weight=self.train_set['weights'])      
