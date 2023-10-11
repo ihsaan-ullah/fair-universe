@@ -225,12 +225,12 @@ class Model():
 
             
                 
-        class_weights_train = (weights_train[self.train_set['labels'] == 0].sum(), weights_train[self.train_set['labels'] == 1].sum())
+        # class_weights_train = (weights_train[self.train_set['labels'] == 0].sum(), weights_train[self.train_set['labels'] == 1].sum())
 
-        for i in range(len(class_weights_train)): # loop on B then S target
-            #training dataset: equalize number of background and signal
-            weights_train[self.train_set['labels'] == i] *= max(class_weights_train)/ class_weights_train[i] 
-            #test dataset : increase test weight to compensate for sampling
+        # for i in range(len(class_weights_train)): # loop on B then S target
+        #     #training dataset: equalize number of background and signal
+        #     weights_train[self.train_set['labels'] == i] *= max(class_weights_train)/ class_weights_train[i] 
+        #     #test dataset : increase test weight to compensate for sampling
 
 
         print("[*] --- Training Model")
