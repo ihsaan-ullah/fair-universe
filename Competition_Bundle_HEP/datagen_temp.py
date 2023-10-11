@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
 import os
+from systematics import Systematics
 
 
 # Load the CSV file
@@ -64,8 +65,20 @@ train_weights[train_label==0] *= total_background_weight / subset_background_wei
 print ("sum of signal" , np.sum(train_weights[train_label==1]))
 print ("sum of background" , np.sum(train_weights[train_label==0]))
 
+import json
 
 
+
+
+# Load the JSON file
+with open('./reference_data/setting/setting.json') as f:
+    data = json.load(f)
+
+# Extract the TES information from the JSON file
+tes = data['TES']
+
+# Print the TES information
+print("TES information:", tes)
 
 # Save the label and weight files for the training set
 train_label.to_csv('./input_data/train/labels/data.labels', index=False, header=False)
@@ -86,7 +99,27 @@ for i, (test_df, test_weights, test_label) in enumerate(zip(test_dfs, test_weigh
     
     test_weights[test_label==1] *= total_signal_weight / subset_signal_weight
     test_weights[test_label==0] *= total_background_weight / subset_background_weight
-    
+
+    #adding systematics to the test set
+
+    with open(f'./reference_data/setting/data_{i}.json') as f:
+        data = json.load(f)
+
+    # Extract the TES information from the JSON file
+    tes = data['TES']
+
+    test_syst = test_df.copy()
+
+    data_syst = Systematics(
+    data=test_syst,
+    tes=tes
+    ).data
+
+    test_df = data_syst.copy()
+    del test_syst
+
+
+
     # Save the current subset as a CSV file
     test_df.to_csv(f'./input_data/test/data/data_{i}.csv', index=False)
     test_weights.to_csv(f'./input_data/test/weights/data_{i}.weights', index=False, header=False)
