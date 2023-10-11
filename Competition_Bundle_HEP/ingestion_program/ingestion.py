@@ -131,8 +131,11 @@ class Ingestion():
         self.test_sets_weights = []
         for i in range(0, 10):
             test_weights_file = os.path.join(input_dir, 'test', 'weights', 'data_'+str(i)+'.weights')
+            test_labels_file = os.path.join(input_dir, 'test', 'labels', 'data_'+str(i)+'.labels')  
             with open(test_weights_file) as f:
                 self.test_sets_weights.append(np.array(f.read().splitlines(), dtype=float))
+            with open(test_labels_file) as f:
+                self.test_labels = np.array(f.read().splitlines(), dtype=float)
 
 
     def initialize_submission(self):
@@ -141,6 +144,7 @@ class Ingestion():
             train_set=self.train_set,
             test_sets=self.test_sets,
             test_sets_weights=self.test_sets_weights,
+            test_labels=self.test_labels,
             systematics=Systematics
         )
 

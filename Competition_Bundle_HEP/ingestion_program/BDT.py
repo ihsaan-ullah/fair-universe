@@ -3,6 +3,7 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from xgboost import XGBClassifier
 from sklearn.metrics import roc_auc_score
+from sklearn.preprocessing import StandardScaler
 from lightgbm import LGBMClassifier
 
 EPSILON = np.finfo(float).eps
@@ -72,6 +73,7 @@ class Model():
             train_set=None,
             test_sets=[],
             test_sets_weights=[],
+            test_labels=[],
             systematics=None,
             model_name="BDT",
             
@@ -102,11 +104,16 @@ class Model():
         self.train_set = train_set
         self.test_sets = []
         self.test_sets_weights = []
+        self.test_labels = []
         for test_set in test_sets:
             self.test_sets.append({"data": test_set})
 
         for test_set_weights in test_sets_weights:
             self.test_sets_weights.append(test_set_weights) 
+
+        for test_label in test_labels:
+            self.test_labels.append(test_label)
+
 
         self.systematics = systematics
 
@@ -114,6 +121,8 @@ class Model():
         self.validation_sets = None
         self.theta_candidates = np.arange(0, 1, 0.1)
         self.best_theta = 0.95
+        self.scaler = StandardScaler()
+
 
         # # Hyper params
         # self.num_epochs = 10
@@ -195,6 +204,8 @@ class Model():
         valid_weights[valid_label == 1] *= signal_weights / valid_signal_weights
         valid_weights[valid_label == 0] *= background_weights / valid_background_weights
 
+        train_df = self.scaler.fit_transform(train_df) 
+
         self.train_set = {
             "data": train_df,
             "labels": train_label,
@@ -211,6 +222,8 @@ class Model():
                 data=valid_df,
                 tes=tes
             ).data
+
+            
             self.validation_sets.append({
                 "data": valid_with_systematics,
                 "labels": valid_label,
@@ -282,9 +295,9 @@ class Model():
         # try each theta on meta-validation set
         # choose best theta
         for theta in self.theta_candidates:
-
+            meta_validation_set_df = self.scaler.transform(meta_validation_set["data"])    
             # Get predictions from trained model
-            Y_hat_valid = self._predict(meta_validation_set['data'], theta)
+            Y_hat_valid = self._predict(meta_validation_set_df, theta)
             Y_valid = meta_validation_set["labels"]
 
             weights_valid = meta_validation_set["weights"].copy()
@@ -328,12 +341,13 @@ class Model():
             index_of_least_sigma_squared = np.argmin(theta_sigma_squared)
 
         # self.best_theta = self.theta_candidates[index_of_least_sigma_squared]
-        self.best_theta = 0.98
+        self.best_theta = 0.96
 
         print(f"[*] --- Best theta : {self.best_theta}")
 
     def _validate(self):
         for valid_set in self.validation_sets:
+            valid_set['data'] = self.scaler.transform(valid_set['data'])
             valid_set['predictions'] = self._predict(valid_set['data'], self.best_theta)
 
     def _compute_validation_result(self):
@@ -399,7 +413,9 @@ class Model():
         print("[*] - Testing")
         # Get predictions from trained model
         for test_set in self.test_sets:
-            test_set['predictions'] = self._predict(test_set['data'], self.best_theta)
+            test_df = test_set['data']
+            test_df = self.scaler.transform(test_df)
+            test_set['predictions'] = self._predict(test_df, self.best_theta)
         for test_set, test_set_weights in zip(self.test_sets, self.test_sets_weights):
             test_set['weights'] = test_set_weights
 
@@ -416,8 +432,11 @@ class Model():
             Y_hat_train = self.train_set["predictions"]
             Y_train = self.train_set["labels"]
             Y_hat_test = test_set["predictions"]
+            Y_test = test_set["labels"]
 
-            
+
+            AUC_test = roc_auc_score(y_true=Y_test, y_score=Y_hat_test,sample_weight=test_set['weights'])
+            print(f"[*] --- AUC test : {AUC_test}")
 
             weights_train = self.train_set["weights"].copy()
             weights_test = test_set["weights"].copy()
