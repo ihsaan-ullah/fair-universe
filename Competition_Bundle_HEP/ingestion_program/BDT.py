@@ -3,6 +3,7 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from xgboost import XGBClassifier
 from sklearn.metrics import roc_auc_score
+from lightgbm import LGBMClassifier
 
 EPSILON = np.finfo(float).eps
 
@@ -163,6 +164,7 @@ class Model():
         print("[*] - Intialize BDT")
 
         self.model = XGBClassifier(tree_method="hist",use_label_encoder=False,eval_metric='logloss')
+        self.model = LightGBMClassifier()
 
 
     def _generate_validation_sets(self):
@@ -349,9 +351,9 @@ class Model():
             print(f"[*] --- Y_hat_train: {Y_hat_train.sum()} --- Y_hat_valid: {Y_hat_valid.sum()} --- Y_train: {Y_train.sum()} --- Y_valid: {Y_valid.sum()}")
             print(f"[*] --- Y_hat_train: {Y_hat_train.shape} --- Y_hat_valid: {Y_hat_valid.shape} --- Y_train: {Y_train.shape} --- Y_valid: {Y_valid.shape}")
 
-            auc_train = roc_auc_score(y_true=Y_train, y_score=Y_hat_train)      
+            auc_train = roc_auc_score(y_true=Y_train, y_score=Y_hat_train,sample_weight=self.train_set['weights'])      
             print(f"[*] --- AUC train : {auc_train}")
-            auc_valid = roc_auc_score(y_true=valid_set["labels"], y_score=valid_set['predictions'])
+            auc_valid = roc_auc_score(y_true=valid_set["labels"], y_score=valid_set['predictions'],sample_weight=valid_set['weights'])
             print(f"[*] --- AUC validation : {auc_valid}")
 
             weights_train = self.train_set["weights"].copy()
