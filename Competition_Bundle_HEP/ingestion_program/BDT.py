@@ -480,7 +480,8 @@ class Model():
             signal = weights_test[Y_hat_test == 1].sum()
             background = weights_test[Y_hat_test == 0].sum()
 
-
+            print(f"[*] --- signal: {signal} --- background: {background}") 
+            
             significance = self.amsasimov_x(signal,background)
             print(f"[*] --- Significance : {significance}")
 
