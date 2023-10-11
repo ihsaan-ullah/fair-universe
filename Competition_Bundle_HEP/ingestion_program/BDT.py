@@ -232,7 +232,7 @@ class Model():
                 "labels": valid_label,
                 "weights": valid_weights,
                 "settings": self.train_set["settings"],
-                "tes" : tes
+                "tes" : tes,
                 "had_pt" : valid_with_systematics["PRI_had_pt"].sum()
             })
 
