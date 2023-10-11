@@ -1,0 +1,200 @@
+############################################
+### Ingestion Program
+############################################
+
+[*] Loading Train data
+[*] Loading Test data
+[*] Initializing submitted model
+[*] Calling fit method of submitted model
+[*] - Generating Validation sets
+Tau energy rescaling : 0.91
+Tau energy rescaling : 0.9
+Tau energy rescaling : 0.93
+Tau energy rescaling : 1.1
+Tau energy rescaling : 1.07
+Tau energy rescaling : 0.96
+Tau energy rescaling : 1.0
+Tau energy rescaling : 0.9
+Tau energy rescaling : 1.05
+Tau energy rescaling : 0.98
+[*] - Intialize BDT
+[*] - Train Neural Network
+[*] - Intialize BDT
+[*] --- Training Model
+[*] --- Fitting Model
+sum of signal 2860861.8101999997
+sum of background 2860861.8102
+[*] --- Predicting Train set
+[*] --- AUC train : 0.858366530119541
+[*] Choose best theta
+
+[*] --- nu_roi: 2870527.8620537133 --- beta_roi: 2860861.8101999993 --- gamma_roi: 9666.051853714 --- sigma squared: 0.030722993247984387
+
+[*] --- nu_roi: 2863868.881294659 --- beta_roi: 2854206.0495264204 --- gamma_roi: 9662.831768238038 --- sigma squared: 0.03067215523463861
+
+[*] --- nu_roi: 1892119.1882803652 --- beta_roi: 1883141.241750912 --- gamma_roi: 8977.946529453176 --- sigma squared: 0.023474397855892892
+
+[*] --- nu_roi: 1081766.114662693 --- beta_roi: 1073821.406078366 --- gamma_roi: 7944.708584327231 --- sigma squared: 0.01713868236677168
+
+[*] --- nu_roi: 664216.1769257048 --- beta_roi: 657146.787566928 --- gamma_roi: 7069.389358776729 --- sigma squared: 0.01329063236087336
+
+[*] --- nu_roi: 423721.4161679389 --- beta_roi: 417434.9519860373 --- gamma_roi: 6286.464181901604 --- sigma squared: 0.010721795616147006
+
+[*] --- nu_roi: 261670.96171797355 --- beta_roi: 256174.04598585964 --- gamma_roi: 5496.915732113919 --- sigma squared: 0.008659989631241828
+
+[*] --- nu_roi: 144179.76214593803 --- beta_roi: 139524.85425319197 --- gamma_roi: 4654.907892746098 --- sigma squared: 0.00665398964692382
+
+[*] --- nu_roi: 73031.45404940666 --- beta_roi: 69387.63658182822 --- gamma_roi: 3643.81746757843 --- sigma squared: 0.0055004309950194155
+
+[*] --- nu_roi: 23585.49103361111 --- beta_roi: 21326.554516623462 --- gamma_roi: 2258.936516987645 --- sigma squared: 0.0046220737434583565
+[*] --- Best theta : 0.95
+[*] - Computing Validation result
+
+[*] --- AUC validation : 0.8248203609970326 --- tes : 0.91
+[*] --- PRI_had_pt : 2053292.128
+[*] --- Significance : 12.192954801957606
+[*] --- delta_mu_stat : 0.08201457450161694
+[*] --- nu_roi: 6207.596220030266 --- n_roi: 7976.46049606489 --- beta_roi: 4742.46485600385 --- gamma_roi: 1465.1313640264143
+[*] --- mu: 1.0 --- mu_hat: 2.2073 --- delta_mu_hat: 1.2073
+
+[*] --- AUC validation : 0.8248203609970326 --- tes : 0.9
+[*] --- PRI_had_pt : 1847963.336
+[*] --- Significance : 12.192954801957606
+[*] --- delta_mu_stat : 0.08201457450161694
+[*] --- nu_roi: 6207.596220030266 --- n_roi: 7976.46049606489 --- beta_roi: 4742.46485600385 --- gamma_roi: 1465.1313640264143
+[*] --- mu: 1.0 --- mu_hat: 2.2073 --- delta_mu_hat: 1.2073
+
+[*] --- AUC validation : 0.8248203609970326 --- tes : 0.93
+[*] --- PRI_had_pt : 1718605.935
+[*] --- Significance : 12.192954801957606
+[*] --- delta_mu_stat : 0.08201457450161694
+[*] --- nu_roi: 6207.596220030266 --- n_roi: 7976.46049606489 --- beta_roi: 4742.46485600385 --- gamma_roi: 1465.1313640264143
+[*] --- mu: 1.0 --- mu_hat: 2.2073 --- delta_mu_hat: 1.2073
+
+[*] --- AUC validation : 0.8248203609970326 --- tes : 1.1
+[*] --- PRI_had_pt : 1890467.7510000002
+[*] --- Significance : 12.192954801957606
+[*] --- delta_mu_stat : 0.08201457450161694
+[*] --- nu_roi: 6207.596220030266 --- n_roi: 7976.46049606489 --- beta_roi: 4742.46485600385 --- gamma_roi: 1465.1313640264143
+[*] --- mu: 1.0 --- mu_hat: 2.2073 --- delta_mu_hat: 1.2073
+
+[*] --- AUC validation : 0.8248203609970326 --- tes : 1.07
+[*] --- PRI_had_pt : 2022800.4609999997
+[*] --- Significance : 12.192954801957606
+[*] --- delta_mu_stat : 0.08201457450161694
+[*] --- nu_roi: 6207.596220030266 --- n_roi: 7976.46049606489 --- beta_roi: 4742.46485600385 --- gamma_roi: 1465.1313640264143
+[*] --- mu: 1.0 --- mu_hat: 2.2073 --- delta_mu_hat: 1.2073
+
+[*] --- AUC validation : 0.8248203609970326 --- tes : 0.96
+[*] --- PRI_had_pt : 1941888.539
+[*] --- Significance : 12.192954801957606
+[*] --- delta_mu_stat : 0.08201457450161694
+[*] --- nu_roi: 6207.596220030266 --- n_roi: 7976.46049606489 --- beta_roi: 4742.46485600385 --- gamma_roi: 1465.1313640264143
+[*] --- mu: 1.0 --- mu_hat: 2.2073 --- delta_mu_hat: 1.2073
+
+[*] --- AUC validation : 0.8248203609970326 --- tes : 1.0
+[*] --- PRI_had_pt : 1941888.539
+[*] --- Significance : 12.192954801957606
+[*] --- delta_mu_stat : 0.08201457450161694
+[*] --- nu_roi: 6207.596220030266 --- n_roi: 7976.46049606489 --- beta_roi: 4742.46485600385 --- gamma_roi: 1465.1313640264143
+[*] --- mu: 1.0 --- mu_hat: 2.2073 --- delta_mu_hat: 1.2073
+
+[*] --- AUC validation : 0.8248203609970326 --- tes : 0.9
+[*] --- PRI_had_pt : 1747700.0960000001
+[*] --- Significance : 12.192954801957606
+[*] --- delta_mu_stat : 0.08201457450161694
+[*] --- nu_roi: 6207.596220030266 --- n_roi: 7976.46049606489 --- beta_roi: 4742.46485600385 --- gamma_roi: 1465.1313640264143
+[*] --- mu: 1.0 --- mu_hat: 2.2073 --- delta_mu_hat: 1.2073
+
+[*] --- AUC validation : 0.8248203609970326 --- tes : 1.05
+[*] --- PRI_had_pt : 1835085.5310000002
+[*] --- Significance : 12.192954801957606
+[*] --- delta_mu_stat : 0.08201457450161694
+[*] --- nu_roi: 6207.596220030266 --- n_roi: 7976.46049606489 --- beta_roi: 4742.46485600385 --- gamma_roi: 1465.1313640264143
+[*] --- mu: 1.0 --- mu_hat: 2.2073 --- delta_mu_hat: 1.2073
+
+[*] --- AUC validation : 0.8248203609970326 --- tes : 0.98
+[*] --- PRI_had_pt : 1798383.745
+[*] --- Significance : 12.192954801957606
+[*] --- delta_mu_stat : 0.08201457450161694
+[*] --- nu_roi: 6207.596220030266 --- n_roi: 7976.46049606489 --- beta_roi: 4742.46485600385 --- gamma_roi: 1465.1313640264143
+[*] --- mu: 1.0 --- mu_hat: 2.2073 --- delta_mu_hat: 1.2073
+[*] --- delta_mu_hat (avg): 1.2073
+[*] Calling predict method of submitted model
+[*] - Testing
+[*] - Computing Test result
+
+[*] --- AUC test : 0.8501092587623881
+[*] --- signal: 1475.367890144941 --- background: 9444.143588687943
+[*] --- Significance : 14.1188304421477
+[*] --- delta_mu_stat : 0.07082739636951713
+[*] --- mu_hat: 4.216
+
+[*] --- AUC test : 0.8526500462011737
+[*] --- signal: 1475.0066237231968 --- background: 11987.875415925202
+[*] --- Significance : 12.712323913865285
+[*] --- delta_mu_stat : 0.0786638231353831
+[*] --- mu_hat: 5.952
+
+[*] --- AUC test : 0.8550712733536924
+[*] --- signal: 1439.731565751594 --- background: 8954.151516084712
+[*] --- Significance : 14.121883126588234
+[*] --- delta_mu_stat : 0.07081208582708291
+[*] --- mu_hat: 3.8573
+
+[*] --- AUC test : 0.8596391031254788
+[*] --- signal: 1459.540929055615 --- background: 2758.635281166799
+[*] --- Significance : 22.472630917708685
+[*] --- delta_mu_stat : 0.044498572670990146
+[*] --- mu_hat: -0.3578
+
+[*] --- AUC test : 0.8478656755100474
+[*] --- signal: 1444.418457754764 --- background: 5211.90726877932
+[*] --- Significance : 17.704177149234745
+[*] --- delta_mu_stat : 0.05648384511579655
+[*] --- mu_hat: 1.3063
+
+[*] --- AUC test : 0.8540458108448992
+[*] --- signal: 1496.1438245739462 --- background: 4119.280640526487
+[*] --- Significance : 19.965585446969413
+[*] --- delta_mu_stat : 0.05008618468294355
+[*] --- mu_hat: 0.5958
+
+[*] --- AUC test : 0.852100253524408
+[*] --- signal: 1438.357453069039 --- background: 6343.35676347717
+[*] --- Significance : 16.305314853948897
+[*] --- delta_mu_stat : 0.06132969580515738
+[*] --- mu_hat: 2.0744
+
+[*] --- AUC test : 0.862805422546401
+[*] --- signal: 1478.6319657346194 --- background: 1320.1743233230186
+[*] --- Significance : 27.949476005180475
+[*] --- delta_mu_stat : 0.03577884607978513
+[*] --- mu_hat: -1.3266
+
+[*] --- AUC test : 0.8475603773199365
+[*] --- signal: 1490.698037159372 --- background: 8153.272985440921
+[*] --- Significance : 15.179649062030208
+[*] --- delta_mu_stat : 0.06587767582198996
+[*] --- mu_hat: 3.3454
+
+[*] --- AUC test : 0.8603164503001722
+[*] --- signal: 1533.616103130979 --- background: 5272.43570182841
+[*] --- Significance : 18.589556760432743
+[*] --- delta_mu_stat : 0.053793644081308434
+[*] --- mu_hat: 1.4085
+
+
+[*] Saving result
+[*] --- delta_mu_hat: 1.2073076308826702
+[*] --- mu_hats (avg): 2.1071214863941012
+
+---------------------------------
+[✔] Total duration: 0:00:24.130472
+---------------------------------
+
+----------------------------------------------
+[✔] Ingestions Program executed successfully!
+----------------------------------------------
+
+
