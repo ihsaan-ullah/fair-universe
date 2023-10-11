@@ -220,10 +220,12 @@ class Model():
         for i in range(0, 10):
             tes = round(np.random.uniform(0.9, 1.10), 2)
             # apply systematics
-            valid_with_systematics = self.systematics(
+            valid_with_systematics_temp = self.systematics(
                 data=valid_df,
                 tes=tes
             ).data
+
+            valid_with_systematics = valid_with_systematics_temp.copy()
 
 
             self.validation_sets.append({
@@ -234,6 +236,7 @@ class Model():
                 "tes" : tes,
                 "had_pt" : valid_with_systematics["PRI_had_pt"].sum()
             })
+            del valid_with_systematics_temp
 
     def _train(self):
         print("[*] - Train Neural Network")
@@ -409,7 +412,7 @@ class Model():
 
             print(f"[*] --- PRI_had_pt : {valid_set['had_pt']}")
             del Score_valid
-            
+
             
 
 
