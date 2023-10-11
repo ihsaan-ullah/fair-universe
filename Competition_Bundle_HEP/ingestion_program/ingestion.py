@@ -66,6 +66,7 @@ class Ingestion():
         self.train_set = None
         self.test_sets = []
         self.test_sets_weights = []
+        self.test_labels = []
 
     def start_timer(self):
         self.start_time = dt.now()
@@ -131,11 +132,13 @@ class Ingestion():
         self.test_sets_weights = []
         for i in range(0, 10):
             test_weights_file = os.path.join(input_dir, 'test', 'weights', 'data_'+str(i)+'.weights')
-            test_labels_file = os.path.join(input_dir, 'test', 'labels', 'data_'+str(i)+'.labels')  
             with open(test_weights_file) as f:
                 self.test_sets_weights.append(np.array(f.read().splitlines(), dtype=float))
+
+        for i in range(0, 10):
+            test_labels_file = os.path.join(input_dir, 'test', 'labels', 'data_'+str(i)+'.labels')
             with open(test_labels_file) as f:
-                self.test_labels = np.array(f.read().splitlines(), dtype=float)
+                self.test_labels.append(np.array(f.read().splitlines(), dtype=float))
 
 
     def initialize_submission(self):

@@ -173,7 +173,7 @@ class Model():
         print("[*] - Intialize BDT")
 
         # self.model = XGBClassifier(tree_method="hist",use_label_encoder=False,eval_metric='logloss')
-        self.model = LGBMClassifier()
+        self.model = LGBMClassifier(num_threads = 4)
 
 
     def _generate_validation_sets(self):
@@ -420,7 +420,7 @@ class Model():
             test_set['weights'] = test_set_weights
         for test_set, test_label in zip(self.test_sets, self.test_labels):
             test_set['labels'] = test_label
-            
+
 
 
 
@@ -437,7 +437,8 @@ class Model():
             Y_hat_test = test_set["predictions"]
             Y_test = test_set["labels"]
 
-
+            print(f"[*] --- Y_hat_train: {Y_hat_train.sum()} --- Y_hat_test: {Y_hat_test.sum()} --- Y_train: {Y_train.sum()} --- Y_test: {Y_test.sum()}")   
+            print(f"[*] --- Y_hat_train: {Y_hat_train.shape} --- Y_hat_test: {Y_hat_test.shape} --- Y_train: {Y_train.shape} --- Y_test: {Y_test.shape}")   
             AUC_test = roc_auc_score(y_true=Y_test, y_score=Y_hat_test,sample_weight=test_set['weights'])
             print(f"[*] --- AUC test : {AUC_test}")
 
