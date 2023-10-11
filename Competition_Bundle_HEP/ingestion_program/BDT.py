@@ -420,7 +420,7 @@ class Model():
             test_set['weights'] = test_set_weights
         for test_set, test_label in zip(self.test_sets, self.test_labels):
             test_set['labels'] = test_label
-            
+
 
 
 
@@ -437,6 +437,7 @@ class Model():
             Y_hat_test = test_set["predictions"]
             Y_test = test_set["labels"]
 
+            print(f"[*] --- Y_hat_train: {Y_hat_train.sum()} --- Y_hat_test: {Y_hat_test.sum()} --- Y_train: {Y_train.sum()} --- Y_test: {Y_test.sum()}")   
 
             AUC_test = roc_auc_score(y_true=Y_test, y_score=Y_hat_test,sample_weight=test_set['weights'])
             print(f"[*] --- AUC test : {AUC_test}")
