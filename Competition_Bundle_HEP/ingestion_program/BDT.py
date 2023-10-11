@@ -3,6 +3,7 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from xgboost import XGBClassifier
 from sklearn.metrics import roc_auc_score
+from sklearn.preprocessing import StandardScaler
 from lightgbm import LGBMClassifier
 
 EPSILON = np.finfo(float).eps
@@ -165,6 +166,7 @@ class Model():
 
         # self.model = XGBClassifier(tree_method="hist",use_label_encoder=False,eval_metric='logloss')
         self.model = LGBMClassifier()
+        self.scalar = StandardScaler()
 
 
     def _generate_validation_sets(self):
@@ -194,6 +196,9 @@ class Model():
         train_weights[train_label == 0] *= background_weights / train_background_weights
         valid_weights[valid_label == 1] *= signal_weights / valid_signal_weights
         valid_weights[valid_label == 0] *= background_weights / valid_background_weights
+
+        train_df = self.scaler.fit_transform(train_df) 
+        valid_df = self.scaler.transform(valid_df)
 
         self.train_set = {
             "data": train_df,
@@ -399,7 +404,9 @@ class Model():
         print("[*] - Testing")
         # Get predictions from trained model
         for test_set in self.test_sets:
-            test_set['predictions'] = self._predict(test_set['data'], self.best_theta)
+            test_df = test_set['data']
+            test_df = self.scaler.transform(test_df)
+            test_set['predictions'] = self._predict(test_df, self.best_theta)
         for test_set, test_set_weights in zip(self.test_sets, self.test_sets_weights):
             test_set['weights'] = test_set_weights
 
