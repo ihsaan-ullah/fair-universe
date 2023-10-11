@@ -790,6 +790,7 @@ class Systematics:
         tes=1.0,
         jes=1.0,
         softMET=1.0,
+        seed=31415,
         w_scale=None,
         bkg_scale=None
 
@@ -852,5 +853,5 @@ class Systematics:
             self.data = all_bkg_weight_norm(self.data, self.bkg_scale)
 
         print("Tau energy rescaling :", self.tes)
-        self.data = mom4_manipulate(self.data, self.tes, self.jes, self.softMET)
+        self.data = mom4_manipulate(data=self.data,systTauEnergyScale = self.tes,systJetEnergyScale = self.jes,softMET = self.softMET,seed=seed)
         self.data = DER_data(self.data)
