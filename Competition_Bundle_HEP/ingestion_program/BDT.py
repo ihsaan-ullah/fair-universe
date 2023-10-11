@@ -348,8 +348,6 @@ class Model():
         print(f"[*] --- Best theta forced : {self.best_theta}")
 
 
-        print(f"[*] --- Best theta : {self.best_theta}")
-
     def _validate(self):
         for valid_set in self.validation_sets:
             valid_set['data'] = self.scaler.transform(valid_set['data'])
