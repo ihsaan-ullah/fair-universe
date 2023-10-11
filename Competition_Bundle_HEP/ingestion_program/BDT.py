@@ -418,6 +418,9 @@ class Model():
             test_set['predictions'] = self._predict(test_df, self.best_theta)
         for test_set, test_set_weights in zip(self.test_sets, self.test_sets_weights):
             test_set['weights'] = test_set_weights
+        for test_set, test_label in zip(self.test_sets, self.test_labels):
+            test_set['labels'] = test_label
+            
 
 
 
