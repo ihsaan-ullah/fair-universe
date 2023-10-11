@@ -341,7 +341,7 @@ class Model():
 
     def _validate(self):
         for valid_set in self.validation_sets:
-            valid_set['data'] = self.scaler.transform(valid_set['data'])    s
+            valid_set['data'] = self.scaler.transform(valid_set['data'])
             valid_set['predictions'] = self._predict(valid_set['data'], self.best_theta)
 
     def _compute_validation_result(self):
