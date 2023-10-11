@@ -341,7 +341,12 @@ class Model():
             index_of_least_sigma_squared = np.argmin(theta_sigma_squared)
 
         # self.best_theta = self.theta_candidates[index_of_least_sigma_squared]
-        self.best_theta = 0.96
+        print(f"[*] --- Best theta : {self.best_theta}")
+
+        self.best_theta = 0.92
+
+        print(f"[*] --- Best theta forced : {self.best_theta}")
+
 
         print(f"[*] --- Best theta : {self.best_theta}")
 
