@@ -256,6 +256,11 @@ class Model():
         print("[*] --- Predicting Train set")
         self.train_set['predictions'] = self._predict(self.train_set['data'], self.best_theta)
 
+        print("[*] --- scoring Train set")
+        self.train_set['score'] = self.model.predict_proba(self.train_set['data'])[:,1]
+
+
+        
     def _fit(self, X, y,w):
         print("[*] --- Fitting Model")
         print("sum of signal" , w[y == 1].sum())    
@@ -266,6 +271,7 @@ class Model():
     def _predict(self, X, theta):
         y_predict = self.model.predict_proba(X)[:,1]
         predictions = np.where(y_predict > theta, 1, 0) 
+
         return predictions
 
     def amsasimov_x(self, s, b):
@@ -393,11 +399,12 @@ class Model():
             Y_train = self.train_set["labels"]
             Y_hat_valid = valid_set["predictions"]
             Y_valid = valid_set["labels"]
+            Score_train = self.train_set["score"]
 
             print(f"[*] --- Y_hat_train: {Y_hat_train.sum()} --- Y_hat_valid: {Y_hat_valid.sum()} --- Y_train: {Y_train.sum()} --- Y_valid: {Y_valid.sum()}")
             print(f"[*] --- Y_hat_train: {Y_hat_train.shape} --- Y_hat_valid: {Y_hat_valid.shape} --- Y_train: {Y_train.shape} --- Y_valid: {Y_valid.shape}")
 
-            auc_train = roc_auc_score(y_true=Y_train, y_score=Y_hat_train,sample_weight=self.train_set['weights'])      
+            auc_train = roc_auc_score(y_true=Y_train, y_score=Score_train,sample_weight=self.train_set['weights'])      
             print(f"[*] --- AUC train : {auc_train}")
             auc_valid = roc_auc_score(y_true=valid_set["labels"], y_score=valid_set['predictions'],sample_weight=valid_set['weights'])
             print(f"[*] --- AUC validation : {auc_valid}")
