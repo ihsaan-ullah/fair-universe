@@ -268,7 +268,7 @@ class Model():
         predictions = np.where(y_predict > theta, 1, 0) 
         return predictions
 
-    def amsasimov_x(s,b):
+    def amsasimov_x(self, s, b):
         '''
         This function calculates the Asimov crossection significance for a given number of signal and background events.
         Parameters: s (float) - number of signal events
@@ -285,7 +285,7 @@ class Model():
             print (2*((s+b)*log(1+float(s)/b)-s))
         #return s/sqrt(s+b)
 
-    def del_mu_stat(s,b):
+    def del_mu_stat(self, s, b):
         '''
         This function calculates the statistical uncertainty on the signal strength.
         Parameters: s (float) - number of signal events
