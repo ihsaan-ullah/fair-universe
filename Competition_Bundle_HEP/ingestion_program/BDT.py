@@ -174,8 +174,8 @@ class Model():
     def _init_model(self):
         print("[*] - Intialize BDT")
 
-        # self.model = XGBClassifier(tree_method="hist",use_label_encoder=False,eval_metric='logloss')
-        self.model = LGBMClassifier(num_threads = 128)
+        self.model = XGBClassifier(tree_method="hist",use_label_encoder=False,eval_metric='logloss')
+        # self.model = LGBMClassifier(num_threads = 128)
 
 
     def _generate_validation_sets(self):
