@@ -410,9 +410,27 @@ class Model():
 
             print(f"[*] --- PRI_had_pt : {valid_set['had_pt']}")
 
+            
+
 
             weights_train = self.train_set["weights"].copy()
             weights_valid = valid_set["weights"].copy()
+
+            signal_valid = weights_valid[Y_valid == 1]
+            background_valid = weights_valid[Y_valid == 0]
+
+            Y_hat_valid_signal = Y_hat_valid[Y_valid == 1]
+            Y_hat_valid_bkg = Y_hat_valid[Y_valid == 0]
+
+            signal = signal_valid[Y_hat_valid_signal == 1].sum()
+            background = background_valid[Y_hat_valid_bkg == 1].sum()
+
+            significance = self.amsasimov_x(signal,background)  
+            print(f"[*] --- Significance : {significance}")
+
+            delta_mu_stat = self.del_mu_stat(signal,background) 
+            print(f"[*] --- delta_mu_stat : {delta_mu_stat}")
+            
 
             # get n_roi
             n_roi = weights_valid[Y_hat_valid == 1].sum()
