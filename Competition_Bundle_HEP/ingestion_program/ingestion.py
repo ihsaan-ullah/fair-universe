@@ -66,6 +66,7 @@ class Ingestion():
         self.train_set = None
         self.test_sets = []
         self.test_sets_weights = []
+        self.test_labels = []
 
     def start_timer(self):
         self.start_time = dt.now()
