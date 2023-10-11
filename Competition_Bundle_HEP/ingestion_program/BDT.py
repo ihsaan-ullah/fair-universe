@@ -475,7 +475,7 @@ class Model():
 
             AUC_test = roc_auc_score(y_true=Y_test, y_score=Y_hat_test,sample_weight=test_set['weights'])
 
-            
+
             print(f"[*] --- AUC test : {AUC_test}")
 
             weights_train = self.train_set["weights"].copy()
@@ -495,7 +495,7 @@ class Model():
 
             print(f"[*] --- signal: {signal} --- background: {background}") 
             
-            significance = self.amsasimov_x(10,20)
+            significance = self.amsasimov_x(signal,background)
             print(f"[*] --- Significance : {significance}")
 
             delta_mu_stat = self.del_mu_stat(signal,background)
