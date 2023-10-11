@@ -230,7 +230,7 @@ class Model():
                 "data": valid_with_systematics,
                 "labels": valid_label,
                 "weights": valid_weights,
-                "settings": self.train_set["settings"]
+                "settings": self.train_set["settings"],
                 "tes" : tes
             })
 
