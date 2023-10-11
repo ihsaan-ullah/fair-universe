@@ -477,13 +477,17 @@ class Model():
             weights_train = self.train_set["weights"].copy()
             weights_test = test_set["weights"].copy()
 
-            significance = self.amsasimov_x(weights_test[Y_hat_test == 1].sum(),weights_test[Y_hat_test == 0].sum())
+            signal = weights_test[Y_hat_test == 1].sum()
+            background = weights_test[Y_hat_test == 0].sum()
+
+
+            significance = self.amsasimov_x(signal,background)
             print(f"[*] --- Significance : {significance}")
 
-            delta_mu_stat = self.del_mu_stat(weights_test[Y_hat_test == 1].sum(),weights_test[Y_hat_test == 0].sum())   
+            delta_mu_stat = self.del_mu_stat(signal,background)
 
             print(f"[*] --- delta_mu_stat : {delta_mu_stat}")
-            
+
             # get n_roi
 
             n_roi = weights_test[Y_hat_test == 1].sum()
