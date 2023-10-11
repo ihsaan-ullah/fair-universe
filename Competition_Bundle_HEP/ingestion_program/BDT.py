@@ -115,7 +115,7 @@ class Model():
         self.validation_sets = None
         self.theta_candidates = np.arange(0, 1, 0.1)
         self.best_theta = 0.95
-        self.scalar = StandardScaler()
+        self.scaler = StandardScaler()
 
 
         # # Hyper params
