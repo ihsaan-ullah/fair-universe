@@ -217,7 +217,6 @@ class Model():
                 tes=tes
             ).data
 
-            valid_with_systematics = self.scaler.transform(valid_with_systematics)  
             
             self.validation_sets.append({
                 "data": valid_with_systematics,
@@ -290,7 +289,7 @@ class Model():
         # try each theta on meta-validation set
         # choose best theta
         for theta in self.theta_candidates:
-
+            meta_validation_set["data"] = self.scaler.transform(meta_validation_set["data"])    
             # Get predictions from trained model
             Y_hat_valid = self._predict(meta_validation_set['data'], theta)
             Y_valid = meta_validation_set["labels"]
@@ -342,6 +341,7 @@ class Model():
 
     def _validate(self):
         for valid_set in self.validation_sets:
+            valid_set['data'] = self.scaler.transform(valid_set['data'])    s
             valid_set['predictions'] = self._predict(valid_set['data'], self.best_theta)
 
     def _compute_validation_result(self):
