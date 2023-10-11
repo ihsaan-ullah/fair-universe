@@ -48,7 +48,9 @@ if not os.path.exists('./input_data/train/weights'):
 
 if not os.path.exists('./input_data/test/weights'):
     os.makedirs('./input_data/test/weights')
-
+if not os.path.exists('./input_data/test/labels'):
+    os.makedirs('./input_data/test/labels')
+    
 subset_weight = np.sum(train_weights)
 subset_signal_weight = np.sum(train_weights[train_label==1])
 subset_background_weight = np.sum(train_weights[train_label==0])
