@@ -222,10 +222,12 @@ class Model():
             # apply systematics
             valid_with_systematics = self.systematics(
                 data=valid_df,
+                seed=i,
                 tes=tes
             ).data
 
             print(f"[*] --- shape of valid_with_systematics : {valid_with_systematics.shape}")
+
             self.validation_sets.append({
                 "data": valid_with_systematics,
                 "labels": valid_label,
