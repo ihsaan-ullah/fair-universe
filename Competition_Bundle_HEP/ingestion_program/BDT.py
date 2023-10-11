@@ -5,6 +5,8 @@ from xgboost import XGBClassifier
 from sklearn.metrics import roc_auc_score
 from sklearn.preprocessing import StandardScaler
 from lightgbm import LGBMClassifier
+from math import sqrt
+from math import log
 
 EPSILON = np.finfo(float).eps
 
@@ -173,7 +175,7 @@ class Model():
         print("[*] - Intialize BDT")
 
         # self.model = XGBClassifier(tree_method="hist",use_label_encoder=False,eval_metric='logloss')
-        self.model = LGBMClassifier(num_threads = 4)
+        self.model = LGBMClassifier(num_threads = 128)
 
 
     def _generate_validation_sets(self):
@@ -266,6 +268,33 @@ class Model():
         predictions = np.where(y_predict > theta, 1, 0) 
         return predictions
 
+    def amsasimov_x(self, s, b):
+        '''
+        This function calculates the Asimov crossection significance for a given number of signal and background events.
+        Parameters: s (float) - number of signal events
+
+        Returns:    float - Asimov crossection significance
+        '''
+
+        if b<=0 or s<=0:
+            return 0
+        try:
+            return s/sqrt(s+b)
+        except ValueError:
+            print(1+float(s)/b)
+            print (2*((s+b)*log(1+float(s)/b)-s))
+        #return s/sqrt(s+b)
+
+    def del_mu_stat(self, s, b):
+        '''
+        This function calculates the statistical uncertainty on the signal strength.
+        Parameters: s (float) - number of signal events
+                    b (float) - number of background events
+        
+        Returns:    float - statistical uncertainty on the signal strength 
+
+        '''
+        return (np.sqrt(s + b)/s)
 
     def get_meta_validation_set(self):
 
@@ -341,9 +370,12 @@ class Model():
             index_of_least_sigma_squared = np.argmin(theta_sigma_squared)
 
         # self.best_theta = self.theta_candidates[index_of_least_sigma_squared]
-        self.best_theta = 0.96
-
         print(f"[*] --- Best theta : {self.best_theta}")
+
+        # self.best_theta = 0.92
+
+        # print(f"[*] --- Best theta forced : {self.best_theta}")
+
 
     def _validate(self):
         for valid_set in self.validation_sets:
@@ -444,6 +476,18 @@ class Model():
 
             weights_train = self.train_set["weights"].copy()
             weights_test = test_set["weights"].copy()
+
+            signal = weights_test[Y_hat_test == 1].sum()
+            background = weights_test[Y_hat_test == 0].sum()
+
+            print(f"[*] --- signal: {signal} --- background: {background}") 
+            
+            significance = self.amsasimov_x(signal,background)
+            print(f"[*] --- Significance : {significance}")
+
+            delta_mu_stat = self.del_mu_stat(signal,background)
+
+            print(f"[*] --- delta_mu_stat : {delta_mu_stat}")
 
             # get n_roi
 

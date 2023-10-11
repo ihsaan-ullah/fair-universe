@@ -50,7 +50,7 @@ if not os.path.exists('./input_data/test/weights'):
     os.makedirs('./input_data/test/weights')
 if not os.path.exists('./input_data/test/labels'):
     os.makedirs('./input_data/test/labels')
-    
+
 subset_weight = np.sum(train_weights)
 subset_signal_weight = np.sum(train_weights[train_label==1])
 subset_background_weight = np.sum(train_weights[train_label==0])
@@ -76,7 +76,7 @@ test_dfs = [test_df[i:i+len(test_df)//10] for i in range(0, len(test_df), len(te
 test_weights_ = [test_weights[i:i+len(test_weights)//10] for i in range(0, len(test_weights), len(test_weights)//10)]
 test_label_ = [test_label[i:i+len(test_label)//10] for i in range(0, len(test_label), len(test_label)//10)]
 
-for i, (test_df, test_weights) in enumerate(zip(test_dfs, test_weights_)):
+for i, (test_df, test_weights, test_label) in enumerate(zip(test_dfs, test_weights_, test_label_)):
     # Calculate the sum of weights of signal and background for the current subset
     subset_weight = np.sum(test_weights)
     subset_signal_weight = np.sum(test_weights[test_label==1])
