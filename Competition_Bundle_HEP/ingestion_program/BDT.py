@@ -343,9 +343,9 @@ class Model():
         # self.best_theta = self.theta_candidates[index_of_least_sigma_squared]
         print(f"[*] --- Best theta : {self.best_theta}")
 
-        self.best_theta = 0.92
+        # self.best_theta = 0.92
 
-        print(f"[*] --- Best theta forced : {self.best_theta}")
+        # print(f"[*] --- Best theta forced : {self.best_theta}")
 
 
     def _validate(self):
