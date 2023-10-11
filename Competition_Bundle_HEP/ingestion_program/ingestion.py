@@ -136,6 +136,9 @@ class Ingestion():
 
         self.mu_hats = predicted_dict["mu_hats"]
         self.delta_mu_hat = predicted_dict["delta_mu_hat"]
+        
+        self.q_1 = predicted_dict["q_1"]
+        self.q_2 = predicted_dict["q_2"]
 
     def save_result(self):
 
@@ -143,10 +146,15 @@ class Ingestion():
 
         result_dict = {
             "delta_mu_hat": self.delta_mu_hat,
-            "mu_hats": self.mu_hats
+            "mu_hats": self.mu_hats,
+            "q_1": self.q_1,
+            "q_2": self.q_2
+        }
         }
         print(f"[*] --- delta_mu_hat: {result_dict['delta_mu_hat']}")
         print(f"[*] --- mu_hats (avg): {np.mean(result_dict['mu_hats'])}")
+        print(f"[*] --- q_1 (avg): {np.mean(result_dict['q_1'])}")
+        print(f"[*] --- q_2 (avg): {np.mean(result_dict['q_2'])}")  
 
         result_file = os.path.join(output_dir, "result.json")
 
