@@ -387,6 +387,8 @@ class Model():
         for valid_set in self.validation_sets:
             valid_set['data'] = self.scaler.transform(valid_set['data'])
             valid_set['predictions'] = self._predict(valid_set['data'], self.best_theta)
+            valid_set['score'] = self.model.predict_proba(valid_set['data'])[:,1]
+
 
     def _compute_validation_result(self):
 
@@ -400,13 +402,12 @@ class Model():
             Y_hat_valid = valid_set["predictions"]
             Y_valid = valid_set["labels"]
             Score_train = self.train_set["score"]
-
-            print(f"[*] --- Y_hat_train: {Y_hat_train.sum()} --- Y_hat_valid: {Y_hat_valid.sum()} --- Y_train: {Y_train.sum()} --- Y_valid: {Y_valid.sum()}")
-            print(f"[*] --- Y_hat_train: {Y_hat_train.shape} --- Y_hat_valid: {Y_hat_valid.shape} --- Y_train: {Y_train.shape} --- Y_valid: {Y_valid.shape}")
+            Score_valid = valid_set["score"]
 
             auc_train = roc_auc_score(y_true=Y_train, y_score=Score_train,sample_weight=self.train_set['weights'])      
             print(f"[*] --- AUC train : {auc_train}")
-            auc_valid = roc_auc_score(y_true=valid_set["labels"], y_score=valid_set['predictions'],sample_weight=valid_set['weights'])
+            
+            auc_valid = roc_auc_score(y_true=valid_set["labels"], y_score=Score_valid,sample_weight=valid_set['weights'])
             print(f"[*] --- AUC validation : {auc_valid}")
 
             weights_train = self.train_set["weights"].copy()
@@ -455,6 +456,8 @@ class Model():
             test_df = test_set['data']
             test_df = self.scaler.transform(test_df)
             test_set['predictions'] = self._predict(test_df, self.best_theta)
+            test_set['score'] = self.model.predict_proba(test_df)[:,1]
+
         for test_set, test_set_weights in zip(self.test_sets, self.test_sets_weights):
             test_set['weights'] = test_set_weights
         for test_set, test_label in zip(self.test_sets, self.test_labels):
@@ -475,10 +478,11 @@ class Model():
             Y_train = self.train_set["labels"]
             Y_hat_test = test_set["predictions"]
             Y_test = test_set["labels"]
+            Score_train = self.train_set["score"]
 
-            print(f"[*] --- Y_hat_train: {Y_hat_train.sum()} --- Y_hat_test: {Y_hat_test.sum()} --- Y_train: {Y_train.sum()} --- Y_test: {Y_test.sum()}")   
-            print(f"[*] --- Y_hat_train: {Y_hat_train.shape} --- Y_hat_test: {Y_hat_test.shape} --- Y_train: {Y_train.shape} --- Y_test: {Y_test.shape}")   
-            AUC_test = roc_auc_score(y_true=Y_test, y_score=Y_hat_test,sample_weight=test_set['weights'])
+            AUC_test = roc_auc_score(y_true=Y_test, y_score=Score_train,sample_weight=test_set['weights'])
+
+
             print(f"[*] --- AUC test : {AUC_test}")
 
             weights_train = self.train_set["weights"].copy()
