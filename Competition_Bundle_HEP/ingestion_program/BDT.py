@@ -199,7 +199,6 @@ class Model():
         valid_weights[valid_label == 0] *= background_weights / valid_background_weights
 
         train_df = self.scaler.fit_transform(train_df) 
-        valid_df = self.scaler.transform(valid_df)
 
         self.train_set = {
             "data": train_df,
@@ -217,6 +216,9 @@ class Model():
                 data=valid_df,
                 tes=tes
             ).data
+
+            valid_with_systematics = self.scaler.transform(valid_with_systematics)  
+            
             self.validation_sets.append({
                 "data": valid_with_systematics,
                 "labels": valid_label,
