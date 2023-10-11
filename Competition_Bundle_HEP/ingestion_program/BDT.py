@@ -438,7 +438,7 @@ class Model():
             Y_test = test_set["labels"]
 
             print(f"[*] --- Y_hat_train: {Y_hat_train.sum()} --- Y_hat_test: {Y_hat_test.sum()} --- Y_train: {Y_train.sum()} --- Y_test: {Y_test.sum()}")   
-
+            print(f"[*] --- Y_hat_train: {Y_hat_train.shape} --- Y_hat_test: {Y_hat_test.shape} --- Y_train: {Y_train.shape} --- Y_test: {Y_test.shape}")   
             AUC_test = roc_auc_score(y_true=Y_test, y_score=Y_hat_test,sample_weight=test_set['weights'])
             print(f"[*] --- AUC test : {AUC_test}")
 
