@@ -240,6 +240,9 @@ class Model():
         self.train_set['predictions'] = self._predict(self.train_set['data'], self.best_theta)
 
     def _fit(self, X, y,w):
+        print("[*] --- Fitting Model")
+        print("sum of signal" , w[y == 1].sum())    
+        print("sum of background" , w[y == 0].sum())
         self.model.fit(X, y,sample_weight = w) 
     
 
