@@ -389,15 +389,6 @@ def visualize_decision(ax, title, model):
     X_grid = np.c_[xx0.ravel(), xx1.ravel()]
 
     response = model.decision_function(X_grid)
-    if model.model_name == "NB":
-        response = model.clf.predict_proba(X_grid)[:, 1]
-        # Transform with log
-        epsilon = np.finfo(float).eps
-        response = -np.log((1/(response+epsilon))-1)
-    else:
-        response = model.decision_function(X_grid)
-
-    
 
     response = response.reshape(xx0.shape)
 
@@ -466,8 +457,8 @@ def visualize_decicion_boundary(name, settings, result, train_sets, test_sets, x
         plt.suptitle(title, fontsize=15)
         plt.show()
 
-def visualize_score(df_train, df_test, obc, title,  N =8):
 
+def visualize_score(df_train, df_test, obc, title):
 
     N = df_train.shape[0]
     score_train = df_train.avg.values
