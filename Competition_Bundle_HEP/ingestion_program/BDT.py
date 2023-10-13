@@ -94,7 +94,7 @@ class Model():
                 systematics class
 
             model_name:
-                name of the model, default: NN
+                name of the model, default: BDT
 
         Returns:
             None
@@ -279,6 +279,9 @@ class Model():
         predictions = np.where(y_predict > theta, 1, 0) 
 
         return predictions
+    
+    def _return_score(self, X):
+        return self.model.predict_proba(X)[:,1]
 
     def amsasimov_x(self, s, b):
         '''
