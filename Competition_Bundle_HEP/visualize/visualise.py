@@ -32,7 +32,7 @@ class Dataset_visualise():
         plt.figure()
         if columns == None:
             columns  =self.columns
-        sns.set(rc={'figure.figsize':(26,30)})
+        sns.set(rc={'figure.figsize':(40,40)})
 
         dfplot=pd.DataFrame(self.dfall, columns=columns)
 
@@ -66,7 +66,7 @@ class Dataset_visualise():
     def pair_plots(self,sample_size = 1000,columns = None):
         if columns == None:
             columns  =self.columns
-        df_sample = self.dfall[coloumns].copy()
+        df_sample = self.dfall[columns].copy()
         df_sample["Label"] = self.target
         
         df_sample_S = df_sample[self.target==1].sample(n=sample_size)

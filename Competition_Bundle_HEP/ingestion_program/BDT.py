@@ -515,22 +515,25 @@ class Model():
 
             weights_train = self.train_set["weights"].copy()
             weights_test = test_set["weights"].copy()
-
+            
+            print(f"[*] --- total weight test: {weights_test.sum()}") 
+            print(f"[*] --- total weight train: {weights_train.sum()}")
 
             Y_hat_test_signal = Y_hat_test[Y_test == 1]
             Y_hat_test_bkg = Y_hat_test[Y_test == 0]    
 
             weights_test_signal = weights_test[Y_test == 1]
             weights_test_bkg = weights_test[Y_test == 0]    
+            
+            print(f"[*] --- total test signal : {weights_test_signal.sum()}") 
+            print(f"[*] --- total test background train: {weights_test_bkg.sum()}")
+
 
             signal = weights_test_signal[Y_hat_test_signal == 1].sum()
             background = weights_test_bkg[Y_hat_test_bkg == 1].sum()
 
 #             signal = weights_test[Y_hat_test == 1].sum()
 #             background = weights_test[Y_hat_test == 0].sum()
-
-
-            print(f"[*] --- signal: {signal} --- background: {background}") 
             
             significance = self.amsasimov_x(signal,background)
             print(f"[*] --- Significance : {significance}")
@@ -556,12 +559,19 @@ class Model():
             beta_roi = weights_train_bkg[Y_hat_train_bkg == 1].sum()
             if gamma_roi == 0:
                 gamma_roi = EPSILON
-
+            
+            nu_roi = gamma_roi + beta_roi
+            
             # Compute mu_hat
             mu_hat = (n_roi - beta_roi)/gamma_roi
 
             mu_hats.append(mu_hat)
             print(f"[*] --- mu_hat: {np.round(mu_hat, 4)}")
+            
+            
+            
+            print(f"[*] --- signal: {signal} --- background: {background} --- Nu_roi {nu_roi}") 
+            print(f"[*] --- mu alter :{(nu_roi - background)/signal}")
 
         print("\n")
 

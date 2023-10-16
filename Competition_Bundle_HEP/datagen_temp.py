@@ -73,18 +73,6 @@ def DataGenerator():
     import json
 
 
-
-
-    # Load the JSON file
-    with open('./reference_data/setting/setting.json') as f:
-        data = json.load(f)
-
-    # Extract the TES information from the JSON file
-    tes = data['TES']
-
-    # Print the TES information
-    print("TES information:", tes)
-
     # Save the label and weight files for the training set
     train_label.to_csv('./input_data/train/labels/data.labels', index=False, header=False)
     train_weights.to_csv('./input_data/train/weights/data.weights', index=False, header=False)
@@ -107,21 +95,21 @@ def DataGenerator():
 
         #adding systematics to the test set
 
-        with open(f'./reference_data/setting/data_{i}.json') as f:
-            data = json.load(f)
+#         with open(f'./reference_data/setting/data_{i}.json') as f:
+#             data = json.load(f)
 
-        # Extract the TES information from the JSON file
-        tes = data['TES']
+#         # Extract the TES information from the JSON file
+#         tes = data['TES']
 
-        test_syst = test_df.copy()
+#         test_syst = test_df.copy()
 
-        data_syst = Systematics(
-        data=test_syst,
-        tes=tes
-        ).data
+#         data_syst = Systematics(
+#         data=test_syst,
+#         tes=tes
+#         ).data
 
-        test_df = data_syst.copy()
-        del test_syst
+#         test_df = data_syst.copy()
+#         del test_syst
 
 
 
