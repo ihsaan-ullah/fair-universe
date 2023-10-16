@@ -69,6 +69,19 @@ $\Large \sigma^2_{\hat{\mu}} \simeq \left( \sum_{i=1}^m \frac{\gamma_i^2}{\nu_i}
 
 Here, $\gamma_i$ and $\beta_i$ are generally NOT assumed to be known constants, only $\gamma$ and $\beta$ are. They must be estimated in each bin, e.g., using a simulator (which can be rather precise since we can generate a lot of data from the simulator). However, in the presence of systematics, the estimation will be biased. A re-estimation hypothesizing a given systematic error will be needed.
 
+
+In the presence of weights, the number of events is given by the sum of weights
+
+$N_{ROI} = \sum{} w_{test}$ number of events in ROI in the test set
+
+$\nu_{ROI} = \sum{} w_{train}$ number of events in ROI in training set
+
+$\gamma_{ROI} = \sum{} w_{train}$ number of signal events in ROI in training set
+
+$\beta_{ROI} = \sum{} w_{train}$ number of Background events in ROI in training set
+
+$\Large \hat{\mu} =  \frac{N_{ROI} - \beta_{ROI}}{\gamma_{ROI}}   $
+
 ### **2. Classifier method**
 Narrowing down the number of events to be considered to a Region Of Interest (ROI), rich in signal events, putting a threshold on the output of a classifier providing $Proba(y=signal|{\bf x})$, then apply the estimator:
 
@@ -81,6 +94,7 @@ $\Large \sigma^2_{\hat{\mu}} = \frac{\nu_{ROI}}{\gamma_{ROI}^2} $
 which is lower than that of the plain Poisson counting process, if and only if  $\gamma_{ROI}$. $\gamma_{ROI} / \nu_{ROI}$ > $\gamma$ . $\gamma / \nu$. We see that $\gamma_{ROI} / \nu_{ROI}$ > $\gamma / \nu$ is NOT a sufficient condition to lower the variance of the estimator of $\mu$. There is a tradeoff between increasing $\gamma_{ROI} / \nu_{ROI}$ and not decreasing $\gamma_{ROI}$ too much, that is going into regions "enriched" in signal, but in which the total number of signal events approaches 0.
 
 Here $\gamma_{ROI}$ and $\beta_{ROI}$ are NOT assumed to be known constants (like in the histogram method); they need to be estimated with the simulator, and, likewise, could be plagued with systematic error. Thus, in the presence of systematics, this simple estimator underestimates the variance of $\hat{\mu}$. **This is the problem we want to solve.**
+
 
 
 ## How to join this challenge?
