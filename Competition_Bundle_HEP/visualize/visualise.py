@@ -177,7 +177,16 @@ def score_histogram(score,labels,plot_label=None,y_scale = 'log'):
 
     plt.show()
     plt.close()
-
+    
+    
+def validationcurve(result):
+    plt.plot(['loss'])
+    plt.plot(['val_loss'])
+    plt.title('model loss', size=12)
+    plt.ylabel('loss', size=12)
+    plt.xlabel('epoch', size=12)
+    plt.legend(['train', 'validation'], loc='upper left')
+    plt.show()
 
 
 
