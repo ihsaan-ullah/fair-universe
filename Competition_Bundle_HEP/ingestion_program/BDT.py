@@ -94,7 +94,9 @@ class Model():
                 systematics class
 
             model_name:
-                name of the model, default: NN
+
+                name of the model, default: BDT
+
 
         Returns:
             None
@@ -279,6 +281,10 @@ class Model():
         predictions = np.where(y_predict > theta, 1, 0) 
 
         return predictions
+
+    def _return_score(self, X):
+        return self.model.predict_proba(X)[:,1]
+
 
     def amsasimov_x(self, s, b):
         '''
@@ -510,6 +516,7 @@ class Model():
             weights_train = self.train_set["weights"].copy()
             weights_test = test_set["weights"].copy()
 
+
             Y_hat_test_signal = Y_hat_test[Y_test == 1]
             Y_hat_test_bkg = Y_hat_test[Y_test == 0]    
 
@@ -519,7 +526,8 @@ class Model():
             signal = weights_test_signal[Y_hat_test_signal == 1].sum()
             background = weights_test_bkg[Y_hat_test_bkg == 1].sum()
 
-
+#             signal = weights_test[Y_hat_test == 1].sum()
+#             background = weights_test[Y_hat_test == 0].sum()
 
 
             print(f"[*] --- signal: {signal} --- background: {background}") 

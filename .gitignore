@@ -8,9 +8,17 @@ run2.py
 .ipynb_checkpoints/
 ML_Stuff/
 
+<<<<<<< HEAD
 
 Competition_Bundle_HEP/input_data/*
 Competition_Bundle_HEP/*.ipynb
+=======
+>>>>>>> 71d671d0f4afb12bd52cb71289f3edd196546d11
 
+Competition_Bundle_HEP/input_data/*
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 71d671d0f4afb12bd52cb71289f3edd196546d11
 Competition_Bundle_HEP_Inverted/sample_code_submission/
