@@ -175,9 +175,10 @@ class Model():
 
     def _init_model(self):
         print("[*] - Intialize BDT")
-
-        self.model = XGBClassifier(tree_method="hist",use_label_encoder=False,eval_metric='logloss')
-        # self.model = LGBMClassifier(num_threads = 128)
+        self.model = [None for a in range(10)]
+        for i in range(10):
+        
+        self.model[i] = XGBClassifier(tree_method="hist",use_label_encoder=False,eval_metric='logloss')
 
 
     def _generate_validation_sets(self):
@@ -273,15 +274,17 @@ class Model():
         print("[*] --- Fitting Model")
         print("sum of signal" , w[y == 1].sum())    
         print("sum of background" , w[y == 0].sum())
-        self.model.fit(X, y,sample_weight = w) 
+        for i in range(10):
+            self.model[i].fit(X, y,sample_weight = w) 
     
 
     def _return_score(self, X):
-        y_predict = self.model.predict_proba(X)[:,1]
-        y_predict_ = y_predict * 0
-        dev = y_predict_
+        y_predict_ = [0 for i in range(np.shape(X)[:,1])]
         for i in range(10):
-            y_predict = self.model.predict_proba(X)[:,1]
+            y_predict = self.model[i].predict_proba(X)[:,1]
+
+
+            y_predict = self.model[i].predict_proba(X)[:,1]
             y_predict_ = y_predict + y_predict_
         
         Y_predict = y_predict_/10

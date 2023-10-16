@@ -32,7 +32,7 @@ class Dataset_visualise():
         plt.figure()
         if columns == None:
             columns  =self.columns
-        sns.set(rc={'figure.figsize':(26,30)})
+        sns.set(rc={'figure.figsize':(40,40)})
 
         dfplot=pd.DataFrame(self.dfall, columns=columns)
 
@@ -66,7 +66,7 @@ class Dataset_visualise():
     def pair_plots(self,sample_size = 1000,columns = None):
         if columns == None:
             columns  =self.columns
-        df_sample = self.dfall[coloumns].copy()
+        df_sample = self.dfall[columns].copy()
         df_sample["Label"] = self.target
         
         df_sample_S = df_sample[self.target==1].sample(n=sample_size)
@@ -177,7 +177,16 @@ def score_histogram(score,labels,plot_label=None,y_scale = 'log'):
 
     plt.show()
     plt.close()
-
+    
+    
+def validationcurve(result):
+    plt.plot(['loss'])
+    plt.plot(['val_loss'])
+    plt.title('model loss', size=12)
+    plt.ylabel('loss', size=12)
+    plt.xlabel('epoch', size=12)
+    plt.legend(['train', 'validation'], loc='upper left')
+    plt.show()
 
 
 
