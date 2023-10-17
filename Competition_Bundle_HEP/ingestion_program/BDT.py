@@ -7,49 +7,15 @@ from sklearn.preprocessing import StandardScaler
 from lightgbm import LGBMClassifier
 from math import sqrt
 from math import log
+from sys import path
+
+path.append('../')
+
+from bootstrap import bootstrap
 
 EPSILON = np.finfo(float).eps
 
 
-# ------------------------------
-# Two layerd Neural Network
-# ------------------------------
-# class TwoLayerNN(nn.Module):
-
-#     def __init__(self, input_size, hidden_size1, hidden_size2, output_size):
-#         super(TwoLayerNN, self).__init__()
-#         self.fc1 = nn.Linear(input_size, hidden_size1)
-#         self.relu1 = nn.ReLU()
-#         self.fc2 = nn.Linear(hidden_size1, hidden_size2)
-#         self.relu2 = nn.ReLU()
-#         self.fc3 = nn.Linear(hidden_size2, output_size)
-
-#     def forward(self, x):
-#         out = self.fc1(x)
-#         out = self.relu1(out)
-#         out = self.fc2(out)
-#         out = self.relu2(out)
-#         out = self.fc3(out)
-#         out = torch.sigmoid(out)
-#         return out
-
-
-# ------------------------------
-# Custom Dataset
-# ------------------------------
-# class CustomDataset(Dataset):
-#     def __init__(self, data, labels=None):
-#         self.data = data
-#         self.labels = labels
-
-#     def __len__(self):
-#         return len(self.data)
-
-#     def __getitem__(self, idx):
-#         sample = {'data': self.data[idx]}
-#         if self.labels is not None:
-#             sample['labels'] = self.labels[idx]
-#         return sample
 
 
 # ------------------------------
@@ -147,7 +113,7 @@ class Model():
         self._generate_validation_sets()
         self._init_model()
         self._train()
-        self._choose_theta()
+#         self._choose_theta()
         self._validate()
         self._compute_validation_result()
 
@@ -278,19 +244,8 @@ class Model():
 
     def _return_score(self, X):
         y_predict = self.model.predict_proba(X)[:,1]
-        y_predict_ = y_predict * 0
-        dev = y_predict_
-        for i in range(10):
-            y_predict = self.model.predict_proba(X)[:,1]
-            y_predict_ = y_predict + y_predict_
         
-        Y_predict = y_predict_/10
-        
-        dev  = (Y_predict - y_predict)**2
-        
-        print(np.sum(dev))
-        
-        return Y_predict
+        return y_predict
     
     def _predict(self, X, theta):
 
@@ -300,7 +255,19 @@ class Model():
 
         return predictions
 
-
+    def N_calc(self,weights,n = 10000):
+        total_weights = []
+        for i in range(n):
+            bootstrap_weights = bootstrap(weights = weights,seed=42+i)
+            total_weights.append(np.array(bootstrap_weights).sum())
+            
+        n_calc_array = np.array(total_weights)
+        
+        return np.mean(n_calc_array)
+        
+        
+    
+    
 
 
     def amsasimov_x(self, s, b):
@@ -367,7 +334,7 @@ class Model():
             weights_valid = meta_validation_set["weights"].copy()
             
             # get region of interest
-            nu_roi = weights_valid[Y_hat_valid == 1].sum()/10
+            nu_roi = self.N_calc(weights_valid[Y_hat_valid == 1])/10
 
             weights_valid_signal = weights_valid[Y_valid == 1]  
             weights_valid_bkg = weights_valid[Y_valid == 0]
@@ -376,11 +343,11 @@ class Model():
             Y_hat_valid_bkg = Y_hat_valid[Y_valid == 0] 
 
             # compute gamma_roi
-            gamma_roi = weights_valid_signal[Y_hat_valid_signal == 1].sum()/10
+            gamma_roi = self.N_calc(weights_valid_signal[Y_hat_valid_signal == 1])/10
 
 
             # compute beta_roi
-            beta_roi = weights_valid_bkg[Y_hat_valid_bkg == 1].sum()/10
+            beta_roi = self.N_calc(weights_valid_bkg[Y_hat_valid_bkg == 1])/10
 
 
             # Compute sigma squared mu hat
@@ -458,10 +425,11 @@ class Model():
 
 
             # get n_roi
-            n_roi = weights_valid[Y_hat_valid == 1].sum()
+            n_roi = self.N_calc(weights_valid[Y_hat_valid == 1])
+            
 
             # get region of interest
-            nu_roi = weights_train[Y_hat_train == 1].sum()
+            nu_roi = self.N_calc(weights_train[Y_hat_train == 1])
 
             # compute gamma_roi
             weights_train_signal = weights_train[Y_train == 1]
@@ -470,15 +438,15 @@ class Model():
             Y_hat_train_signal = Y_hat_train[Y_train == 1]
             Y_hat_train_bkg = Y_hat_train[Y_train == 0]
 
-            gamma_roi = weights_train_signal[Y_hat_train_signal == 1].sum()
+            gamma_roi = self.N_calc(weights_train_signal[Y_hat_train_signal == 1])
 
             # compute beta_roi
-            beta_roi = weights_train_bkg[Y_hat_train_bkg == 1].sum()
+            beta_roi = self.N_calc(weights_train_bkg[Y_hat_train_bkg == 1])
             if gamma_roi == 0:
                 gamma_roi = EPSILON
 
             # Compute mu_hat
-            mu_hat = (n_roi - beta_roi)/gamma_roi
+            mu_hat = ((n_roi - beta_roi)/gamma_roi)
 
             # Compute delta mu hat (absolute value)
             delta_mu_hat = np.abs(valid_set["settings"]["ground_truth_mu"] - mu_hat)
@@ -561,7 +529,7 @@ class Model():
 
             # get n_roi
 
-            n_roi = weights_test[Y_hat_test == 1].sum()
+            n_roi = self.N_calc(weights_test[Y_hat_test == 1])
 
 
             weights_train_signal = weights_train[Y_train == 1]
@@ -570,10 +538,10 @@ class Model():
             Y_hat_train_signal = Y_hat_train[Y_train == 1]
             Y_hat_train_bkg = Y_hat_train[Y_train == 0]
 
-            gamma_roi = weights_train_signal[Y_hat_train_signal == 1].sum()
+            gamma_roi = self.N_calc(weights_train_signal[Y_hat_train_signal == 1])
 
             # compute beta_roi
-            beta_roi = weights_train_bkg[Y_hat_train_bkg == 1].sum()
+            beta_roi = self.N_calc(weights_train_bkg[Y_hat_train_bkg == 1])
             if gamma_roi == 0:
                 gamma_roi = EPSILON
             
@@ -587,8 +555,8 @@ class Model():
             
             
             
-            print(f"[*] --- signal: {signal} --- background: {background} --- Nu_roi {nu_roi}") 
-            print(f"[*] --- mu alter :{(nu_roi - background)/signal}")
+#             print(f"[*] --- signal: {signal} --- background: {background} --- Nu_roi {nu_roi}") 
+#             print(f"[*] --- mu alter :{(nu_roi - background)/signal}")
 
         print("\n")
 
