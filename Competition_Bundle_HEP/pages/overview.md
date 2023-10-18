@@ -89,7 +89,19 @@ $\Large \hat{\mu} =  \frac{N_{ROI} - \beta_{ROI}}{\gamma_{ROI}}   $
 
 Alternate formulation of $\mu$
 
+$N_{pseudo} = \sum_{i = 0}^l w_{pseudo}$ where l is the number of elements in one pseudo dataset
 
+$N_{ROI_{BS}} = \frac{\sum_{i = 0}^m N_{pseudo}}{m} $  where m is the number of pseudo datasets
+
+$\sigma_{ROI_{BS}} =  \frac{\sum_{i = 0}^m (N_{pseudo} - N_{ROI_{BS}} )^2}{m}$
+
+$\gamma_{ROI} = \sum_{i = 0}^n w_{Validation}  \forall i \in {S} $ number of signal events in ROI in Validation set
+
+$\beta_{ROI} = \sum_{i = 0}^n w_{train}   \forall i \in {B} $ number of Background events in ROI in Validation set
+
+$\Large \hat{\mu} =  \frac{N_{ROI_{BS}} - \beta_{ROI}}{\gamma_{ROI}}   $
+
+$\Delta \hat{\mu} = |\frac{\sigma_{ROI_{BS}} - \beta_{ROI}}{\gamma_{ROI}}|$
 
 This estimator has variance:
 
