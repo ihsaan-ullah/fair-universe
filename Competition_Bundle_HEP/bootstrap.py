@@ -7,17 +7,24 @@ import json
 root_dir = "./"
 input_dir = root_dir + "input_data"
 
-def bootstrap(data,weights, n=1000, seed=42):
-    data_list = []
+def bootstrap(weights, seed=42):
+    
     prng = RandomState(seed)
     n_obs = len(weights)
-    new_weights = prng.poisson(lam=weights, size=(n, n_obs))
+    new_weights = prng.poisson(lam=weights)
+    return new_weights
 
-    for i in range(n):
-        data_list.append(data)
-        data_list[i]['Weight'] = new_weights[i]
+def bootstrap_data(data,weights,label, n = 1000,seed=42):
+    
+    prng = RandomState(seed)
+    n_obs = len(weights)
+    new_weights = prng.poisson(lam=weights)
+    
+    data['weights'] = new_weights
+    data['label'] = label
+    data_bootstrap = data.sample(n)
+    return data_bootstrap
 
-    return data_list
 
 if __name__ == '__main__':
     print("[*] Loading Train data")

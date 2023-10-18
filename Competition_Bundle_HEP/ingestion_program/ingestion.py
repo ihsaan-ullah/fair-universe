@@ -125,17 +125,17 @@ class Ingestion():
     def load_test_sets(self):
         print("[*] Loading Test data")
         self.test_sets = []
-        for i in range(0, 10):
+        for i in range(0, 1):
             test_data_file = os.path.join(input_dir, 'test', 'data', 'data_'+str(i)+'.csv')
             self.test_sets.append(pd.read_csv(test_data_file))
 
         self.test_sets_weights = []
-        for i in range(0, 10):
+        for i in range(0, 1):
             test_weights_file = os.path.join(input_dir, 'test', 'weights', 'data_'+str(i)+'.weights')
             with open(test_weights_file) as f:
                 self.test_sets_weights.append(np.array(f.read().splitlines(), dtype=float))
 
-        for i in range(0, 10):
+        for i in range(0, 1):
             test_labels_file = os.path.join(input_dir, 'test', 'labels', 'data_'+str(i)+'.labels')
             with open(test_labels_file) as f:
                 self.test_labels.append(np.array(f.read().splitlines(), dtype=float))
