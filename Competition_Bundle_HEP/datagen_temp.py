@@ -78,9 +78,9 @@ def DataGenerator():
     train_weights.to_csv('./input_data/train/weights/data.weights', index=False, header=False)
 
     # Divide the test set into 10 equal parts and save each part as a separate CSV file
-    test_dfs = [test_df[i:i+len(test_df)//10] for i in range(0, len(test_df), len(test_df)//10)]
-    test_weights_ = [test_weights[i:i+len(test_weights)//10] for i in range(0, len(test_weights), len(test_weights)//10)]
-    test_label_ = [test_label[i:i+len(test_label)//10] for i in range(0, len(test_label), len(test_label)//10)]
+    test_dfs = [test_df[i:i+len(test_df)//1] for i in range(0, len(test_df), len(test_df)//1)]
+    test_weights_ = [test_weights[i:i+len(test_weights)//1] for i in range(0, len(test_weights), len(test_weights)//1)]
+    test_label_ = [test_label[i:i+len(test_label)//1] for i in range(0, len(test_label), len(test_label)//1)]
 
     for i, (test_df, test_weights, test_label) in enumerate(zip(test_dfs, test_weights_, test_label_)):
         # Calculate the sum of weights of signal and background for the current subset

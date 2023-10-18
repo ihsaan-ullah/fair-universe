@@ -14,6 +14,18 @@ def bootstrap(weights, seed=42):
     new_weights = prng.poisson(lam=weights)
     return new_weights
 
+def bootstrap_data(data,weights,label, n = 1000,seed=42):
+    
+    prng = RandomState(seed)
+    n_obs = len(weights)
+    new_weights = prng.poisson(lam=weights)
+    
+    data['weights'] = new_weights
+    data['label'] = label
+    data_bootstrap = data.sample(n)
+    return data_bootstrap
+
+
 if __name__ == '__main__':
     print("[*] Loading Train data")
 
