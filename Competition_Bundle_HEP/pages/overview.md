@@ -97,9 +97,9 @@ $N_{ROI_{BS}} = \frac{\sum_{i = 0}^m N_{pseudo}}{m} $  where m is the number of 
 
 $\sigma_{ROI_{BS}} =  \frac{\sum_{i = 0}^m (N_{pseudo} - N_{ROI_{BS}} )^2}{m}$
 
-$\gamma_{ROI} = \sum_{i = 0}^n w_{Validation}  \forall i \in {S} $ number of signal events in ROI in Validation set
+$\gamma_{ROI} = \sum_{i = 0}^n w_{test}  \forall i \in {S} $ number of signal events in ROI in Validation set
 
-$\beta_{ROI} = \sum_{i = 0}^n w_{train}   \forall i \in {B} $ number of Background events in ROI in Validation set
+$\beta_{ROI} = \sum_{i = 0}^n w_{test}   \forall i \in {B} $ number of Background events in ROI in test set
 
 $\Large \hat{\mu} =  \frac{N_{ROI_{BS}} - \beta_{ROI}}{\gamma_{ROI}}   $
 
