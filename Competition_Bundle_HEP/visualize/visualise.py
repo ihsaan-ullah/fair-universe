@@ -92,15 +92,34 @@ class Dataset_visualise():
         plt.title('Pair plots of features in' + self.name)
         plt.show()
         plt.close()
+        
+    def cluster_plot(self,columns = None):
+        
+        plt.figure()
+
+        if columns == None:
+            columns  =self.columns
+        df_sample = self.dfall[columns].copy()
+        
+        sns.clustermap(df_sample)
 
 
 def Z_curve(score,labels,weights): ## work in progress
+    
+    plt.figure()
+
+    
+    sns.set(rc={'figure.figsize':(8,7)})
+
     thresholds_list =  np.linspace(0,1,num=100)
     int_pred_sig = [weights[(labels == 1) & (score  > th_cut)].sum() for th_cut in thresholds_list]
     plt.plot(thresholds_list,int_pred_sig)
     plt.show()
 
 def roc_curve_(score,labels,weights,plot_label = "model",color='b',lw = 2):
+    
+    plt.figure()
+
     sns.set(rc={'figure.figsize':(8,7)})
 
 
@@ -179,13 +198,20 @@ def score_histogram(score,labels,plot_label=None,y_scale = 'log'):
     plt.close()
     
     
-def validationcurve(result):
-    plt.plot(['loss'])
-    plt.plot(['val_loss'])
-    plt.title('model loss', size=12)
-    plt.ylabel('loss', size=12)
-    plt.xlabel('epoch', size=12)
-    plt.legend(['train', 'validation'], loc='upper left')
+def validationcurve(results,eval_metric,model_name = 'model'):
+    
+    sns.set(rc={'figure.figsize':(8,7)})
+
+    
+    epochs = len(results['validation_0'][eval_metric])
+    x_axis = range(0, epochs)
+    
+    fig, ax = plt.subplots()
+    ax.plot(x_axis, results['validation_0'][eval_metric], label='Train')
+    ax.plot(x_axis, results['validation_1'][eval_metric], label='Validation')
+    ax.legend()
+    plt.ylabel(eval_metric)
+    plt.title(model_name + ' logloss')
     plt.show()
 
 
