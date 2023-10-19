@@ -95,21 +95,32 @@ def DataGenerator():
 
         #adding systematics to the test set
 
-#         with open(f'./reference_data/setting/data_{i}.json') as f:
-#             data = json.load(f)
+        with open(f'./reference_data/setting/data_{i}.json') as f:
+            data = json.load(f)
 
-#         # Extract the TES information from the JSON file
-#         tes = data['TES']
+        # Extract the TES information from the JSON file
+        tes = data['TES']
 
-#         test_syst = test_df.copy()
+        test_syst = test_df.copy()
 
-#         data_syst = Systematics(
-#         data=test_syst,
-#         tes=tes
-#         ).data
+        data_syst = Systematics(
+        data=test_syst,
+        tes=tes
+        ).data
 
-#         test_df = data_syst.copy()
-#         del test_syst
+        mu = data['ground_truth_mu']
+        del_mu = mu - 1.0
+
+        signal =  test_weights[test_label==1].sum()
+        background = test_weights[test_label==0].sum()
+
+        a = 1 - (del_mu*signal/background)
+        # modify the label and weight of the test set for new ground truth mu
+        test_weights[test_label==1] *= a
+
+
+        test_df = data_syst.copy()
+        del test_syst
 
 
 
@@ -119,8 +130,10 @@ def DataGenerator():
         test_label.to_csv(f'./input_data/test/labels/data_{i}.labels', index=False, header=False)
 
 
-        # print ("sum of signal" , np.sum(test_weights[test_label==1]))
-        # print ("sum of background" , np.sum(test_weights[test_label==0]))
+        print ("sum of signal" , np.sum(test_weights[test_label==1]))
+        print ("sum of background" , np.sum(test_weights[test_label==0]))
+        print ("sum of weights" , np.sum(test_weights))
+        print ("mu = ",np.sum(test_weights) - np.sum(test_weights[test_label==0])/np.sum(test_weights[test_label==1]))
 
     # Save the training set as a CSV file
     train_df.to_csv('./input_data/train/data/data.csv', index=False)
