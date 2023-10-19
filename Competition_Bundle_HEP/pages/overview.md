@@ -89,6 +89,8 @@ $\Large \hat{\mu} =  \frac{N_{ROI} - \beta_{ROI}}{\gamma_{ROI}}   $
 
 Alternate formulation of $\mu$
 
+$ w_{pseudo} = Poisson(w_i)$, where $w_i$ the weights of event i 
+
 $N_{pseudo} = \sum_{i = 0}^l w_{pseudo}$ where l is the number of elements in one pseudo dataset
 
 $N_{ROI_{BS}} = \frac{\sum_{i = 0}^m N_{pseudo}}{m} $  where m is the number of pseudo datasets
