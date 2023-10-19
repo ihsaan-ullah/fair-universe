@@ -197,6 +197,15 @@ class Model():
         
         self.eval_set = [(self.train_set['data'], self.train_set['labels']),(valid_df.to_numpy(),valid_label)]
         
+        with open('./input_data/test/labels/data_mu_calc.labels') as f:
+            mu_calc_set_label = np.array(f.read().splitlines(), dtype=float)
+        with open('./input_data/test/weights/data_mu_calc.weights') as f:
+            mu_calc_set_weights = np.array(f.read().splitlines(), dtype=float)
+        with open('./input_data/test/data/data_mu_calc.csv') as f:
+            mu_calc_set_df = pd.read_csv(f)
+
+        
+
         self.mu_calc_set = {
                 "data": mu_calc_set_df,
                 "labels": mu_calc_set_label,
