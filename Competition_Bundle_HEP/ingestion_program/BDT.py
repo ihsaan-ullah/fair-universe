@@ -115,7 +115,7 @@ class Model():
         self._generate_validation_sets()
         self._init_model()
         self._train()
-        self._choose_theta()
+#         self._choose_theta()
         self._validate()
         self._compute_validation_result()
 
@@ -196,6 +196,12 @@ class Model():
         
         
         self.eval_set = [(self.train_set['data'], self.train_set['labels']),(valid_df.to_numpy(),valid_label)]
+        
+        self.mu_calc_set = {
+                "data": mu_calc_set_df,
+                "labels": mu_calc_set_label,
+                "weights": mu_calc_set_weights
+            }
 
         self.validation_sets = []
         # Loop 10 times to generate 10 validation sets
@@ -204,7 +210,7 @@ class Model():
             # apply systematics
             valid_with_systematics_temp = self.systematics(
                 data=valid_df,
-                tes=1.0
+                tes=tes
             ).data
 
             valid_with_systematics = valid_with_systematics_temp.copy()
@@ -215,7 +221,7 @@ class Model():
                 "labels": valid_label,
                 "weights": valid_weights,
                 "settings": self.train_set["settings"],
-                "tes" : 1.0
+                "tes" : tes
             })
             del valid_with_systematics_temp
 
@@ -289,12 +295,25 @@ class Model():
     
     def mu_hat_calc(self):
 
-        mu = (N - self.beta)/self.gamma
+        self.mu_calc_set['data'] = self.scaler.transform(self.mu_calc_set['data'])
+        Y_hat_mu_calc_set = self._predict(self.mu_calc_set['data'], self.best_theta)
+        Y_mu_calc_set = self.mu_calc_set['labels']
+        weights_mu_calc_set = self.mu_calc_set['weights']
         
         
-        
-    
-    
+        # compute gamma_roi
+        weights_mu_calc_set_signal = weights_mu_calc_set[Y_mu_calc_set == 1]
+        weights_mu_calc_set_bkg = weights_mu_calc_set[Y_mu_calc_set == 0]
+
+        Y_hat_mu_calc_set_signal = Y_hat_mu_calc_set[Y_mu_calc_set == 1]
+        Y_hat_mu_calc_set_bkg = Y_hat_mu_calc_set[Y_mu_calc_set == 0]
+
+        self.gamma_roi = (weights_mu_calc_set_signal[Y_hat_mu_calc_set_signal == 1]).sum()
+
+        # compute beta_roi
+        self.beta_roi = (weights_mu_calc_set_bkg[Y_hat_mu_calc_set_bkg == 1]).sum()
+        if self.gamma_roi == 0:
+            self.gamma_roi = EPSILON
 
 
     def amsasimov_x(self, s, b):
@@ -556,13 +575,12 @@ class Model():
         print("[*] - Computing Test result")
 
         mu_hats = []
+        self.mu_hat_calc()
+        
         for test_set in self.test_sets:
 
-            Y_hat_train = self.train_set["predictions"]
-            Y_train = self.train_set["labels"]
             Y_hat_test = test_set["predictions"]
             Y_test = test_set["labels"]
-            Score_train = self.train_set["score"]
             Score_test = test_set["score"]
 
             AUC_test = roc_auc_score(y_true=Y_test, y_score=Score_test,sample_weight=test_set['weights'])
@@ -575,6 +593,8 @@ class Model():
             
             print(f"[*] --- total weight test: {weights_test.sum()}") 
             print(f"[*] --- total weight train: {weights_train.sum()}")
+            print(f"[*] --- total weight mu_cals_set: {self.mu_cals_set['weights'].sum()}")
+            
 
             Y_hat_test_signal = Y_hat_test[Y_test == 1]
             Y_hat_test_bkg = Y_hat_test[Y_test == 0]    
@@ -603,42 +623,20 @@ class Model():
 
             [n_roi ,sigma] = self.N_calc(weights_test[Y_hat_test == 1])
             
-
-            weights_train_signal = weights_train[Y_train == 1]
-            weights_train_bkg = weights_train[Y_train == 0]
-
-            Y_hat_train_signal = Y_hat_train[Y_train == 1]
-            Y_hat_train_bkg = Y_hat_train[Y_train == 0]
-
-            gamma_roi = (weights_train_signal[Y_hat_train_signal == 1]).sum()
-
-            # compute beta_roi
-            beta_roi = (weights_train_bkg[Y_hat_train_bkg == 1]).sum()
-            if gamma_roi == 0:
-                gamma_roi = EPSILON
-            
-            nu_roi = gamma_roi + beta_roi
             
             n_plus_1_sigma = n_roi + sigma
             n_minus_1_sigma = n_roi - sigma
             
-            print(f"[*] --- signal: {gamma_roi} --- background: {beta_roi} --- N_roi {nu_roi}")
+            print(f"[*] --- signal: {self.gamma_roi} --- background: {self.beta_roi}")
             
             # Compute mu_hat
-            mu_hat = (n_roi - background)/signal
-            
-
+            mu_hat = (n_roi - self.beta_roi)/self.gamma_roi
             mu_hats.append(mu_hat)
 #             print(f"[*] --- mu_hat: {np.round(mu_hat, 4)} + {(n_plus_1_sigma - beta_roi)/gamma_roi} - {(n_minus_1_sigma - beta_roi)/gamma_roi}")
-            
-            
-            
+           
             print(f"[*] --- signal test: {signal} --- background test: {background} --- N_roi {n_roi}")
-
-            
-             
-            
-            print(f"\n[*] --- mu hat test :{mu_hat} + {(n_plus_1_sigma - background)/signal} - {(n_minus_1_sigma - background)/signal}")
+           
+            print(f"\n[*] --- mu hat test :{mu_hat} + {(n_plus_1_sigma - self.beta_roi)/self.gamma_roi} - {(n_minus_1_sigma - self.beta_roi)/self.gamma_roi}")
             
         print("\n")
 
