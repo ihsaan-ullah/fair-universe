@@ -144,9 +144,19 @@ class Model():
     def _init_model(self):
         print("[*] - Intialize BDT")
 
-#         self.model = XGBClassifier(tree_method="hist",use_label_encoder=False,eval_metric='logloss',max_depth = 3,nthread = 16,num_leaves = 8)
+        self.model = XGBClassifier(tree_method="hist",use_label_encoder=False,eval_metric=['logloss','auc'])
 #         self.model = LGBMClassifier(max_depth = 3,num_leaves = 8,num_trees = 50,nthread = 32,n_jobs = 32)
-        self.model = LGBMClassifier(tree_method="hist",max_depth = 3,num_leaves = 8,nthread = 32,n_jobs = 32)
+#         self.result = {}
+#         self.model = LGBMClassifier(tree_method="hist",
+#                                     max_depth = 3,num_leaves = 8,
+#                                     nthread = 32,
+#                                     n_jobs = 32,
+#                                     num_trees = 50,
+#                                     metric=['logloss','auc'],
+#                                     callbacks=[
+#                                         lgb.log_evaluation(10),
+#                                         lgb.record_evaluation(self.result)
+#                                     ])
     def _generate_validation_sets(self):
         print("[*] - Generating Validation sets")
 
@@ -159,7 +169,7 @@ class Model():
             self.train_set["data"],
             self.train_set["labels"],
             self.train_set["weights"],
-            test_size=0.3,
+            test_size=0.2,
             stratify=self.train_set["labels"]
         )
 
@@ -184,7 +194,8 @@ class Model():
             "settings": self.train_set["settings"]
         }
         
-        self.eval_set = [(train_df, train_label),(valid_df,valid_label)]
+        
+        self.eval_set = [(self.train_set['data'], self.train_set['labels']),(valid_df.to_numpy(),valid_label)]
 
         self.validation_sets = []
         # Loop 10 times to generate 10 validation sets
@@ -193,7 +204,7 @@ class Model():
             # apply systematics
             valid_with_systematics_temp = self.systematics(
                 data=valid_df,
-                tes=tes
+                tes=1.0
             ).data
 
             valid_with_systematics = valid_with_systematics_temp.copy()
@@ -204,7 +215,7 @@ class Model():
                 "labels": valid_label,
                 "weights": valid_weights,
                 "settings": self.train_set["settings"],
-                "tes" : tes
+                "tes" : 1.0
             })
             del valid_with_systematics_temp
 
@@ -242,7 +253,7 @@ class Model():
         print("[*] --- Fitting Model")
         print("sum of signal" , w[y == 1].sum())    
         print("sum of background" , w[y == 0].sum())
-#         plot = self.model.fit(X, y,sample_weight = w,eval_set = self.eval_set) 
+        self.model.fit(X, y,sample_weight = w,eval_set = self.eval_set) 
         self.model.fit(X, y,sample_weight = w) 
 #         lgb.plot_metric(plot)
     
@@ -614,20 +625,21 @@ class Model():
             print(f"[*] --- signal: {gamma_roi} --- background: {beta_roi} --- N_roi {nu_roi}")
             
             # Compute mu_hat
-            mu_hat = (n_roi - beta_roi)/gamma_roi
+            mu_hat = (n_roi - background)/signal
+            
 
             mu_hats.append(mu_hat)
-            print(f"[*] --- mu_hat: {np.round(mu_hat, 4)} + {(n_plus_1_sigma - beta_roi)/gamma_roi} - {(n_minus_1_sigma - beta_roi)/gamma_roi}")
+#             print(f"[*] --- mu_hat: {np.round(mu_hat, 4)} + {(n_plus_1_sigma - beta_roi)/gamma_roi} - {(n_minus_1_sigma - beta_roi)/gamma_roi}")
             
             
             
-            print(f"[*] --- signal: {signal} --- background: {background} --- N_roi {n_roi}")
+            print(f"[*] --- signal test: {signal} --- background test: {background} --- N_roi {n_roi}")
 
             
              
             
-            print(f"[*] --- mu alter :{(n_roi - background)/signal} + {(n_plus_1_sigma - background)/signal} - {(n_minus_1_sigma - background)/signal}")
-
+            print(f"\n[*] --- mu hat test :{mu_hat} + {(n_plus_1_sigma - background)/signal} - {(n_minus_1_sigma - background)/signal}")
+            
         print("\n")
 
         # Save mu_hat from test
