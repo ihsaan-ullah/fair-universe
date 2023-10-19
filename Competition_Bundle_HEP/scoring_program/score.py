@@ -14,7 +14,7 @@ from sklearn.metrics import (
 # Default Directories
 # ------------------------------------------
 # root directory
-root_dir = "./"
+root_dir = "../"
 
 # Directory to output computed score into
 output_dir = root_dir + "scoring_output"

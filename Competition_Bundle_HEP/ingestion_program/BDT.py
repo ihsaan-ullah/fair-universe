@@ -197,11 +197,11 @@ class Model():
         
         self.eval_set = [(self.train_set['data'], self.train_set['labels']),(valid_df.to_numpy(),valid_label)]
         
-        with open('./input_data/test/labels/data_mu_calc.labels') as f:
+        with open('../input_data/test/labels/data_mu_calc.labels') as f:
             mu_calc_set_label = np.array(f.read().splitlines(), dtype=float)
-        with open('./input_data/test/weights/data_mu_calc.weights') as f:
+        with open('../input_data/test/weights/data_mu_calc.weights') as f:
             mu_calc_set_weights = np.array(f.read().splitlines(), dtype=float)
-        with open('./input_data/test/data/data_mu_calc.csv') as f:
+        with open('../input_data/test/data/data_mu_calc.csv') as f:
             mu_calc_set_df = pd.read_csv(f)
 
         
@@ -602,7 +602,7 @@ class Model():
             
             print(f"[*] --- total weight test: {weights_test.sum()}") 
             print(f"[*] --- total weight train: {weights_train.sum()}")
-            print(f"[*] --- total weight mu_cals_set: {self.mu_cals_set['weights'].sum()}")
+            print(f"[*] --- total weight mu_cals_set: {self.mu_calc_set['weights'].sum()}")
             
 
             Y_hat_test_signal = Y_hat_test[Y_test == 1]
