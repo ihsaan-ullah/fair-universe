@@ -142,6 +142,7 @@ def DataGenerator():
         test_weights.to_csv(f'./input_data/test/weights/data_{i}.weights', index=False, header=False)
         test_label.to_csv(f'./input_data/test/labels/data_{i}.labels', index=False, header=False)
 
+        print ("Shape of test set : ",np.shape(test_df))
 
         print ("sum of signal" , np.sum(test_weights[test_label==1]))
         print ("sum of background" , np.sum(test_weights[test_label==0]))
