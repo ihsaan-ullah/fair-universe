@@ -89,8 +89,8 @@ class DataGenerator:
         self.pb = self.settings["p_b"]
         self.ps = round(1 - self.pb, 5)
 
-        self.number_of_signal_events = int(self.total_number_of_events*self.ps)
-        self.number_of_background_events = int(self.total_number_of_events * self.pb)
+        self.number_of_signal_events = np.random.binomial(self.total_number_of_events, p=self.ps, size=None)    
+        self.number_of_background_events = self.total_number_of_events - self.number_of_signal_events
 
         # -----------------------------------------------
         # Load Background distribution
