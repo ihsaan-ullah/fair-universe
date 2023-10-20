@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import os
 from sklearn.model_selection import train_test_split
 from xgboost import XGBClassifier
 from sklearn.metrics import roc_auc_score
@@ -10,8 +11,11 @@ from math import sqrt
 from math import log
 from sys import path
 
+module_dir= os.path.dirname(os.path.realpath(__file__))
 
-path.append('../')
+root_dir = os.path.dirname(module_dir)
+
+path.append(root_dir)
 
 from bootstrap import bootstrap
 
@@ -197,12 +201,18 @@ class Model():
         
         self.eval_set = [(self.train_set['data'], self.train_set['labels']),(valid_df.to_numpy(),valid_label)]
         
-        with open('../input_data/test/labels/data_mu_calc.labels') as f:
+        labels_path = os.path.join(root_dir, 'input_data', 'test', 'labels', 'data_mu_calc.labels')
+        weights_path = os.path.join(root_dir, 'input_data', 'test', 'weights', 'data_mu_calc.weights')
+        data_path = os.path.join(root_dir, 'input_data', 'test', 'data', 'data_mu_calc.csv')
+
+        # Reading data from files
+        with open(labels_path) as f:
             mu_calc_set_label = np.array(f.read().splitlines(), dtype=float)
-        with open('../input_data/test/weights/data_mu_calc.weights') as f:
+
+        with open(weights_path) as f:
             mu_calc_set_weights = np.array(f.read().splitlines(), dtype=float)
-        with open('../input_data/test/data/data_mu_calc.csv') as f:
-            mu_calc_set_df = pd.read_csv(f)
+
+        mu_calc_set_df = pd.read_csv(data_path)
 
         
 

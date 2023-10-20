@@ -56,7 +56,7 @@ def DataGenerator():
     if not os.path.exists(train_label_path):
         os.makedirs(train_label_path)
 
-    train_weights_path =  os.path.join(module_dir, 'input_data/train/weight')
+    train_weights_path =  os.path.join(module_dir, 'input_data/train/weights')
     if not os.path.exists(train_weights_path):
         os.makedirs(train_weights_path)
 
@@ -64,17 +64,25 @@ def DataGenerator():
     if not os.path.exists(train_data_path):
         os.makedirs(train_data_path)
 
+    train_settings_path =  os.path.join(module_dir, 'input_data/train/settings')
+    if not os.path.exists(train_settings_path):
+        os.makedirs(train_settings_path)
+
+
+
     test_label_path =  os.path.join(module_dir, 'input_data/test/labels')
     if not os.path.exists(test_label_path):
         os.makedirs(test_label_path)
 
-    test_weights_path =  os.path.join(module_dir, 'input_data/test/weight')
+    test_weights_path =  os.path.join(module_dir, 'input_data/test/weights')
     if not os.path.exists(test_weights_path):
         os.makedirs(test_weights_path)
 
     test_data_path =  os.path.join(module_dir, 'input_data/test/data')
     if not os.path.exists(test_data_path):
         os.makedirs(test_data_path)
+
+    
 
 
     subset_signal_weight = np.sum(train_weights[train_label==1])
@@ -91,12 +99,21 @@ def DataGenerator():
 
     import json
 
+    train_settings = {"tes": 1.0, "ground_truth_mu": 1.0}
+
+    # Specify the file path
+    Settings_file_path = os.path.join(train_settings_path, 'data.json')
+
+    # Save the settings to a JSON file
+    with open(Settings_file_path, 'w') as json_file:
+        json.dump(train_settings, json_file, indent=4)
 
     # Save the label and weight files for the training set
-    # test_label_path =  os.path.join(test_label_path, 'data.label')
-    train_label.to_csv(test_label_path + 'data.label', index=False, header=False)
-    # test_weights_path =  os.path.join(test_weights_path, 'data.weights')
-    train_weights.to_csv(test_weights_path + 'data.weights', index=False, header=False)
+    train_label_path =  os.path.join(train_label_path, 'data.labels')
+    train_label.to_csv(train_label_path, index=False, header=False)
+
+    train_weights_path =  os.path.join(train_weights_path, 'data.weights')
+    train_weights.to_csv(train_weights_path, index=False, header=False)
 
     # Divide the test set into 10 equal parts and save each part as a separate CSV file
     test_dfs = [test_df[i:i+len(test_df)//10] for i in range(0, len(test_df), len(test_df)//10)]
@@ -111,9 +128,14 @@ def DataGenerator():
     mu_calc_weights[mu_calc_label==1] *= total_signal_weight / signal_mu_calc
     mu_calc_weights[mu_calc_label==0] *= total_background_weight / background_mu_calc
 
-    mu_calc_weights.to_csv(test_weights_path + 'data_mu_calc.weights', index=False, header=False)
-    mu_calc_label.to_csv(test_label_path + 'data_mu_calc.labels', index=False, header=False)
-    mu_calc_set.to_csv(test_data_path + 'data_mu_calc.csv', index=False)
+    weights_file_path = os.path.join(test_weights_path, 'data_mu_calc.weights')
+    labels_file_path = os.path.join(test_label_path, 'data_mu_calc.labels')
+    data_file_path = os.path.join(test_data_path, 'data_mu_calc.csv')
+
+    # Writing data to files
+    mu_calc_weights.to_csv(weights_file_path, index=False, header=False)
+    mu_calc_label.to_csv(labels_file_path, index=False, header=False)
+    mu_calc_set.to_csv(data_file_path, index=False)
 
 
 
@@ -160,9 +182,14 @@ def DataGenerator():
 
 
         # Save the current subset as a CSV file
-        test_df.to_csv(test_data_path + f'data_{i}.csv', index=False)
-        test_weights.to_csv(test_weights_path + f'data_{i}.weights', index=False, header=False)
-        test_label.to_csv(test_label_path + f'data_{i}.labels', index=False, header=False)
+        data_file_path = os.path.join(test_data_path, f'data_{i}.csv')
+        weights_file_path = os.path.join(test_weights_path, f'data_{i}.weights')
+        labels_file_path = os.path.join(test_label_path, f'data_{i}.labels')
+
+        # Writing data to files
+        test_df.to_csv(data_file_path, index=False)
+        test_weights.to_csv(weights_file_path, index=False, header=False)
+        test_label.to_csv(labels_file_path, index=False, header=False)
 
         print ("Shape of test set : ",np.shape(test_df))
 
@@ -172,7 +199,8 @@ def DataGenerator():
         print ("mu = ",(np.sum(test_weights) - np.sum(train_weights[train_label==0]))/np.sum(train_weights[train_label==1]))
 
     # Save the training set as a CSV file
-    train_df.to_csv(train_data_path + 'data.csv', index=False)
+    train_data_path = os.path.join(train_data_path, 'data.csv')
+    train_df.to_csv(train_data_path, index=False)
 
     print ("Shape of train set : ",np.shape(train_df)) 
 

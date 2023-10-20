@@ -22,13 +22,18 @@ module_dir= os.path.dirname(os.path.realpath(__file__))
 root_dir = os.path.dirname(module_dir)
 
 # Input data directory to read training data from
-input_dir = root_dir + "input_data"
+
+# Input data directory
+input_dir = os.path.join(root_dir, 'input_data')
+
 # Output data directory to write predictions to
-output_dir = root_dir + "sample_result_submission"
+output_dir = os.path.join(root_dir, 'sample_result_submission')
+
 # Program directory
-program_dir = root_dir + "ingestion_program"
+program_dir = os.path.join(root_dir, 'ingestion_program')
+
 # Directory to read submitted submissions from
-submission_dir = root_dir + "sample_code_submission"
+submission_dir = os.path.join(root_dir, 'sample_code_submission')
 
 # ------------------------------------------
 # Codabench Directories
