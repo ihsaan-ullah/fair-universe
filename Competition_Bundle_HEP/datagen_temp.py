@@ -113,7 +113,7 @@ def DataGenerator():
 
         #adding systematics to the test set
 
-        with open(f'/reference_data/settings/data_{i}.json') as f:
+        with open(f'reference_data/settings/data_{i}.json') as f:
             data = json.load(f)
 
         # Extract the TES information from the JSON file
