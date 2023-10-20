@@ -594,6 +594,7 @@ class Model():
         print("[*] - Computing Test result")
 
         mu_hats = []
+        delta_mu_hats = []
         self.mu_hat_calc()
         
         for test_set in self.test_sets:
@@ -650,6 +651,10 @@ class Model():
             
             # Compute mu_hat
             mu_hat = (n_roi - self.beta_roi)/self.gamma_roi
+            
+            delta_mu_hat = abs((sigma - self.beta_roi)/self.gamma_roi)
+            
+            delta_mu_hats.append(delta_mu_hat)
             mu_hats.append(mu_hat)
 #             print(f"[*] --- mu_hat: {np.round(mu_hat, 4)} + {(n_plus_1_sigma - beta_roi)/gamma_roi} - {(n_minus_1_sigma - beta_roi)/gamma_roi}")
            
@@ -661,3 +666,4 @@ class Model():
 
         # Save mu_hat from test
         self.mu_hats = mu_hats
+        self.delta_mu_hat = delta_mu_hats
