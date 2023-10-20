@@ -12,8 +12,12 @@ from systematics import Systematics
 # Load the CSV file
 def DataGenerator():
     
-
-    df = pd.read_csv('./reference_data.csv')
+    # Get the directory of the current script (my_module.py)
+    module_dir = os.path.dirname(os.path.realpath(__file__))
+    
+    # Construct the absolute path to something.csv
+    csv_file_path = os.path.join(module_dir, 'reference_data.csv')
+    df = pd.read_csv(csv_file_path)
 
     # Remove the "label" and "weights" columns from the data
 
@@ -108,8 +112,9 @@ def DataGenerator():
         test_weights[test_label==0] *= total_background_weight / subset_background_weight
 
         #adding systematics to the test set
-
-        with open(f'./reference_data/settings/data_{i}.json') as f:
+        
+        setting_path =  os.path.join(module_dir, f'./reference_data/settings/data_{i}.json')
+        with open(setting_path) as f:
             data = json.load(f)
 
         # Extract the TES information from the JSON file
@@ -138,6 +143,7 @@ def DataGenerator():
 
 
         # Save the current subset as a CSV file
+        
         test_df.to_csv(f'./input_data/test/data/data_{i}.csv', index=False)
         test_weights.to_csv(f'./input_data/test/weights/data_{i}.weights', index=False, header=False)
         test_label.to_csv(f'./input_data/test/labels/data_{i}.labels', index=False, header=False)
