@@ -15,7 +15,12 @@ warnings.filterwarnings("ignore")
 # Default Directories
 # ------------------------------------------
 # root directory
-root_dir = "../"
+
+
+module_dir= os.path.dirname(os.path.realpath(__file__))
+
+root_dir = os.path.dirname(module_dir)
+
 # Input data directory to read training data from
 input_dir = root_dir + "input_data"
 # Output data directory to write predictions to
