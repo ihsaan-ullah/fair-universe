@@ -78,8 +78,8 @@ def DataGenerator():
 
 
     # Save the label and weight files for the training set
-    train_label.to_csv('./input_data/train/labels/data.labels', index=False, header=False)
-    train_weights.to_csv('./input_data/train/weights/data.weights', index=False, header=False)
+    train_label.to_csv('input_data/train/labels/data.labels', index=False, header=False)
+    train_weights.to_csv('.input_data/train/weights/data.weights', index=False, header=False)
 
     # Divide the test set into 10 equal parts and save each part as a separate CSV file
     test_dfs = [test_df[i:i+len(test_df)//10] for i in range(0, len(test_df), len(test_df)//10)]
@@ -94,9 +94,9 @@ def DataGenerator():
     mu_calc_weights[mu_calc_label==1] *= total_signal_weight / signal_mu_calc
     mu_calc_weights[mu_calc_label==0] *= total_background_weight / background_mu_calc
 
-    mu_calc_weights.to_csv('./input_data/test/weights/data_mu_calc.weights', index=False, header=False)
-    mu_calc_label.to_csv('./input_data/test/labels/data_mu_calc.labels', index=False, header=False)
-    mu_calc_set.to_csv('./input_data/test/data/data_mu_calc.csv', index=False)
+    mu_calc_weights.to_csv('input_data/test/weights/data_mu_calc.weights', index=False, header=False)
+    mu_calc_label.to_csv('input_data/test/labels/data_mu_calc.labels', index=False, header=False)
+    mu_calc_set.to_csv('input_data/test/data/data_mu_calc.csv', index=False)
 
 
 
@@ -142,9 +142,9 @@ def DataGenerator():
 
 
         # Save the current subset as a CSV file
-        test_df.to_csv(f'./input_data/test/data/data_{i}.csv', index=False)
-        test_weights.to_csv(f'./input_data/test/weights/data_{i}.weights', index=False, header=False)
-        test_label.to_csv(f'./input_data/test/labels/data_{i}.labels', index=False, header=False)
+        test_df.to_csv(f'input_data/test/data/data_{i}.csv', index=False)
+        test_weights.to_csv(f'input_data/test/weights/data_{i}.weights', index=False, header=False)
+        test_label.to_csv(f'input_data/test/labels/data_{i}.labels', index=False, header=False)
 
         print ("Shape of test set : ",np.shape(test_df))
 
@@ -154,7 +154,7 @@ def DataGenerator():
         print ("mu = ",(np.sum(test_weights) - np.sum(train_weights[train_label==0]))/np.sum(train_weights[train_label==1]))
 
     # Save the training set as a CSV file
-    train_df.to_csv('./input_data/train/data/data.csv', index=False)
+    train_df.to_csv('input_data/train/data/data.csv', index=False)
 
     print ("Shape of test set : ",np.shape(test_df))
     print ("Shape of train set : ",np.shape(train_df)) 
