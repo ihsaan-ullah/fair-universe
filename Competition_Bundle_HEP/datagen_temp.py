@@ -47,20 +47,20 @@ def DataGenerator():
     train_df, test_df, train_label, test_label, train_weights, test_weights = train_test_split(df, label, weights, test_size=0.3)
 
     # Create directories to store the label and weight files
-    if not os.path.exists('./input_data/train/labels'):
-        os.makedirs('./input_data/train/labels')
+    if not os.path.exists('input_data/train/labels'):
+        os.makedirs('input_data/train/labels')
 
-    if not os.path.exists('./input_data/train/weights'):
-        os.makedirs('./input_data/train/weights')
-    if not os.path.exists('./input_data/train/data'):
-        os.makedirs('./input_data/train/data')
+    if not os.path.exists('input_data/train/weights'):
+        os.makedirs('input_data/train/weights')
+    if not os.path.exists('input_data/train/data'):
+        os.makedirs('input_data/train/data')
 
-    if not os.path.exists('./input_data/test/weights'):
-        os.makedirs('./input_data/test/weights')
-    if not os.path.exists('./input_data/test/labels'):
-        os.makedirs('./input_data/test/labels')
-    if not os.path.exists('./input_data/test/data'):
-        os.makedirs('./input_data/test/data')
+    if not os.path.exists('input_data/test/weights'):
+        os.makedirs('input_data/test/weights')
+    if not os.path.exists('input_data/test/labels'):
+        os.makedirs('input_data/test/labels')
+    if not os.path.exists('input_data/test/data'):
+        os.makedirs('input_data/test/data')
 
     subset_signal_weight = np.sum(train_weights[train_label==1])
     subset_background_weight = np.sum(train_weights[train_label==0])
