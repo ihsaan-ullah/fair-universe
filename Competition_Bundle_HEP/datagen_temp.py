@@ -52,11 +52,15 @@ def DataGenerator():
 
     if not os.path.exists('./input_data/train/weights'):
         os.makedirs('./input_data/train/weights')
+    if not os.path.exists('./input_data/train/data'):
+        os.makedirs('./input_data/train/data')
 
     if not os.path.exists('./input_data/test/weights'):
         os.makedirs('./input_data/test/weights')
     if not os.path.exists('./input_data/test/labels'):
         os.makedirs('./input_data/test/labels')
+    if not os.path.exists('./input_data/test/data'):
+        os.makedirs('./input_data/test/data')
 
     subset_signal_weight = np.sum(train_weights[train_label==1])
     subset_background_weight = np.sum(train_weights[train_label==0])
