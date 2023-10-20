@@ -666,4 +666,4 @@ class Model():
 
         # Save mu_hat from test
         self.mu_hats = mu_hats
-        self.delta_mu_hat = delta_mu_hats
+        self.delta_mu_hat = np.mean(delta_mu_hats)
