@@ -5,10 +5,7 @@ import os
 import numpy as np
 import json
 from datetime import datetime as dt
-from sklearn.metrics import (
-    mean_absolute_error as mae,
-    mean_squared_error as mse
-)
+from sklearn.metrics import mean_absolute_error as mae, mean_squared_error as mse
 
 # ------------------------------------------
 # Default Directories
@@ -26,7 +23,7 @@ reference_dir = os.path.join(root_dir, "reference_data")
 prediction_dir = root_dir + "sample_result_submission"
 
 # score file to write score into
-score_file = os.path.join(output_dir, 'scores.json')
+score_file = os.path.join(output_dir, "scores.json")
 
 # ------------------------------------------
 # Codabench Directories
@@ -47,10 +44,8 @@ score_file = os.path.join(output_dir, 'scores.json')
 # score_file = os.path.join(output_dir, 'scores.json')
 
 
-class Scoring():
-
+class Scoring:
     def __init__(self):
-
         # Initialize class variables
         self.start_time = None
         self.end_time = None
@@ -79,14 +74,16 @@ class Scoring():
 
     def show_duration(self):
         print("\n---------------------------------")
-        print(f'[✔] Total duration: {self.get_duration()}')
+        print(f"[✔] Total duration: {self.get_duration()}")
         print("---------------------------------")
 
     def load_test_settings(self):
         print("[*] Reading test settings")
         self.test_settings = []
         for i in range(0, 10):
-            settings_file = os.path.join(reference_dir, "settings", "data_"+str(i)+".json")
+            settings_file = os.path.join(
+                reference_dir, "settings", "data_" + str(i) + ".json"
+            )
             with open(settings_file) as f:
                 self.test_settings.append(json.load(f))
 
@@ -99,17 +96,23 @@ class Scoring():
         with open(results_file) as f:
             self.ingestion_results = json.load(f)
 
+        # Load predictions for q_1 and q_2
+        self.q_1 = self.ingestion_results["q_1"]
+        self.q_2 = self.ingestion_results["q_2"]
         print("[✔]")
 
     def compute_scores(self):
         print("[*] Computing scores")
 
         C = 0.02
-        mus = [test_setting['ground_truth_mu'] for test_setting in self.test_settings]
-        mu_hats = self.ingestion_results['mu_hats']
-        delta_mus = [mu-mu_hat for mu, mu_hat in zip(mus, mu_hats)]
+        mus = [test_setting["ground_truth_mu"] for test_setting in self.test_settings]
+        mu_hats = self.ingestion_results["mu_hats"]
+        delta_mus = [mu - mu_hat for mu, mu_hat in zip(mus, mu_hats)]
         delta_mu_hat = self.ingestion_results["delta_mu_hat"]
         delta_mu_hats = np.repeat(delta_mu_hat, len(delta_mus))
+
+        # Compute J_q
+        score_J_q = self.compute_J_q(self.q_1, self.q_2)
 
         # Compute MAE
         mae_mu = self.compute_MAE(mus, mu_hats)
@@ -137,7 +140,8 @@ class Scoring():
             "coverage_mu": coverage_mu,
             "coverage_C": coverage_C,
             "score1_mae": score_mae,
-            "score1_mse": score_mse
+            "score1_mse": score_mse,
+            "score_J_q": score_J_q,
         }
         print(f"[*] --- delta_mu_hat: {round(delta_mu_hat, 3)}")
         print(f"[*] --- MAE (mu): {round(mae_mu, 3)}")
@@ -148,8 +152,22 @@ class Scoring():
         print(f"[*] --- coverage (C): {coverage_C}")
         print(f"[*] --- score (MAE): {round(score_mae, 3)}")
         print(f"[*] --- score (MSE): {round(score_mse, 3)}")
+        print(f"[*] --- score (J_q): {round(score_J_q, 3)}")
 
         print("[✔]")
+
+    def compute_J_q(self, q1, q2, order=2, eps=1e-4):
+        delta_mu = np.mean(q2 - q1)  # average over all tests
+        N_test = len(self.test_settings)
+        N_in = 0
+        for test_setting in self.test_settings:
+            if (
+                test_setting["ground_truth_mu"] >= q1
+                and test_setting["ground_truth_mu"] <= q2
+            ):
+                N_in += 1
+
+        return (delta_mu + eps) * inv_pol(N_in / N_test, order=order)
 
     def compute_MAE(self, actual, calculated):
         return mae(actual, calculated)
@@ -158,7 +176,6 @@ class Scoring():
         return mse(actual, calculated)
 
     def compute_coverage(self, mus, mu_hats, delta_mu_hat=None, C=None):
-
         coverage = 0
         n = len(mus)
 
@@ -168,31 +185,46 @@ class Scoring():
                 mu_plus = mu_hat + delta_mu_hat
                 mu_minu = mu_hat - delta_mu_hat
             else:
-                mu_plus = mu_hat + (C/2)
-                mu_minu = mu_hat - (C/2)
+                mu_plus = mu_hat + (C / 2)
+                mu_minu = mu_hat - (C / 2)
 
             # calculate how many times the groundtruth mu is between mu+ and mu-
             if mu >= mu_minu and mu <= mu_plus:
                 coverage += 1
 
-        return coverage/n
+        return coverage / n
 
     def compute_score(self, mu_score, delta_mu_score):
-
         return mu_score + delta_mu_score
 
     def write_scores(self):
         print("[*] Writing scores")
 
-        with open(score_file, 'w') as f_score:
+        with open(score_file, "w") as f_score:
             f_score.write(json.dumps(self.scores_dict, indent=4))
 
         print("[✔]")
         pass
 
 
-if __name__ == '__main__':
+def inv_pol(x, order=2):
+    """Inverse of polynomial p(x) used to score quantile predictions.
 
+    p(x) = 4 * x * (1 - x)) ** order
+
+    Args:
+        x (_type_): esetimate of coverage
+        order (int, optional): Raise the inverse polynomial to this power to
+            control shape of loss curve (higher order results in higher
+            penalties for a given departure form x=0.5). Defaults to 2.
+
+    Returns:
+        float: value of (4x(1 - x)) ** order
+    """
+    return (1.0 / (4.0 * (x * (1.0 - x)))) ** order
+
+
+if __name__ == "__main__":
     print("############################################")
     print("### Scoring Program")
     print("############################################\n")
