@@ -11,7 +11,7 @@ from systematics import Systematics
 
 
 # Load the CSV file
-def DataGenerator(verbose=0):
+def dataGenerator(verbose=0):
     
     # Get the directory of the current script (my_module.py)
     module_dir = os.path.dirname(os.path.realpath(__file__))

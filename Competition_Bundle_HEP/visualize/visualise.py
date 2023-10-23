@@ -23,7 +23,7 @@ class Dataset_visualise():
         print(f'[*] --- Number of features : {self.dfall.shape[1]}')
         print(f'[*] --- Number of signal events : {self.dfall[self.target==1].shape[0]}')
         print(f'[*] --- Number of background events : {self.dfall[self.target==0].shape[0]}')
-        
+
         print('[*] --- List of all features')
         display(self.dfall.columns)
 
@@ -94,7 +94,7 @@ class Dataset_visualise():
             lh._sizes = [10]
 
         plt.rcParams['figure.facecolor'] = 'w'  # Set the figure facecolor to white
-        plt.title('Pair plots of features in' + self.name)
+        ax.fig.suptitle('Pair plots of features in' + self.name)
         plt.show()
         plt.close()
         
