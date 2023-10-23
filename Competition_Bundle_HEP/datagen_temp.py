@@ -11,7 +11,7 @@ from systematics import Systematics
 
 
 # Load the CSV file
-def DataGenerator():
+def DataGenerator(verbose=0):
     
     # Get the directory of the current script (my_module.py)
     module_dir = os.path.dirname(os.path.realpath(__file__))
@@ -35,14 +35,16 @@ def DataGenerator():
 
     # Print the features of the data
     features = df.columns.tolist()
-    for feature in features:
-        print(feature)
+    if verbose > 1:
+        print ("[*] --- Features of the data")
+        for feature in features:
+            print(feature)
 
 
-
-    print (f"[*] --- sum of weights : {np.sum(weights)}")
-    print (f"[*] --- sum of signal : {np.sum(weights[label==1])}")
-    print (f"[*] --- sum of background : {np.sum(weights[label==0])}")
+    if verbose > 0:
+        print (f"[*] --- sum of weights : {np.sum(weights)}")
+        print (f"[*] --- sum of signal : {np.sum(weights[label==1])}")
+        print (f"[*] --- sum of background : {np.sum(weights[label==0])}")
     
     # Calculate the sum of weights of signal and background for the whole data
     total_signal_weight = np.sum(weights[label==1])
@@ -94,8 +96,9 @@ def DataGenerator():
     train_weights[train_label==1] *= total_signal_weight / subset_signal_weight
     train_weights[train_label==0] *= total_background_weight / subset_background_weight
 
-    print ("sum of signal" , np.sum(train_weights[train_label==1]))
-    print ("sum of background" , np.sum(train_weights[train_label==0]))
+    if verbose > 1:
+        print (f"[*] --- Signal in Training set " , np.sum(train_weights[train_label==1]))
+        print (f"[*] --- Background in Training set" , np.sum(train_weights[train_label==0]))
 
     import json
 
@@ -163,11 +166,13 @@ def DataGenerator():
 
         data_syst = Systematics(
         data=test_syst,
+        verbose=verbose,
         tes=tes
         ).data
 
         mu = data['ground_truth_mu']
-        print("mu = ",mu)
+        if verbose > 1:
+            print(f'[*] --- mu = {mu}')
 
         signal =  test_weights[test_label==1].sum()
         background = test_weights[test_label==0].sum()
@@ -190,19 +195,19 @@ def DataGenerator():
         test_df.to_csv(data_file_path, index=False)
         test_weights.to_csv(weights_file_path, index=False, header=False)
         test_label.to_csv(labels_file_path, index=False, header=False)
+        if verbose > 2:
+            print (f"[*] --- Shape of test set : ",np.shape(test_df))
 
-        print ("Shape of test set : ",np.shape(test_df))
-
-        print ("sum of signal" , np.sum(test_weights[test_label==1]))
-        print ("sum of background" , np.sum(test_weights[test_label==0]))
-        print ("sum of weights" , np.sum(test_weights))
-        print ("mu = ",(np.sum(test_weights) - np.sum(train_weights[train_label==0]))/np.sum(train_weights[train_label==1]))
+            print (f"[*] --- Signal in  test set {i}" , np.sum(test_weights[test_label==1]))
+            print (f"[*] --- Background in  test set {i}" , np.sum(test_weights[test_label==0]))
+            print (f"[*] --- Total Events in  test set {i}" , np.sum(test_weights))
 
     # Save the training set as a CSV file
     train_data_path = os.path.join(train_data_path, 'data.csv')
     train_df.to_csv(train_data_path, index=False)
 
-    print ("Shape of train set : ",np.shape(train_df)) 
+    if verbose > 0:
+        print ("Shape of train set : ",np.shape(train_df)) 
 
 if __name__ == "__main__":
     DataGenerator() 

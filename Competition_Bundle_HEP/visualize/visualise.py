@@ -19,6 +19,11 @@ class Dataset_visualise():
 
     def examine_dataset(self):
         print(f'[*] --- Dataset name : {self.name}')
+        print(f'[*] --- Number of events : {self.dfall.shape[0]}')
+        print(f'[*] --- Number of features : {self.dfall.shape[1]}')
+        print(f'[*] --- Number of signal events : {self.dfall[self.target==1].shape[0]}')
+        print(f'[*] --- Number of background events : {self.dfall[self.target==0].shape[0]}')
+        
         print('[*] --- List of all features')
         display(self.dfall.columns)
 
