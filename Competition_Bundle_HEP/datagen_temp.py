@@ -174,8 +174,6 @@ def dataGenerator(verbose=0):
         if verbose > 1:
             print(f'[*] --- mu = {mu}')
 
-        signal =  test_weights[test_label==1].sum()
-        background = test_weights[test_label==0].sum()
 
         # modify the label and weight of the test set for new ground truth mu
         test_weights[test_label==1] *= mu
@@ -210,5 +208,5 @@ def dataGenerator(verbose=0):
         print ("Shape of train set : ",np.shape(train_df)) 
 
 if __name__ == "__main__":
-    DataGenerator() 
+    dataGenerator() 
 
