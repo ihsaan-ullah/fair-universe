@@ -177,17 +177,30 @@ class Model():
             stratify=self.train_set["labels"]
         )
 
+        train_df, mu_calc_set_df, train_label, mu_calc_set_label, train_weights, mu_calc_set_weights = train_test_split(
+            train_df,
+            train_label,
+            train_weights,
+            test_size=0.5,
+            stratify=train_label
+        )
+
         # Calculate the sum of weights for signal and background in the training and validation sets
         train_signal_weights = train_weights[train_label == 1].sum()
         train_background_weights = train_weights[train_label == 0].sum()
         valid_signal_weights = valid_weights[valid_label == 1].sum()
         valid_background_weights = valid_weights[valid_label == 0].sum()
+        mu_calc_set_signal_weights = mu_calc_set_weights[mu_calc_set_label == 1].sum()
+        mu_calc_set_background_weights = mu_calc_set_weights[mu_calc_set_label == 0].sum()
+
 
         # Balance the sum of weights for signal and background in the training and validation sets
         train_weights[train_label == 1] *= signal_weights / train_signal_weights
         train_weights[train_label == 0] *= background_weights / train_background_weights
         valid_weights[valid_label == 1] *= signal_weights / valid_signal_weights
         valid_weights[valid_label == 0] *= background_weights / valid_background_weights
+        mu_calc_set_weights[mu_calc_set_label == 1] *= signal_weights / mu_calc_set_signal_weights
+        mu_calc_set_weights[mu_calc_set_label == 0] *= background_weights / mu_calc_set_background_weights
 
         train_df = self.scaler.fit_transform(train_df) 
 
@@ -201,21 +214,6 @@ class Model():
         
         self.eval_set = [(self.train_set['data'], self.train_set['labels']),(valid_df.to_numpy(),valid_label)]
         
-        labels_path = os.path.join(root_dir, 'input_data', 'test', 'labels', 'data_mu_calc.labels')
-        weights_path = os.path.join(root_dir, 'input_data', 'test', 'weights', 'data_mu_calc.weights')
-        data_path = os.path.join(root_dir, 'input_data', 'test', 'data', 'data_mu_calc.csv')
-
-        # Reading data from files
-        with open(labels_path) as f:
-            mu_calc_set_label = np.array(f.read().splitlines(), dtype=float)
-
-        with open(weights_path) as f:
-            mu_calc_set_weights = np.array(f.read().splitlines(), dtype=float)
-
-        mu_calc_set_df = pd.read_csv(data_path)
-
-        
-
         self.mu_calc_set = {
                 "data": mu_calc_set_df,
                 "labels": mu_calc_set_label,
@@ -651,10 +649,13 @@ class Model():
             
             # Compute mu_hat
             mu_hat = (n_roi - self.beta_roi)/self.gamma_roi
-            
-            delta_mu_hat = abs((sigma - self.beta_roi)/self.gamma_roi)
+            mu_plus_1_sigma = ((n_plus_1_sigma - self.beta_roi)/self.gamma_roi)
+            mu_minus_1_sigma = ((n_minus_1_sigma - self.beta_roi)/self.gamma_roi)
+            delta_mu_hat = mu_plus_1_sigma - mu_minus_1_sigma
             
             delta_mu_hats.append(delta_mu_hat)
+
+            print(f"[*] --- delta_mu_hat: {delta_mu_hat}")
             mu_hats.append(mu_hat)
 #             print(f"[*] --- mu_hat: {np.round(mu_hat, 4)} + {(n_plus_1_sigma - beta_roi)/gamma_roi} - {(n_minus_1_sigma - beta_roi)/gamma_roi}")
            

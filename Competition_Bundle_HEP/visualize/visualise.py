@@ -56,7 +56,7 @@ class Dataset_visualise():
         if columns == None:
             columns  =self.columns
         for i in range(2):
-            sns.set(rc={'figure.figsize':(32,28)})
+            sns.set(rc={'figure.figsize':(10,10)})
 
             
             dfplot=pd.DataFrame(self.dfall, columns=columns)
@@ -219,6 +219,37 @@ def validationcurve(results,eval_metric,model_name = 'model'):
     plt.title(model_name + ' logloss')
     plt.show()
 
+def feature_importance_plot (columns,feature_importance,model_name = 'model'):
+    
+    plt.figure()
+    sns.set(rc={'figure.figsize':(8,7)})
 
+    plt.bar(columns, feature_importance)
+    plt.xticks(rotation=90)
+    plt.ylabel('Feature Importance')
+    plt.title(model_name + ' Feature Importance')
+    plt.show()
 
+    top_features = []
+    for feature, importance in zip(columns, feature_importance):
+        if importance > 0.025:
+            top_features.append(feature)
+    
+    print( top_features )
+
+def permutation_importance(model,data,model_name = 'model'):
+    
+
+    from sklearn.inspection import permutation_importance
+    r = permutation_importance(model, data.dfall, data.target,sample_weight=data.weights,
+                            scoring='roc_auc',n_repeats=1,n_jobs=-1,
+                            random_state=0)
+    plt.bar(data.columns,r.importances.mean(axis=1).T,)
+
+    plt.xlabel('features')
+    plt.xticks(rotation=90)
+    plt.ylabel('impact on auc')
+    plt.title('Permutation Importance XGBoost + ' + model_name)
+
+    plt.show()
 

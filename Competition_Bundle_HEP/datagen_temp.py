@@ -51,7 +51,7 @@ def dataGenerator(verbose=0):
     total_background_weight = np.sum(weights[label==0])
 
     # Split the data into training and testing sets
-    train_df, test_df, train_label, test_label, train_weights, test_weights = train_test_split(df, label, weights, test_size=0.3)
+    train_df, test_df, train_label, test_label, train_weights, test_weights = train_test_split(df, label, weights, test_size=0.2)
 
     # Create directories to store the label and weight files
     train_label_path =  os.path.join(module_dir, 'input_data/train/labels')
@@ -123,26 +123,10 @@ def dataGenerator(verbose=0):
     test_weights_ = [test_weights[i:i+len(test_weights)//10] for i in range(0, len(test_weights), len(test_weights)//10)]
     test_label_ = [test_label[i:i+len(test_label)//10] for i in range(0, len(test_label), len(test_label)//10)]
 
-    mu_calc_set = test_dfs.pop(0)
-    mu_calc_weights = test_weights_.pop(0)
-    mu_calc_label = test_label_.pop(0)
-    signal_mu_calc = np.sum(mu_calc_weights[mu_calc_label==1])
-    background_mu_calc = np.sum(mu_calc_weights[mu_calc_label==0])  
-    mu_calc_weights[mu_calc_label==1] *= total_signal_weight / signal_mu_calc
-    mu_calc_weights[mu_calc_label==0] *= total_background_weight / background_mu_calc
-
-    weights_file_path = os.path.join(test_weights_path, 'data_mu_calc.weights')
-    labels_file_path = os.path.join(test_label_path, 'data_mu_calc.labels')
-    data_file_path = os.path.join(test_data_path, 'data_mu_calc.csv')
-
-    # Writing data to files
-    mu_calc_weights.to_csv(weights_file_path, index=False, header=False)
-    mu_calc_label.to_csv(labels_file_path, index=False, header=False)
-    mu_calc_set.to_csv(data_file_path, index=False)
-
-
 
     for i, (test_df, test_weights, test_label) in enumerate(zip(test_dfs, test_weights_, test_label_)):
+        if i == 10:
+            break
         # Calculate the sum of weights of signal and background for the current subset
 
         subset_signal_weight = np.sum(test_weights[test_label==1])
@@ -155,7 +139,7 @@ def dataGenerator(verbose=0):
 
         #adding systematics to the test set
         
-        setting_path =  os.path.join(module_dir, f'reference_data/settings/data_{i}.json')
+        setting_path =  os.path.join(module_dir, 'reference_data','settings',f'data_{i}.json')
         with open(setting_path) as f:
             data = json.load(f)
 
@@ -170,7 +154,8 @@ def dataGenerator(verbose=0):
         tes=tes
         ).data
 
-        mu = data['ground_truth_mu']
+        # mu = data['ground_truth_mu']
+        mu = 1.0
         if verbose > 1:
             print(f'[*] --- mu = {mu}')
 
@@ -193,7 +178,7 @@ def dataGenerator(verbose=0):
         test_df.to_csv(data_file_path, index=False)
         test_weights.to_csv(weights_file_path, index=False, header=False)
         test_label.to_csv(labels_file_path, index=False, header=False)
-        if verbose > 2:
+        if verbose > 1:
             print (f"[*] --- Shape of test set : ",np.shape(test_df))
 
             print (f"[*] --- Signal in  test set {i}" , np.sum(test_weights[test_label==1]))
@@ -207,6 +192,49 @@ def dataGenerator(verbose=0):
     if verbose > 0:
         print ("Shape of train set : ",np.shape(train_df)) 
 
+
+
+def dataSimulator(n=1000, verbose=0, tes=1.0, mu=1.0):
+    '''
+    Simulates data for the HEP competition using reference data and systematics.
+
+    Args:
+        n (int): Number of samples to simulate. Default is 1000.
+        verbose (int): Verbosity level. Default is 0.
+        tes (float): TES (Trigger Efficiency Scale Factor) value. Default is 1.0.
+        mu (float): Mu (Signal Strength) value. Default is 1.0.
+
+    Returns:
+        pandas.DataFrame: Simulated data with systematics and weights.
+    '''
+
+    # Get the directory of the current script (datagen_temp.py)
+    module_dir = os.path.dirname(os.path.realpath(__file__))
+    
+    # Construct the absolute path to reference_data.csv
+    csv_file_path = os.path.join(module_dir, 'reference_data.csv')
+    df = pd.read_csv(csv_file_path)
+
+    # Sample n rows from the reference data
+    data = df.sample(n=n, replace=True)
+
+    # Apply systematics to the sampled data
+    data_syst = Systematics(
+        data=data,
+        verbose=verbose,
+        tes=tes
+    ).data
+
+    # Apply weight scaling factor mu to the data
+    data_syst['Weight'] *= mu
+
+    return data_syst
+
+
+
+    
+
+
 if __name__ == "__main__":
-    dataGenerator() 
+    dataGenerator(verbose=2) 
 
