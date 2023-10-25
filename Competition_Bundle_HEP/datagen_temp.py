@@ -154,8 +154,8 @@ def dataGenerator(verbose=0):
         tes=tes
         ).data
 
-        # mu = data['ground_truth_mu']
-        mu = 1.0
+        mu = data['ground_truth_mu']
+        # mu = 1.0
         if verbose > 1:
             print(f'[*] --- mu = {mu}')
 
