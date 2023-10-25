@@ -95,8 +95,8 @@ class Model():
 
         # Intialize class variables
         self.validation_sets = None
-        self.theta_candidates = np.arange(0, 1, 0.01)
-        self.best_theta = 0.95
+        self.theta_candidates = np.arange(0.9, 1, 0.01)
+        self.best_theta = 0.9
         self.scaler = StandardScaler()
 
 
@@ -119,7 +119,8 @@ class Model():
         self._generate_validation_sets()
         self._init_model()
         self._train()
-#         self._choose_theta()
+        self._choose_theta()
+        self.mu_hat_calc()
         self._validate()
         self._compute_validation_result()
 
@@ -149,19 +150,8 @@ class Model():
         print("[*] - Intialize BDT")
 
         # self.model = XGBClassifier(tree_method="hist",use_label_encoder=False,eval_metric=['logloss','auc'])
-        self.model = LGBMClassifier(tree_method="hist",use_label_encoder=False,eval_metric=['logloss','auc'])
-# self.model = LGBMClassifier(max_depth = 3,num_leaves = 8,num_trees = 50)#,nthread = 32,n_jobs = 32)
-#         self.result = {}
-#         self.model = LGBMClassifier(tree_method="hist",
-#                                     max_depth = 3,num_leaves = 8,
-#                                     nthread = 32,
-#                                     n_jobs = 32,
-#                                     num_trees = 50,
-#                                     metric=['logloss','auc'],
-#                                     callbacks=[
-#                                         lgb.log_evaluation(10),
-#                                         lgb.record_evaluation(self.result)
-#                                     ])
+        self.model = LGBMClassifier(metric=['logloss','auc'])
+
     def _generate_validation_sets(self):
         print("[*] - Generating Validation sets")
 
@@ -204,6 +194,8 @@ class Model():
         mu_calc_set_weights[mu_calc_set_label == 1] *= signal_weights / mu_calc_set_signal_weights
         mu_calc_set_weights[mu_calc_set_label == 0] *= background_weights / mu_calc_set_background_weights
 
+
+
         train_df = self.scaler.fit_transform(train_df) 
 
         self.train_set = {
@@ -224,7 +216,7 @@ class Model():
 
         self.validation_sets = []
         # Loop 10 times to generate 10 validation sets
-        for i in range(0, 1):
+        for i in range(0, 10):
             tes = round(np.random.uniform(0.9, 1.10), 2)
             # apply systematics
             valid_with_systematics_temp = self.systematics(
@@ -244,7 +236,17 @@ class Model():
             })
             del valid_with_systematics_temp
 
-        print(f"\n[*] --- Size of train set: {len(self.train_set['data'])} --- Size of validation set: {len(self.validation_sets[0]['data'])} --- Size of mu_calc set: {len(self.mu_calc_set['data'])}\n")
+        train_signal_weights = train_weights[train_label == 1].sum()
+        train_background_weights = train_weights[train_label == 0].sum()
+        valid_signal_weights = valid_weights[valid_label == 1].sum()
+        valid_background_weights = valid_weights[valid_label == 0].sum()
+        mu_calc_set_signal_weights = mu_calc_set_weights[mu_calc_set_label == 1].sum()
+        mu_calc_set_background_weights = mu_calc_set_weights[mu_calc_set_label == 0].sum()
+
+        print(f"[*] --- original signal: {signal_weights} --- original background: {background_weights}")
+        print(f"[*] --- train signal: {train_signal_weights} --- train background: {train_background_weights}")
+        print(f"[*] --- valid signal: {valid_signal_weights} --- valid background: {valid_background_weights}")
+        print(f"[*] --- mu_calc_set signal: {mu_calc_set_signal_weights} --- mu_calc_set background: {mu_calc_set_background_weights}")
 
     def _train(self):
         print("[*] - Train Neural Network")
@@ -273,9 +275,6 @@ class Model():
 
         auc_train = roc_auc_score(y_true=self.train_set['labels'], y_score = self.train_set['score'],sample_weight=self.train_set['weights'])      
         print(f"[*] --- AUC train : {auc_train}")
-
-        print("[*] --- Predicting mu_calc set")
-        self.mu_hat_calc()
 
 
         
