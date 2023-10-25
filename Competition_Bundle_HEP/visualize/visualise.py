@@ -125,8 +125,7 @@ def roc_curve_(score,labels,weights,plot_label = "model",color='b',lw = 2):
     
     plt.figure()
 
-    sns.set(rc={'figure.figsize':(8,7)})
-
+    plt.figure(figsize=(8,7))
 
     fpr,tpr,_ = roc_curve(y_true=labels, y_score=score,sample_weight=weights)
     plt.plot(fpr, tpr, color= color,lw=lw, label=plot_label)
@@ -204,13 +203,10 @@ def score_histogram(score,labels,plot_label=None,y_scale = 'log'):
     
     
 def validationcurve(results,eval_metric,model_name = 'model'):
-    
-    sns.set(rc={'figure.figsize':(8,7)})
 
-    
     epochs = len(results['validation_0'][eval_metric])
     x_axis = range(0, epochs)
-    
+    plt.figure(figsize=(8,7))
     fig, ax = plt.subplots()
     ax.plot(x_axis, results['validation_0'][eval_metric], label='Train')
     ax.plot(x_axis, results['validation_1'][eval_metric], label='Validation')
@@ -220,9 +216,8 @@ def validationcurve(results,eval_metric,model_name = 'model'):
     plt.show()
 
 def feature_importance_plot (columns,feature_importance,model_name = 'model'):
-    
-    plt.figure()
-    sns.set(rc={'figure.figsize':(8,7)})
+
+    plt.figure(figsize=(8,7))
 
     plt.bar(columns, feature_importance)
     plt.xticks(rotation=90)
@@ -239,6 +234,7 @@ def feature_importance_plot (columns,feature_importance,model_name = 'model'):
 
 def permutation_importance(model,data,model_name = 'model'):
     
+    plt.figure(figsize=(8,7))
 
     from sklearn.inspection import permutation_importance
     r = permutation_importance(model, data.dfall, data.target,sample_weight=data.weights,

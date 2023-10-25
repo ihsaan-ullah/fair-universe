@@ -54,33 +54,33 @@ def dataGenerator(verbose=0):
     train_df, test_df, train_label, test_label, train_weights, test_weights = train_test_split(df, label, weights, test_size=0.2)
 
     # Create directories to store the label and weight files
-    train_label_path =  os.path.join(module_dir, 'input_data/train/labels')
+    train_label_path =  os.path.join(module_dir, 'input_data','train','labels')
     if not os.path.exists(train_label_path):
         os.makedirs(train_label_path)
 
-    train_weights_path =  os.path.join(module_dir, 'input_data/train/weights')
+    train_weights_path =  os.path.join(module_dir, 'input_data','train','weights')
     if not os.path.exists(train_weights_path):
         os.makedirs(train_weights_path)
 
-    train_data_path =  os.path.join(module_dir, 'input_data/train/data')
+    train_data_path =  os.path.join(module_dir, 'input_data','train','data')
     if not os.path.exists(train_data_path):
         os.makedirs(train_data_path)
 
-    train_settings_path =  os.path.join(module_dir, 'input_data/train/settings')
+    train_settings_path =  os.path.join(module_dir, 'input_data','train','settings')
     if not os.path.exists(train_settings_path):
         os.makedirs(train_settings_path)
 
 
 
-    test_label_path =  os.path.join(module_dir, 'input_data/test/labels')
+    test_label_path =  os.path.join(module_dir, 'input_data','test','labels')
     if not os.path.exists(test_label_path):
         os.makedirs(test_label_path)
 
-    test_weights_path =  os.path.join(module_dir, 'input_data/test/weights')
+    test_weights_path =  os.path.join(module_dir, 'input_data','test','weights')
     if not os.path.exists(test_weights_path):
         os.makedirs(test_weights_path)
 
-    test_data_path =  os.path.join(module_dir, 'input_data/test/data')
+    test_data_path =  os.path.join(module_dir, 'input_data','test','data')
     if not os.path.exists(test_data_path):
         os.makedirs(test_data_path)
 
