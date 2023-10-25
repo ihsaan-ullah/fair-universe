@@ -149,7 +149,7 @@ class Model():
         print("[*] - Intialize BDT")
 
         self.model = XGBClassifier(tree_method="hist",use_label_encoder=False,eval_metric=['logloss','auc'])
-#         self.model = LGBMClassifier(max_depth = 3,num_leaves = 8,num_trees = 50,nthread = 32,n_jobs = 32)
+        # self.model = LGBMClassifier(max_depth = 3,num_leaves = 8,num_trees = 50,nthread = 32,n_jobs = 32)
 #         self.result = {}
 #         self.model = LGBMClassifier(tree_method="hist",
 #                                     max_depth = 3,num_leaves = 8,
@@ -173,7 +173,7 @@ class Model():
             self.train_set["data"],
             self.train_set["labels"],
             self.train_set["weights"],
-            test_size=0.2,
+            test_size=0.05,
             stratify=self.train_set["labels"]
         )
 
@@ -182,6 +182,7 @@ class Model():
             train_label,
             train_weights,
             test_size=0.5,
+            shuffle=True,
             stratify=train_label
         )
 
@@ -241,6 +242,8 @@ class Model():
                 "tes" : tes
             })
             del valid_with_systematics_temp
+
+        print(f"\n[*] --- Size of train set: {len(self.train_set['data'])} --- Size of validation set: {len(self.validation_sets[0]['data'])} --- Size of mu_calc set: {len(self.mu_calc_set['data'])}\n")
 
     def _train(self):
         print("[*] - Train Neural Network")
