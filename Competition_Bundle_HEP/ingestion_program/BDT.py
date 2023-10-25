@@ -148,8 +148,9 @@ class Model():
     def _init_model(self):
         print("[*] - Intialize BDT")
 
-        self.model = XGBClassifier(tree_method="hist",use_label_encoder=False,eval_metric=['logloss','auc'])
-        # self.model = LGBMClassifier(max_depth = 3,num_leaves = 8,num_trees = 50,nthread = 32,n_jobs = 32)
+        # self.model = XGBClassifier(tree_method="hist",use_label_encoder=False,eval_metric=['logloss','auc'])
+        self.model = LGBMClassifier(tree_method="hist",use_label_encoder=False,eval_metric=['logloss','auc'])
+# self.model = LGBMClassifier(max_depth = 3,num_leaves = 8,num_trees = 50)#,nthread = 32,n_jobs = 32)
 #         self.result = {}
 #         self.model = LGBMClassifier(tree_method="hist",
 #                                     max_depth = 3,num_leaves = 8,
@@ -272,6 +273,9 @@ class Model():
 
         auc_train = roc_auc_score(y_true=self.train_set['labels'], y_score = self.train_set['score'],sample_weight=self.train_set['weights'])      
         print(f"[*] --- AUC train : {auc_train}")
+
+        print("[*] --- Predicting mu_calc set")
+        self.mu_hat_calc()
 
 
         
@@ -498,24 +502,15 @@ class Model():
             
 
             # get region of interest
-            nu_roi = (weights_train[Y_hat_train == 1]).sum()
+            nu_roi = self.beta_roi + self.gamma_roi 
             
             print(f'[*] --- number of events in roi validation {n_roi}')
             print(f'[*] --- number of events in roi train {nu_roi}')            
 
-            
-            
-            # compute gamma_roi
-            weights_train_signal = weights_train[Y_train == 1]
-            weights_train_bkg = weights_train[Y_train == 0]
-
-            Y_hat_train_signal = Y_hat_train[Y_train == 1]
-            Y_hat_train_bkg = Y_hat_train[Y_train == 0]
-
-            gamma_roi = (weights_train_signal[Y_hat_train_signal == 1]).sum()
+            gamma_roi = self.gamma_roi
 
             # compute beta_roi
-            beta_roi = (weights_train_bkg[Y_hat_train_bkg == 1]).sum()
+            beta_roi = self.beta_roi
             if gamma_roi == 0:
                 gamma_roi = EPSILON
 
@@ -596,7 +591,6 @@ class Model():
 
         mu_hats = []
         delta_mu_hats = []
-        self.mu_hat_calc()
         
         for test_set in self.test_sets:
 
