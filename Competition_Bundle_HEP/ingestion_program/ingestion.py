@@ -62,7 +62,7 @@ from systematics import Systematics
 # Import Model
 # ------------------------------------------
 
-from BDT import Model
+from model import Model
 
 
 class Ingestion():
