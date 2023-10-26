@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns # seaborn for nice plot quicker
 from sklearn.metrics import roc_curve
 from IPython.display import display
+from sklearn.metrics import roc_auc_score
 
 class Dataset_visualise():
 
@@ -122,13 +123,16 @@ def Z_curve(score,labels,weights): ## work in progress
     plt.show()
 
 def roc_curve_(score,labels,weights,plot_label = "model",color='b',lw = 2):
+
+    auc = roc_auc_score(y_true=labels, y_score=score,sample_weight=weights)
+
     
     plt.figure()
 
     plt.figure(figsize=(8,7))
 
     fpr,tpr,_ = roc_curve(y_true=labels, y_score=score,sample_weight=weights)
-    plt.plot(fpr, tpr, color= color,lw=lw, label=plot_label)
+    plt.plot(fpr, tpr, color= color,lw=lw, label=plot_label + ' AUC :' + f'{auc:.3f}')
 
     plt.plot([0, 1], [0, 1], color='k', lw=lw, linestyle='--')
     plt.xlim([-0.01, 1.01])

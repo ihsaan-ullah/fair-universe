@@ -75,8 +75,7 @@ class Ingestion():
         self.model = None
         self.train_set = None
         self.test_sets = []
-        self.test_sets_weights = []
-        self.test_labels = []
+
 
     def start_timer(self):
         self.start_time = dt.now()
@@ -137,18 +136,17 @@ class Ingestion():
         self.test_sets = []
         for i in range(0, 10):
             test_data_file = os.path.join(input_dir, 'test', 'data', 'data_'+str(i)+'.csv')
-            self.test_sets.append(pd.read_csv(test_data_file))
+            test_data = pd.read_csv(test_data_file)
 
-        self.test_sets_weights = []
-        for i in range(0, 10):
             test_weights_file = os.path.join(input_dir, 'test', 'weights', 'data_'+str(i)+'.weights')
             with open(test_weights_file) as f:
-                self.test_sets_weights.append(np.array(f.read().splitlines(), dtype=float))
+                test_weights = np.array(f.read().splitlines(), dtype=float)
 
-        # for i in range(0, 10):
-        #     test_labels_file = os.path.join(input_dir, 'test', 'labels', 'data_'+str(i)+'.labels')
-        #     with open(test_labels_file) as f:
-        #         self.test_labels.append(np.array(f.read().splitlines(), dtype=float))
+            test_set = {
+                "data": test_data,
+                "weights": test_weights
+            }
+            self.test_sets.append(test_set)
 
 
     def initialize_submission(self):
@@ -156,8 +154,6 @@ class Ingestion():
         self.model = Model(
             train_set=self.train_set,
             test_sets=self.test_sets,
-            test_sets_weights=self.test_sets_weights,
-            test_labels=self.test_labels,
             systematics=Systematics
         )
 

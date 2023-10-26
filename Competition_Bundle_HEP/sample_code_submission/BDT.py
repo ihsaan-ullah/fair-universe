@@ -46,8 +46,6 @@ class Model():
             self,
             train_set=None,
             test_sets=[],
-            test_sets_weights=[],
-            test_labels=[],
             systematics=None,
             model_name="BDT",
             
@@ -78,14 +76,14 @@ class Model():
 
         self.model_name = model_name
         self.train_set = train_set
-        self.test_sets = []
-        self.test_sets_weights = []
-        self.test_labels = []
-        for test_set in test_sets:
-            self.test_sets.append({"data": test_set})
+        self.test_sets = test_sets
+        # self.test_sets_weights = []
+        # self.test_labels = []
+        # for test_set in test_sets:
+        #     self.test_sets.append({"data": test_set})
 
-        for test_set_weights in test_sets_weights:
-            self.test_sets_weights.append(test_set_weights) 
+        # for test_set_weights in test_sets_weights:
+        #     self.test_sets_weights.append(test_set_weights) 
 
         # for test_label in test_labels:
         #     self.test_labels.append(test_label)
@@ -95,7 +93,7 @@ class Model():
 
         # Intialize class variables
         self.validation_sets = None
-        self.theta_candidates = np.arange(0.9, 1, 0.01)
+        self.theta_candidates = np.arange(0.9, 0.96, 0.01)
         self.best_theta = 0.9
         self.scaler = StandardScaler()
 
@@ -538,51 +536,6 @@ class Model():
             test_set['predictions'] = self._predict(test_df, self.best_theta)
             test_set['score'] = self.model.predict_proba(test_df)[:,1]
 
-        for test_set, test_set_weights in zip(self.test_sets, self.test_sets_weights):
-            test_set['weights'] = test_set_weights
-        for test_set, test_label in zip(self.test_sets, self.test_labels):
-            test_set['labels'] = test_label
-
-    def test_BS(self):
-        
-        
-        print("[*] - Testing")
-        # Get predictions from trained model
-
-        for test_set, test_set_weights, test_label in zip(self.test_sets, self.test_sets_weights, self.test_labels):
-            test_df = test_set['data']
-            test_df = self.scaler.transform(test_df)
-            test_set['weights'] = test_set_weights
-            test_set['labels'] = test_label
-            
-            bootstrap_N_roi_ = []
-            
-            for i in range(5000):
-            
-                bootstrap_df = bootstrap_data(test_df,test_set_weights, n = 10000,seed=42+1)
-                
-                bootstrap_label = bootstrap_df.pop('label')
-                bootstrap_weights = bootstrap_df.pop('weights')
-                
-                    
-
-                bootstrap_score = self.model.predict_proba(bootstrap_df)[:,1]
-
-                bootstrap_weights = self._predict(bootstrap_df, self.best_theta)
-                
-                bootstrap_N_roi = np.sum(bootstrap_weights[bootstrap_weights == 1])
-                
-                bootstrap_N_roi_.append(bootstrap_N_roi)
-            
-                
-            test_set['N_roi'] = np.mean(bootstrap_N_roi_)
-                           
-                
-                
-
-            
-
-
 
     def _compute_test_result(self):
 
@@ -594,13 +547,7 @@ class Model():
         for test_set in self.test_sets:
 
             Y_hat_test = test_set["predictions"]
-            # Y_test = test_set["labels"]
-            Score_test = test_set["score"]
 
-            # AUC_test = roc_auc_score(y_true=Y_test, y_score=Score_test,sample_weight=test_set['weights'])
-
-
-            # print(f"\n[*] --- AUC test : {AUC_test}")
 
             weights_train = self.train_set["weights"].copy()
             weights_test = test_set["weights"].copy()
@@ -608,34 +555,11 @@ class Model():
             print(f"[*] --- total weight test: {weights_test.sum()}") 
             print(f"[*] --- total weight train: {weights_train.sum()}")
             print(f"[*] --- total weight mu_cals_set: {self.mu_calc_set['weights'].sum()}")
-            
-
-            # Y_hat_test_signal = Y_hat_test[Y_test == 1]
-            # Y_hat_test_bkg = Y_hat_test[Y_test == 0]    
-
-            # weights_test_signal = weights_test[Y_test == 1]
-            # weights_test_bkg = weights_test[Y_test == 0]    
-            
-            # print(f"[*] --- total test signal : {weights_test_signal.sum()}") 
-            # print(f"[*] --- total test background train: {weights_test_bkg.sum()}")
-
-
-            # signal = weights_test_signal[Y_hat_test_signal == 1].sum()
-            # background = weights_test_bkg[Y_hat_test_bkg == 1].sum()
-
-            
-            # significance = self.amsasimov_x(signal,background)
-            # print(f"[*] --- Significance : {significance}")
-
-            # delta_mu_stat = self.del_mu_stat(signal,background)
-
-            # print(f"[*] --- delta_mu_stat : {delta_mu_stat}")
 
             # get n_roi
 
             [n_roi ,sigma] = self.N_calc(weights_test[Y_hat_test == 1])
-            
-            
+           
             n_plus_1_sigma = n_roi + sigma
             n_minus_1_sigma = n_roi - sigma
             
@@ -651,16 +575,13 @@ class Model():
 
             print(f"[*] --- delta_mu_hat: {delta_mu_hat}")
             mu_hats.append(mu_hat)
-#             print(f"[*] --- mu_hat: {np.round(mu_hat, 4)} + {(n_plus_1_sigma - beta_roi)/gamma_roi} - {(n_minus_1_sigma - beta_roi)/gamma_roi}")
-           
-            # print(f"[*] --- signal test: {signal} --- background test: {background} --- N_roi {n_roi}")
            
             print(f"\n[*] --- mu hat test :{mu_hat} + {(n_plus_1_sigma - self.beta_roi)/self.gamma_roi} - {(n_minus_1_sigma - self.beta_roi)/self.gamma_roi}")
             
         print("\n")
 
         # Save mu_hat from test
-        self.mu_hats = mu_hats
+        self.mu_hats = (mu_hats)
         self.delta_mu_hat = np.mean(delta_mu_hats)
 
         print(f"[*] --- mu_hats (avg): {np.mean(mu_hats)}")

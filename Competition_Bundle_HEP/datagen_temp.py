@@ -72,9 +72,9 @@ def dataGenerator(verbose=0):
 
 
 
-    test_label_path =  os.path.join(module_dir, 'input_data','test','labels')
-    if not os.path.exists(test_label_path):
-        os.makedirs(test_label_path)
+    reference_label_path =  os.path.join(module_dir, 'reference_data','labels')
+    if not os.path.exists(reference_label_path):
+        os.makedirs(reference_label_path)
 
     test_weights_path =  os.path.join(module_dir, 'input_data','test','weights')
     if not os.path.exists(test_weights_path):
@@ -172,7 +172,7 @@ def dataGenerator(verbose=0):
         # Save the current subset as a CSV file
         data_file_path = os.path.join(test_data_path, f'data_{i}.csv')
         weights_file_path = os.path.join(test_weights_path, f'data_{i}.weights')
-        labels_file_path = os.path.join(test_label_path, f'data_{i}.labels')
+        labels_file_path = os.path.join(reference_label_path, f'data_{i}.labels')
 
         # Writing data to files
         test_df.to_csv(data_file_path, index=False)
