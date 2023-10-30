@@ -15,4 +15,4 @@ This sample submission is a real submission with a baseline method that trains o
 ## Starting Kit
 We are providing a starting kit as a Google Colab notebook to demonstrate the problem and a solution for it which can be submitted as a submission the competition. You can copy the Colab notebook and make changes as you want.  
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1QhFIJlQQ4rAloi9FsEfmGAvRbb5QtlaD?usp=sharing)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ragansu/fair-universe/blob/master/Competition_Bundle_HEP/Starting_kit/Starting_kit.ipynb)

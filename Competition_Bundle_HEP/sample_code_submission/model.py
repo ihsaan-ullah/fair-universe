@@ -1,31 +1,33 @@
-import os
 import numpy as np
 import pandas as pd
+import os
 from sklearn.model_selection import train_test_split
+from xgboost import XGBClassifier
+from sklearn.metrics import roc_auc_score
+from sklearn.preprocessing import StandardScaler
+from lightgbm import LGBMClassifier
+import lightgbm as lgb
+from math import sqrt
+from math import log
+from sys import path
 
-from sklearn.naive_bayes import GaussianNB
-from sklearn.linear_model import RidgeClassifier
-from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.svm import SVC
-from sklearn.ensemble import GradientBoostingClassifier
+module_dir= os.path.dirname(os.path.realpath(__file__))
+
+root_dir = os.path.dirname(module_dir)
+
+path.append(root_dir)
+
+from bootstrap import bootstrap
 
 EPSILON = np.finfo(float).eps
 
-MODELS = {
-    "NB": GaussianNB,
-    "Ridge R": RidgeClassifier,
-    "LDA": LinearDiscriminantAnalysis,
-    "DTC": DecisionTreeClassifier,
-    "SVM": SVC,
-    "XG": GradientBoostingClassifier
-}
+
 
 
 # ------------------------------
 # Baseline Model
 # ------------------------------
-class Model:
+class Model():
     """
     This is a model class to be submitted by the participants in their submission.
 
@@ -45,8 +47,8 @@ class Model:
             train_set=None,
             test_sets=[],
             systematics=None,
-            model_name="XG",
-            use_systematics=False
+            model_name="BDT",
+            
     ):
         """
         Model class constructor
@@ -62,25 +64,43 @@ class Model:
                 systematics class
 
             model_name:
-                name of the model, default: NB
+
+                name of the model, default: BDT
+
 
         Returns:
             None
         """
 
         # Set class variables from parameters
+
         self.model_name = model_name
         self.train_set = train_set
-        self.test_sets = []
-        for test_set in test_sets:
-            self.test_sets.append({"data": test_set})
+        self.test_sets = test_sets
+        # self.test_sets_weights = []
+        # self.test_labels = []
+        # for test_set in test_sets:
+        #     self.test_sets.append({"data": test_set})
+
+        # for test_set_weights in test_sets_weights:
+        #     self.test_sets_weights.append(test_set_weights) 
+
+        # for test_label in test_labels:
+        #     self.test_labels.append(test_label)
+
+
         self.systematics = systematics
-        self.use_systematics = use_systematics
 
         # Intialize class variables
         self.validation_sets = None
-        self.theta_candidates = np.arange(-10, 10)
-        self.best_theta = None
+        self.theta_candidates = np.arange(0.9, 0.96, 0.01)
+        self.best_theta = 0.9
+        self.scaler = StandardScaler()
+
+
+        # # Hyper params
+        # self.num_epochs = 10
+        # self.batch_size = 32
 
     def fit(self):
         """
@@ -94,20 +114,13 @@ class Model:
             None
         """
 
-        # Generate Validation sets
-        self.generate_validation_sets()
-
-        # Train classifier
-        self.train()
-
-        # Choose best theta
-        self.choose_theta()
-
-        # Validate using multiple validations sets
-        self.validate()
-
-        # Compute mu and delta mu from validation set
-        self.compute_validation_result()
+        self._generate_validation_sets()
+        self._init_model()
+        self._train()
+        self._choose_theta()
+        self.mu_hat_calc()
+        self._validate()
+        self._compute_validation_result()
 
     def predict(self):
         """
@@ -123,146 +136,253 @@ class Model:
                 - delta_mu_hat
         """
 
-        # Test using the best theta
-        self.test()
-
-        # Compute mu and delta mu from test set
-        self.compute_test_result()
+        self._test()
+        self._compute_test_result()
 
         return {
             "mu_hats": self.mu_hats,
-            "delta_mu_hat": self.delta_mu_hat,
-            "predictions": [test_set["predictions"] for test_set in self.test_sets],
-            "decisions": [test_set["decisions"] for test_set in self.test_sets],
-            "theta": self.best_theta
+            "delta_mu_hat": self.delta_mu_hat
         }
 
     def _init_model(self):
-        if self.model_name == "SVM":
-            self.clf = SVC(kernel='linear')
-        elif self.model_name == "XG":
-            self.clf = GradientBoostingClassifier()
-        else:
-            model = MODELS[self.model_name]
-            self.clf = model()
+        print("[*] - Intialize BDT")
 
-    def _fit(self, X, y):
-        if self.model_name == "XG":
-            weights = X["New_Weight"]
-            X = X.drop("Weight", axis=1)
-            X = X.drop("New_Weight", axis=1)
-            self.clf.fit(X, y, sample_weight=weights)
-        else:
-            self.clf.fit(X, y)
+        # self.model = XGBClassifier(tree_method="hist",use_label_encoder=False,eval_metric=['logloss','auc'])
+        self.model = LGBMClassifier(metric=['logloss','auc'])
 
-    def _predict(self, X, theta):
-        if self.model_name == "XG":
-            X = X.drop("Weight", axis=1)
-            if "New_Weight" in X.columns:
-                X = X.drop("New_Weight", axis=1)
-        predictions = np.zeros(X.shape[0])
-        decisions = self._decision_function(X, theta)
-
-        # class 1 -> if decision function  > theta
-        # class 0 -> otherwise
-        predictions = (decisions > theta).astype(int)
-        return predictions
-
-    def _decision_function(self, X, theta):
-
-        if self.model_name == "XG":
-            if "Weight" in X.columns:
-                X = X.drop("Weight", axis=1)
-
-        # decision funciton: output between -inf and +inf
-        # 0 is the neutral point between the 2 classes which is on the decision boundary
-
-        decisions = None
-        if self.model_name in ["Ridge R", "LDA", "SVM", "XG"]:
-            decisions = self.clf.decision_function(X)
-        else:
-            # to make the output of both decision funciton and predict proba the same
-            # we transform the predict proba output
-            predicted_score = self.clf.predict_proba(X)
-            # Transform with log
-            predicted_score = -np.log((1/(predicted_score+EPSILON))-1)
-            decisions = predicted_score[:, 1]
-
-        # subtract the threshold from decisions because we want the decision boundary to be at 0
-        return decisions - theta
-
-    def generate_validation_sets(self):
+    def _generate_validation_sets(self):
         print("[*] - Generating Validation sets")
 
-        # Keep 70% of train set for training
-        # Use the remaining 30% as validation set
-        # Add systematics to validation set and create multiple validation sets
+        # Calculate the sum of weights for signal and background in the original dataset
+        signal_weights = self.train_set["weights"][self.train_set["labels"] == 1].sum()
+        background_weights = self.train_set["weights"][self.train_set["labels"] == 0].sum()
 
-        # create a df for train test split
-        train_df = self.train_set["data"]
-        train_df["Label"] = self.train_set["labels"]
+        # Split the data into training and validation sets while preserving the proportion of samples with respect to the target variable
+        train_df, valid_df, train_label, valid_label, train_weights, valid_weights = train_test_split(
+            self.train_set["data"],
+            self.train_set["labels"],
+            self.train_set["weights"],
+            test_size=0.05,
+            stratify=self.train_set["labels"]
+        )
 
-        # train: 70%
-        # valid: 30%
-        train, valid = train_test_split(train_df, test_size=0.3)
+        train_df, mu_calc_set_df, train_label, mu_calc_set_label, train_weights, mu_calc_set_weights = train_test_split(
+            train_df,
+            train_label,
+            train_weights,
+            test_size=0.5,
+            shuffle=True,
+            stratify=train_label
+        )
+
+        # Calculate the sum of weights for signal and background in the training and validation sets
+        train_signal_weights = train_weights[train_label == 1].sum()
+        train_background_weights = train_weights[train_label == 0].sum()
+        valid_signal_weights = valid_weights[valid_label == 1].sum()
+        valid_background_weights = valid_weights[valid_label == 0].sum()
+        mu_calc_set_signal_weights = mu_calc_set_weights[mu_calc_set_label == 1].sum()
+        mu_calc_set_background_weights = mu_calc_set_weights[mu_calc_set_label == 0].sum()
+
+
+        # Balance the sum of weights for signal and background in the training and validation sets
+        train_weights[train_label == 1] *= signal_weights / train_signal_weights
+        train_weights[train_label == 0] *= background_weights / train_background_weights
+        valid_weights[valid_label == 1] *= signal_weights / valid_signal_weights
+        valid_weights[valid_label == 0] *= background_weights / valid_background_weights
+        mu_calc_set_weights[mu_calc_set_label == 1] *= signal_weights / mu_calc_set_signal_weights
+        mu_calc_set_weights[mu_calc_set_label == 0] *= background_weights / mu_calc_set_background_weights
+
+
+
+        train_df = self.scaler.fit_transform(train_df) 
 
         self.train_set = {
-            "data": train.drop('Label', axis=1),
-            "labels": train["Label"].values,
+            "data": train_df,
+            "labels": train_label,
+            "weights": train_weights,
             "settings": self.train_set["settings"]
         }
+        
+        
+        self.eval_set = [(self.train_set['data'], self.train_set['labels']),(valid_df.to_numpy(),valid_label)]
+        
+        self.mu_calc_set = {
+                "data": mu_calc_set_df,
+                "labels": mu_calc_set_label,
+                "weights": mu_calc_set_weights
+            }
 
         self.validation_sets = []
         # Loop 10 times to generate 10 validation sets
         for i in range(0, 10):
-            if self.use_systematics:
-                tes = round(np.random.uniform(0.9, 1.10), 2)
-                # apply systematics
-                valid_with_systematics = self.systematics(
-                    data=valid,
-                    tes=tes
-                ).data
-                self.validation_sets.append({
-                    "data": valid_with_systematics.drop('Label', axis=1),
-                    "labels": valid["Label"].values,
-                    "settings": self.train_set["settings"]
-                })
-            else:
-                self.validation_sets.append({
-                    "data": valid.drop('Label', axis=1),
-                    "labels": valid["Label"].values,
-                    "settings": self.train_set["settings"]
-                })
+            tes = round(np.random.uniform(0.9, 1.10), 2)
+            # apply systematics
+            valid_with_systematics_temp = self.systematics(
+                data=valid_df,
+                tes=tes
+            ).data
 
+            valid_with_systematics = valid_with_systematics_temp.copy()
+
+
+            self.validation_sets.append({
+                "data": valid_with_systematics,
+                "labels": valid_label,
+                "weights": valid_weights,
+                "settings": self.train_set["settings"],
+                "tes" : tes
+            })
+            del valid_with_systematics_temp
+
+        train_signal_weights = train_weights[train_label == 1].sum()
+        train_background_weights = train_weights[train_label == 0].sum()
+        valid_signal_weights = valid_weights[valid_label == 1].sum()
+        valid_background_weights = valid_weights[valid_label == 0].sum()
+        mu_calc_set_signal_weights = mu_calc_set_weights[mu_calc_set_label == 1].sum()
+        mu_calc_set_background_weights = mu_calc_set_weights[mu_calc_set_label == 0].sum()
+
+        print(f"[*] --- original signal: {signal_weights} --- original background: {background_weights}")
+        print(f"[*] --- train signal: {train_signal_weights} --- train background: {train_background_weights}")
+        print(f"[*] --- valid signal: {valid_signal_weights} --- valid background: {valid_background_weights}")
+        print(f"[*] --- mu_calc_set signal: {mu_calc_set_signal_weights} --- mu_calc_set background: {mu_calc_set_background_weights}")
+
+    def _train(self):
+        print("[*] - Train Neural Network")
+
+        self._init_model()
+
+        weights_train = self.train_set["weights"].copy()
+
+            
+                
+        class_weights_train = (weights_train[self.train_set['labels'] == 0].sum(), weights_train[self.train_set['labels'] == 1].sum())
+
+        for i in range(len(class_weights_train)): # loop on B then S target
+            #training dataset: equalize number of background and signal
+            weights_train[self.train_set['labels'] == i] *= max(class_weights_train)/ class_weights_train[i] 
+            #test dataset : increase test weight to compensate for sampling
+        
+
+        print("[*] --- Training Model")
+        self._fit(self.train_set['data'], self.train_set['labels'], weights_train)
+
+        print("[*] --- Predicting Train set")
+        self.train_set['predictions'] = self._predict(self.train_set['data'], self.best_theta)
+
+        self.train_set['score'] = self._return_score(self.train_set['data'])
+
+        auc_train = roc_auc_score(y_true=self.train_set['labels'], y_score = self.train_set['score'],sample_weight=self.train_set['weights'])      
+        print(f"[*] --- AUC train : {auc_train}")
+
+
+        
+    def _fit(self, X, y,w):
+        print("[*] --- Fitting Model")
+        print("sum of signal" , w[y == 1].sum())    
+        print("sum of background" , w[y == 0].sum())
+        self.model.fit(X, y,sample_weight = w,eval_set = self.eval_set) 
+        self.model.fit(X, y,sample_weight = w) 
+#         lgb.plot_metric(plot)
+    
+
+    def _return_score(self, X):
+        y_predict = self.model.predict_proba(X)[:,1]
+        
+        return y_predict
+    
+    def _predict(self, X, theta):
+
+        Y_predict = self._return_score(X)
+        
+        predictions = np.where(Y_predict > theta, 1, 0) 
+
+        return predictions
+
+    def N_calc(self,weights,n = 10000):
+        total_weights = []
+        for i in range(n):
+            bootstrap_weights = bootstrap(weights = weights,seed=42+i)
+            total_weights.append(np.array(bootstrap_weights).sum())
+            
+        n_calc_array = np.array(total_weights)
+        
+        guss_mean = np.mean(n_calc_array)
+
+        sigma = np.sqrt(sum((n_calc_array - guss_mean)**2)/n)
+        
+        print(f'[*] --- mean N: {guss_mean} --- sigma N: {sigma}')
+        
+        return np.array([guss_mean,sigma])
+    
+    def mu_hat_calc(self):
+
+        self.mu_calc_set['data'] = self.scaler.transform(self.mu_calc_set['data'])
+        Y_hat_mu_calc_set = self._predict(self.mu_calc_set['data'], self.best_theta)
+        Y_mu_calc_set = self.mu_calc_set['labels']
+        weights_mu_calc_set = self.mu_calc_set['weights']
+        
+        
+        # compute gamma_roi
+        weights_mu_calc_set_signal = weights_mu_calc_set[Y_mu_calc_set == 1]
+        weights_mu_calc_set_bkg = weights_mu_calc_set[Y_mu_calc_set == 0]
+
+        Y_hat_mu_calc_set_signal = Y_hat_mu_calc_set[Y_mu_calc_set == 1]
+        Y_hat_mu_calc_set_bkg = Y_hat_mu_calc_set[Y_mu_calc_set == 0]
+
+        self.gamma_roi = (weights_mu_calc_set_signal[Y_hat_mu_calc_set_signal == 1]).sum()
+
+        # compute beta_roi
+        self.beta_roi = (weights_mu_calc_set_bkg[Y_hat_mu_calc_set_bkg == 1]).sum()
+        if self.gamma_roi == 0:
+            self.gamma_roi = EPSILON
+
+
+    def amsasimov_x(self, s, b):
+        '''
+        This function calculates the Asimov crossection significance for a given number of signal and background events.
+        Parameters: s (float) - number of signal events
+
+        Returns:    float - Asimov crossection significance
+        '''
+
+        if b<=0 or s<=0:
+            return 0
+        try:
+            return s/sqrt(s+b)
+        except ValueError:
+            print(1+float(s)/b)
+            print (2*((s+b)*log(1+float(s)/b)-s))
+        #return s/sqrt(s+b)
+
+    def del_mu_stat(self, s, b):
+        '''
+        This function calculates the statistical uncertainty on the signal strength.
+        Parameters: s (float) - number of signal events
+                    b (float) - number of background events
+        
+        Returns:    float - statistical uncertainty on the signal strength 
+
+        '''
+        return (np.sqrt(s + b)/s)
 
     def get_meta_validation_set(self):
 
         meta_validation_data = []
         meta_validation_labels = []
+        meta_validation_weights = []
 
         for valid_set in self.validation_sets:
             meta_validation_data.append(valid_set['data'])
             meta_validation_labels = np.concatenate((meta_validation_labels, valid_set['labels']))
+            meta_validation_weights = np.concatenate((meta_validation_weights, valid_set['weights']))
 
         return {
             'data': pd.concat(meta_validation_data),
-            'labels': meta_validation_labels
+            'labels': meta_validation_labels,
+            'weights': meta_validation_weights
         }
 
-    def train(self):
-
-        print("[*] - Train a classifier")
-
-        print("[*] --- Loading Model")
-        self._init_model()
-
-        print("[*] --- Training Model")
-        self._fit(self.train_set['data'], self.train_set['labels'])
-
-        print("[*] --- Predicting Train set")
-        self.train_set['predictions'] = self._predict(self.train_set['data'], 0)
-
-    def choose_theta(self):
+    def _choose_theta(self):
 
         print("[*] Choose best theta")
 
@@ -273,35 +393,38 @@ class Model:
         # try each theta on meta-validation set
         # choose best theta
         for theta in self.theta_candidates:
-
+            meta_validation_set_df = self.scaler.transform(meta_validation_set["data"])    
             # Get predictions from trained model
-            Y_hat_valid = self._predict(meta_validation_set['data'], theta)
+            Y_hat_valid = self._predict(meta_validation_set_df, theta)
             Y_valid = meta_validation_set["labels"]
 
+            weights_valid = meta_validation_set["weights"].copy()
+            
             # get region of interest
-            roi_indexes = np.argwhere(Y_hat_valid == 1).flatten()
-            roi_points = Y_valid[roi_indexes]
-            # compute nu_roi
-            # nu_roi = len(roi_points)
-            nu_roi = meta_validation_set['data'].iloc[roi_indexes]["Weight"].sum()
+            nu_roi = (weights_valid[Y_hat_valid == 1]).sum()/10
+
+            weights_valid_signal = weights_valid[Y_valid == 1]  
+            weights_valid_bkg = weights_valid[Y_valid == 0]
+
+            Y_hat_valid_signal = Y_hat_valid[Y_valid == 1]  
+            Y_hat_valid_bkg = Y_hat_valid[Y_valid == 0] 
 
             # compute gamma_roi
-            # indexes = np.argwhere(roi_points == 1)
-            indexes = np.argwhere(roi_points == 1).flatten()
+            gamma_roi = (weights_valid_signal[Y_hat_valid_signal == 1]).sum()/10
 
-            # get signal class predictions
-            # signal_predictions = roi_points[indexes]
-            # gamma_roi = len(signal_predictions)
-            gamma_roi = meta_validation_set['data'].iloc[indexes]["Weight"].sum()
 
             # compute beta_roi
-            # beta_roi = nu_roi - gamma_roi
+            beta_roi = (weights_valid_bkg[Y_hat_valid_bkg == 1]).sum()/10
+
 
             # Compute sigma squared mu hat
             sigma_squared_mu_hat = nu_roi/np.square(gamma_roi)
 
             # get N_ROI from predictions
             theta_sigma_squared.append(sigma_squared_mu_hat)
+
+            print(f"\n[*] --- theta: {theta}--- nu_roi: {nu_roi} --- beta_roi: {beta_roi} --- gamma_roi: {gamma_roi} --- sigma squared: {sigma_squared_mu_hat}")
+
 
         # Choose theta with min sigma squared
         try:
@@ -311,104 +434,157 @@ class Model:
             index_of_least_sigma_squared = np.argmin(theta_sigma_squared)
 
         self.best_theta = self.theta_candidates[index_of_least_sigma_squared]
-
         print(f"[*] --- Best theta : {self.best_theta}")
 
-    def validate(self):
-        for valid_set in self.validation_sets:
-            valid_set['predictions'] = self._predict(valid_set['data'], self.best_theta)
 
-    def compute_validation_result(self):
+    def _validate(self):
+        for valid_set in self.validation_sets:
+            valid_set['data'] = self.scaler.transform(valid_set['data'])
+            valid_set['predictions'] = self._predict(valid_set['data'], self.best_theta)
+            valid_set['score'] = self.model.predict_proba(valid_set['data'])[:,1]
+
+
+    def _compute_validation_result(self):
 
         print("[*] - Computing Validation result")
 
         delta_mu_hats = []
         for valid_set in self.validation_sets:
 
-            mu_hat = self.compute_mu_hat(
-                train_set=self.train_set,
-                test_set=valid_set,
-                Y_hat_train=self.train_set["predictions"],
-                Y_train=self.train_set["labels"],
-                Y_hat_test=valid_set["predictions"]
-                )
+            Y_hat_train = self.train_set["predictions"]
+            Y_train = self.train_set["labels"]
+            Y_hat_valid = valid_set["predictions"]
+            Y_valid = valid_set["labels"]
+            Score_train = self.train_set["score"]
+            Score_valid = valid_set["score"]
+
+
+            auc_valid = roc_auc_score(y_true=valid_set["labels"], y_score=Score_valid,sample_weight=valid_set['weights'])
+            print(f"\n[*] --- AUC validation : {auc_valid} --- tes : {valid_set['tes']}")
+
+            # print(f"[*] --- PRI_had_pt : {valid_set['had_pt']}")
+            # del Score_valid
+
+            
+
+
+            weights_train = self.train_set["weights"].copy()
+            weights_valid = valid_set["weights"].copy()
+            
+            print(f'[*] --- total weights train: {weights_train.sum()}')
+            print(f'[*] --- total weights valid: {weights_valid.sum()}')
+
+            signal_valid = weights_valid[Y_valid == 1]
+            background_valid = weights_valid[Y_valid == 0]
+            
+
+            Y_hat_valid_signal = Y_hat_valid[Y_valid == 1]
+            Y_hat_valid_bkg = Y_hat_valid[Y_valid == 0]
+
+            signal = signal_valid[Y_hat_valid_signal == 1].sum()
+            background = background_valid[Y_hat_valid_bkg == 1].sum()
+
+            significance = self.amsasimov_x(signal,background)  
+            print(f"[*] --- Significance : {significance}")
+
+            delta_mu_stat = self.del_mu_stat(signal,background) 
+            print(f"[*] --- delta_mu_stat : {delta_mu_stat}")
+
+
+            # get n_roi
+            n_roi = self.N_calc(weights_valid[Y_hat_valid == 1])[0]
+            
+
+            
+            
+
+            # get region of interest
+            nu_roi = self.beta_roi + self.gamma_roi 
+            
+            print(f'[*] --- number of events in roi validation {n_roi}')
+            print(f'[*] --- number of events in roi train {nu_roi}')            
+
+            gamma_roi = self.gamma_roi
+
+            # compute beta_roi
+            beta_roi = self.beta_roi
+            if gamma_roi == 0:
+                gamma_roi = EPSILON
+
+            # Compute mu_hat
+            mu_hat = ((n_roi - beta_roi)/gamma_roi)
 
             # Compute delta mu hat (absolute value)
             delta_mu_hat = np.abs(valid_set["settings"]["ground_truth_mu"] - mu_hat)
 
             delta_mu_hats.append(delta_mu_hat)
 
-            # print(f"[*] --- n_roi: {n_roi} --- nu_roi: {nu_roi} --- beta_roi: {beta_roi} --- gamma_roi: {gamma_roi}")
-            print(f"[*] --- mu: {np.round(valid_set['settings']['ground_truth_mu'], 3)} --- mu_hat: {np.round(mu_hat, 3)} --- delta_mu_hat: {np.round(delta_mu_hat, 3)}")
+            print(f"[*] --- nu_roi: {nu_roi} --- n_roi: {n_roi} --- beta_roi: {beta_roi} --- gamma_roi: {gamma_roi}")
+
+            print(f"[*] --- mu: {np.round(valid_set['settings']['ground_truth_mu'], 4)} --- mu_hat: {np.round(mu_hat, 4)} --- delta_mu_hat: {np.round(delta_mu_hat, 4)}")
 
         # Average delta mu_hat
         self.delta_mu_hat = np.mean(delta_mu_hats)
-        print(f"[*] --- delta_mu_hat (avg): {np.round(self.delta_mu_hat, 2)}")
+        print(f"[*] --- delta_mu_hat (avg): {np.round(self.delta_mu_hat, 4)}")
 
-    def test(self):
+    def _test(self):
         print("[*] - Testing")
         # Get predictions from trained model
         for test_set in self.test_sets:
-            test_set["predictions"] = self._predict(test_set['data'], self.best_theta)
-            test_set["decisions"] = self._decision_function(test_set['data'], self.best_theta)
+            test_df = test_set['data']
+            test_df = self.scaler.transform(test_df)
+            test_set['predictions'] = self._predict(test_df, self.best_theta)
+            test_set['score'] = self.model.predict_proba(test_df)[:,1]
 
-    def compute_mu_hat(self, train_set, test_set, Y_hat_train, Y_train, Y_hat_test):
 
-        # n_roi = len(Y_hat_test[Y_hat_test == 1])
-        # n_roi is sum of weights of the predicted signals in train
-        roi_indexes_test = np.argwhere(Y_hat_test == 1).flatten()
-        n_roi = test_set['data'].iloc[roi_indexes_test]["Weight"].sum()
-
-        # get region of interest from train
-
-        # get indexes of points in train predicted as signal
-        roi_indexes = np.argwhere(Y_hat_train == 1).flatten()
-        # get all points from train with these indexes
-        roi_points = Y_train[roi_indexes]
-        # compute nu_roi
-        # nu_roi = len(roi_points)
-        # nu_roi is sum of weights of the groundtruth signals in train
-        nu_roi = train_set['data'].iloc[roi_indexes]["Weight"].sum()
-
-        # compute gamma_roi
-        # indexes = np.argwhere(roi_points == 1)
-        # get indexes of roi points where label = 1
-        indexes = np.argwhere(roi_points == 1).flatten()
-
-        # get signal class predictions
-        # signal_predictions = roi_points[indexes]
-        # gamma_roi = len(signal_predictions)
-        gamma_roi = train_set['data'].iloc[indexes]["Weight"].sum()
-
-        # compute beta_roi
-        beta_roi = nu_roi - gamma_roi
-
-        if gamma_roi == 0:
-            gamma_roi = EPSILON
-
-        # Compute mu_hat
-        mu_hat = (n_roi - beta_roi)/gamma_roi
-
-        # print(f"n_roi: {n_roi} --- nu_roi: {nu_roi} --- gamma_roi: {gamma_roi}")
-
-        return mu_hat
-
-    def compute_test_result(self):
+    def _compute_test_result(self):
 
         print("[*] - Computing Test result")
 
         mu_hats = []
+        delta_mu_hats = []
+        
         for test_set in self.test_sets:
 
-            mu_hat = self.compute_mu_hat(
-                train_set=self.train_set,
-                test_set=test_set,
-                Y_hat_train=self.train_set["predictions"],
-                Y_train=self.train_set["labels"],
-                Y_hat_test=test_set["predictions"]
-                )
+            Y_hat_test = test_set["predictions"]
+
+
+            weights_train = self.train_set["weights"].copy()
+            weights_test = test_set["weights"].copy()
+            
+            print(f"[*] --- total weight test: {weights_test.sum()}") 
+            print(f"[*] --- total weight train: {weights_train.sum()}")
+            print(f"[*] --- total weight mu_cals_set: {self.mu_calc_set['weights'].sum()}")
+
+            # get n_roi
+
+            [n_roi ,sigma] = self.N_calc(weights_test[Y_hat_test == 1])
+           
+            n_plus_1_sigma = n_roi + sigma
+            n_minus_1_sigma = n_roi - sigma
+            
+            print(f"[*] --- signal: {self.gamma_roi} --- background: {self.beta_roi}")
+            
+            # Compute mu_hat
+            mu_hat = (n_roi - self.beta_roi)/self.gamma_roi
+            mu_plus_1_sigma = ((n_plus_1_sigma - self.beta_roi)/self.gamma_roi)
+            mu_minus_1_sigma = ((n_minus_1_sigma - self.beta_roi)/self.gamma_roi)
+            delta_mu_hat = mu_plus_1_sigma - mu_minus_1_sigma
+            
+            delta_mu_hats.append(delta_mu_hat)
+
+            print(f"[*] --- delta_mu_hat: {delta_mu_hat}")
             mu_hats.append(mu_hat)
-            print(f"[*] --- mu_hat: {np.round(mu_hat, 3)}")
+           
+            print(f"\n[*] --- mu hat test :{mu_hat} + {(n_plus_1_sigma - self.beta_roi)/self.gamma_roi} - {(n_minus_1_sigma - self.beta_roi)/self.gamma_roi}")
+            
+        print("\n")
 
         # Save mu_hat from test
-        self.mu_hats = mu_hats
+        self.mu_hats = (mu_hats)
+        self.delta_mu_hat = np.mean(delta_mu_hats)
+
+        print(f"[*] --- mu_hats (avg): {np.mean(mu_hats)}")
+        print(f"[*] --- mu_hats (std): {np.std(mu_hats)}")
+        print(f"[*] --- delta_mu_hat (avg): {np.round(self.delta_mu_hat, 4)}")
+        print(f"[*] --- delta_mu_hat (std): {np.round(np.std(delta_mu_hats), 4)}")

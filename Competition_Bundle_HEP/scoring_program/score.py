@@ -11,16 +11,18 @@ from sklearn.metrics import mean_absolute_error as mae, mean_squared_error as ms
 # Default Directories
 # ------------------------------------------
 # root directory
-root_dir = "./"
+module_dir= os.path.dirname(os.path.realpath(__file__))
+
+root_dir = os.path.dirname(module_dir)
 
 # Directory to output computed score into
-output_dir = root_dir + "scoring_output"
+output_dir = os.path.join(root_dir, "scoring_output")
 
 # reference data (test labels)
 reference_dir = os.path.join(root_dir, "reference_data")
 
 # submitted/predicted lables
-prediction_dir = root_dir + "sample_result_submission"
+prediction_dir = os.path.join(root_dir, "sample_result_submission")
 
 # score file to write score into
 score_file = os.path.join(output_dir, "scores.json")
@@ -254,5 +256,5 @@ if __name__ == "__main__":
     scoring.show_duration()
 
     print("\n----------------------------------------------")
-    print("[✔] Scroging Program executed successfully!")
+    print("[✔] Scoring Program executed successfully!")
     print("----------------------------------------------\n\n")

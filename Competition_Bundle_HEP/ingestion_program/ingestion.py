@@ -15,15 +15,25 @@ warnings.filterwarnings("ignore")
 # Default Directories
 # ------------------------------------------
 # root directory
-root_dir = "./"
+
+
+module_dir= os.path.dirname(os.path.realpath(__file__))
+
+root_dir = os.path.dirname(module_dir)
+
 # Input data directory to read training data from
-input_dir = root_dir + "input_data"
+
+# Input data directory
+input_dir = os.path.join(root_dir, 'input_data')
+
 # Output data directory to write predictions to
-output_dir = root_dir + "sample_result_submission"
+output_dir = os.path.join(root_dir, 'sample_result_submission')
+
 # Program directory
-program_dir = root_dir + "ingestion_program"
+program_dir = os.path.join(root_dir, 'ingestion_program')
+
 # Directory to read submitted submissions from
-submission_dir = root_dir + "sample_code_submission"
+submission_dir = os.path.join(root_dir, 'sample_code_submission')
 
 # ------------------------------------------
 # Codabench Directories
@@ -51,7 +61,8 @@ from systematics import Systematics
 # ------------------------------------------
 # Import Model
 # ------------------------------------------
-from NN import Model
+
+from model import Model
 
 
 class Ingestion():
@@ -64,6 +75,7 @@ class Ingestion():
         self.model = None
         self.train_set = None
         self.test_sets = []
+
 
     def start_timer(self):
         self.start_time = dt.now()
@@ -93,30 +105,49 @@ class Ingestion():
         train_data_file = os.path.join(input_dir, 'train', 'data', 'data.csv')
         train_labels_file = os.path.join(input_dir, 'train', 'labels', "data.labels")
         train_settings_file = os.path.join(input_dir, 'train', 'settings', "data.json")
+        train_weights_file = os.path.join(input_dir, 'train', 'weights', "data.weights")
 
         # read train data
         train_data = pd.read_csv(train_data_file)
 
-        # read trian labels
+        # read train labels
         with open(train_labels_file, "r") as f:
             train_labels = np.array(f.read().splitlines(), dtype=float)
 
         # read train settings
         with open(train_settings_file) as f:
             train_settings = json.load(f)
+        
+        # read train weights
+        with open(train_weights_file) as f:
+            train_weights = np.array(f.read().splitlines(), dtype=float)
+
 
         self.train_set = {
             "data": train_data,
             "labels": train_labels,
-            "settings": train_settings
+            "settings": train_settings,
+            "weights": train_weights
         }
 
+    
     def load_test_sets(self):
         print("[*] Loading Test data")
         self.test_sets = []
         for i in range(0, 10):
             test_data_file = os.path.join(input_dir, 'test', 'data', 'data_'+str(i)+'.csv')
-            self.test_sets.append(pd.read_csv(test_data_file))
+            test_data = pd.read_csv(test_data_file)
+
+            test_weights_file = os.path.join(input_dir, 'test', 'weights', 'data_'+str(i)+'.weights')
+            with open(test_weights_file) as f:
+                test_weights = np.array(f.read().splitlines(), dtype=float)
+
+            test_set = {
+                "data": test_data,
+                "weights": test_weights
+            }
+            self.test_sets.append(test_set)
+
 
     def initialize_submission(self):
         print("[*] Initializing submitted model")
