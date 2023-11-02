@@ -14,38 +14,30 @@ warnings.filterwarnings("ignore")
 # ------------------------------------------
 # Default Directories
 # ------------------------------------------
-# root directory
-
-
-module_dir= os.path.dirname(os.path.realpath(__file__))
-
-root_dir = os.path.dirname(module_dir)
-
-# Input data directory to read training data from
-
-# Input data directory
-input_dir = os.path.join(root_dir, 'input_data')
-
-# Output data directory to write predictions to
-output_dir = os.path.join(root_dir, 'sample_result_submission')
-
-# Program directory
-program_dir = os.path.join(root_dir, 'ingestion_program')
-
-# Directory to read submitted submissions from
-submission_dir = os.path.join(root_dir, 'sample_code_submission')
+# # Root directory
+# root_dir = "./"
+# # Input data directory to read training and test data from
+# input_dir = os.path.join(root_dir, "input_data")
+# # Output data directory to write predictions to
+# output_dir = os.path.join(root_dir, "sample_result_submission")
+# # Program directory
+# program_dir = os.path.join(root_dir, "ingestion_program")
+# # Directory to read submitted submissions from
+# submission_dir = os.path.join(root_dir, "sample_code_submission")
 
 # ------------------------------------------
 # Codabench Directories
 # ------------------------------------------
-# # Input data directory to read training data from
-# input_dir = '/app/input_data/'
-# # Output data directory to write predictions to
-# output_dir = '/app/output/'
-# # Program directory
-# program_dir = '/app/program'
-# # Directory to read submitted submissions from
-# submission_dir = '/app/ingested_program'
+# Root directory
+root_dir = "/app"
+# Input data directory to read training and test data from
+input_dir = os.path.join(root_dir, "input_data")
+# Output data directory to write predictions to
+output_dir = os.path.join(root_dir, "output")
+# Program directory
+program_dir = os.path.join(root_dir, "program")
+# Directory to read submitted submissions from
+submission_dir = os.path.join(root_dir, "ingested_program")
 
 path.append(input_dir)
 path.append(output_dir)
@@ -75,7 +67,6 @@ class Ingestion():
         self.model = None
         self.train_set = None
         self.test_sets = []
-
 
     def start_timer(self):
         self.start_time = dt.now()
@@ -117,11 +108,10 @@ class Ingestion():
         # read train settings
         with open(train_settings_file) as f:
             train_settings = json.load(f)
-        
+
         # read train weights
         with open(train_weights_file) as f:
             train_weights = np.array(f.read().splitlines(), dtype=float)
-
 
         self.train_set = {
             "data": train_data,
@@ -130,7 +120,6 @@ class Ingestion():
             "weights": train_weights
         }
 
-    
     def load_test_sets(self):
         print("[*] Loading Test data")
         self.test_sets = []
@@ -147,7 +136,6 @@ class Ingestion():
                 "weights": test_weights
             }
             self.test_sets.append(test_set)
-
 
     def initialize_submission(self):
         print("[*] Initializing submitted model")
@@ -167,25 +155,23 @@ class Ingestion():
 
         self.mu_hats = predicted_dict["mu_hats"]
         self.delta_mu_hat = predicted_dict["delta_mu_hat"]
-        
-        self.q_1 = predicted_dict["q_1"]
-        self.q_2 = predicted_dict["q_2"]
+
+        self.q_1 = predicted_dict.get("q_1", None)
+        self.q_2 = predicted_dict.get("q_2", None)
 
     def save_result(self):
-
         print("[*] Saving result")
-
         result_dict = {
             "delta_mu_hat": self.delta_mu_hat,
             "mu_hats": self.mu_hats,
             "q_1": self.q_1,
             "q_2": self.q_2
         }
-        }
+
         print(f"[*] --- delta_mu_hat: {result_dict['delta_mu_hat']}")
         print(f"[*] --- mu_hats (avg): {np.mean(result_dict['mu_hats'])}")
-        print(f"[*] --- q_1 (avg): {np.mean(result_dict['q_1'])}")
-        print(f"[*] --- q_2 (avg): {np.mean(result_dict['q_2'])}")  
+        # print(f"[*] --- q_1 (avg): {np.mean(result_dict['q_1'])}")
+        # print(f"[*] --- q_2 (avg): {np.mean(result_dict['q_2'])}")
 
         result_file = os.path.join(output_dir, "result.json")
 

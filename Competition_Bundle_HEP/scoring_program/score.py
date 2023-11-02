@@ -10,40 +10,32 @@ from sklearn.metrics import mean_absolute_error as mae, mean_squared_error as ms
 # ------------------------------------------
 # Default Directories
 # ------------------------------------------
-# root directory
-module_dir= os.path.dirname(os.path.realpath(__file__))
-
-root_dir = os.path.dirname(module_dir)
-
-# Directory to output computed score into
-output_dir = os.path.join(root_dir, "scoring_output")
-
-# reference data (test labels)
-reference_dir = os.path.join(root_dir, "reference_data")
-
-# submitted/predicted lables
-prediction_dir = os.path.join(root_dir, "sample_result_submission")
-
-# score file to write score into
-score_file = os.path.join(output_dir, "scores.json")
+# # root directory
+# root_dir = "./"
+# # Directory to output computed score into
+# output_dir = os.path.join(root_dir, "scoring_output")
+# # reference data (test labels)
+# reference_dir = os.path.join(root_dir, "reference_data")
+# # submitted/predicted lables
+# prediction_dir = os.path.join(root_dir, "sample_result_submission")
+# # score file to write score into
+# score_file = os.path.join(output_dir, "scores.json")
 
 # ------------------------------------------
 # Codabench Directories
 # ------------------------------------------
-# # # Directory read predictions and solutions from
-# input_dir = '/app/input'
-
-# # Directory to output computed score into
-# output_dir = '/app/output/'
-
-# # reference data (test labels)
-# reference_dir = os.path.join(input_dir, 'ref')  # Ground truth data
-
-# # submitted/predicted labels
-# prediction_dir = os.path.join(input_dir, 'res')
-
-# # score file to write score into
-# score_file = os.path.join(output_dir, 'scores.json')
+# root directory
+root_dir = "/app"
+# Directory read predictions and solutions from
+input_dir = os.path.join(root_dir, "input")
+# Directory to output computed score into
+output_dir = os.path.join(root_dir, "output")
+# reference data (test labels)
+reference_dir = os.path.join(input_dir, 'ref')  # Ground truth data
+# submitted/predicted labels
+prediction_dir = os.path.join(input_dir, 'res')
+# score file to write score into
+score_file = os.path.join(output_dir, 'scores.json')
 
 
 class Scoring:
@@ -114,7 +106,7 @@ class Scoring:
         delta_mu_hats = np.repeat(delta_mu_hat, len(delta_mus))
 
         # Compute J_q
-        score_J_q = self.compute_J_q(self.q_1, self.q_2)
+        # score_J_q = self.compute_J_q(self.q_1, self.q_2)
 
         # Compute MAE
         mae_mu = self.compute_MAE(mus, mu_hats)
@@ -141,9 +133,9 @@ class Scoring:
             "mse_delta_mu": mse_delta_mu,
             "coverage_mu": coverage_mu,
             "coverage_C": coverage_C,
-            "score1_mae": score_mae,
-            "score1_mse": score_mse,
-            "score_J_q": score_J_q,
+            "score_mae": score_mae,
+            "score_mse": score_mse,
+            # "score_J_q": score_J_q,
         }
         print(f"[*] --- delta_mu_hat: {round(delta_mu_hat, 3)}")
         print(f"[*] --- MAE (mu): {round(mae_mu, 3)}")
@@ -154,7 +146,7 @@ class Scoring:
         print(f"[*] --- coverage (C): {coverage_C}")
         print(f"[*] --- score (MAE): {round(score_mae, 3)}")
         print(f"[*] --- score (MSE): {round(score_mse, 3)}")
-        print(f"[*] --- score (J_q): {round(score_J_q, 3)}")
+        # print(f"[*] --- score (J_q): {round(score_J_q, 3)}")
 
         print("[✔]")
 

@@ -55,6 +55,8 @@ $\text{Score}\_{MAE} = MAE_{\hat{\mu}} + MAE_{\Delta{\hat{\mu}}} ~~~~~~~~~ (7)$
 
 $\text{Score}\_{MSE} = MSE_{\hat{\mu}} + MSE_{\Delta{\hat{\mu}}} ~~~~~~~~~ (8)$
 
+***
+
 ## Score Quantile
 For a given dataset, $\mathbf d$ and unknown parameter $\mu$ we define the $q^\mathrm{th}$ quantile of the posterior distribution $p(\mu | \mathbf d)$ as the value $\mu_q$ such that the probability of $\mu$ being smaller than $\mu_q$ is $q$. The problem posed to participants is to determine the two quantiles $\mu_{25}, \mu_{75}$, i.e. the central region of the parameter space that contains the true value of $\mu$ with a probability of 50%.
 

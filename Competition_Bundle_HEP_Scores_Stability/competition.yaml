@@ -1,0 +1,68 @@
+# FAIR-UNIVERSE HEP Score Stability competition yaml file
+# Created by: Ihsan Ullah
+# Created on: November 01, 2023
+
+version: 2
+title: FU HEP - Scores Stability
+description: Fair-Universe Competition HEP Scores Stability
+image: logo.png
+has_registration: True   
+force_submission_to_leaderboard: True
+docker_image: ihsaanullah/fair-universe:new
+
+terms: pages/terms.md
+pages:  
+  - title: Overview
+    file: pages/overview.md
+  - title: Evaluation
+    file: pages/evaluation.md
+  - title: Terms
+    file: pages/terms.md
+  - title: Data
+    file: pages/data.md
+
+phases:
+  - index: 0
+    name: Phase 1
+    description: Feedback Phase
+    start: 2023-10-15
+    end: 2023-11-30
+    tasks:
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+
+tasks:
+  - index: 0
+    name: FU HEP Scores Stability
+    description: FU HEP Scores Stability
+    input_data: input_data/
+    reference_data: reference_data/  
+    scoring_program: scoring_program/
+    ingestion_program: ingestion_program/
+
+
+leaderboards:
+  - index: 0 
+    title: Results
+    key: main
+    submission_rule: "Force_Latest_Multiple"
+    columns:
+      - index: 0
+        title: Score RMSE
+        key: rmse
+      - index: 1
+        title: Score MAE
+        key: mae
+      - index: 2
+        title: Score Ben-Sascha
+        key: ben_sascha
+
+
