@@ -35,7 +35,6 @@ def bootstrap_data(data,weights,label, n = 1000,seed=42):
     data_bootstrap['weights'][data_bootstrap['label']==1] *= total_signal_weight / subset_signal_weight
     data_bootstrap['weights'][data_bootstrap['label']==0] *= total_background_weight / subset_background_weight
 
-    print("Bootstrap weights: ", data_bootstrap['weights'].sum())
     prng = RandomState(seed)
 
     data_bootstrap['weights'] = prng.poisson(lam=data_bootstrap['weights'])

@@ -9,32 +9,34 @@ from datetime import datetime as dt
 # ------------------------------------------
 # Default Directories
 # ------------------------------------------
-# # root directory
-# root_dir = "./"
-# # Directory to output computed score into
-# output_dir = os.path.join(root_dir, "scoring_output")
-# # reference data (test labels)
-# reference_dir = os.path.join(root_dir, "reference_data")
-# # submitted/predicted lables
-# prediction_dir = os.path.join(root_dir, "sample_result_submission")
-# # score file to write score into
-# score_file = os.path.join(output_dir, "scores.json")
+# root directory
+module_dir= os.path.dirname(os.path.realpath(__file__))
+
+root_dir = os.path.dirname(module_dir)
+# Directory to output computed score into
+output_dir = os.path.join(root_dir, "scoring_output")
+# reference data (test labels)
+reference_dir = os.path.join(root_dir, "reference_data")
+# submitted/predicted lables
+prediction_dir = os.path.join(root_dir, "sample_result_submission")
+# score file to write score into
+score_file = os.path.join(output_dir, "scores.json")
 
 # ------------------------------------------
 # Codabench Directories
 # ------------------------------------------
-# root directory
-root_dir = "/app"
-# Directory read predictions and solutions from
-input_dir = os.path.join(root_dir, "input")
-# Directory to output computed score into
-output_dir = os.path.join(root_dir, "output")
-# reference data (test labels)
-reference_dir = os.path.join(input_dir, 'ref')  # Ground truth data
-# submitted/predicted labels
-prediction_dir = os.path.join(input_dir, 'res')
-# score file to write score into
-score_file = os.path.join(output_dir, 'scores.json')
+# # root directory
+# root_dir = "/app"
+# # Directory read predictions and solutions from
+# input_dir = os.path.join(root_dir, "input")
+# # Directory to output computed score into
+# output_dir = os.path.join(root_dir, "output")
+# # reference data (test labels)
+# reference_dir = os.path.join(input_dir, 'ref')  # Ground truth data
+# # submitted/predicted labels
+# prediction_dir = os.path.join(input_dir, 'res')
+# # score file to write score into
+# score_file = os.path.join(output_dir, 'scores.json')
 
 
 class Scoring:
@@ -73,9 +75,9 @@ class Scoring:
     def load_test_settings(self):
         print("[*] Reading test settings")
         self.test_settings = []
-        for i in range(0, 10):
+        for i in range(0, 1):
             settings_file = os.path.join(
-                reference_dir, "settings", "data_" + str(i) + ".json"
+                reference_dir, f'set_{1}',"settings", "data.json"
             )
             with open(settings_file) as f:
                 self.test_settings.append(json.load(f))
@@ -101,10 +103,14 @@ class Scoring:
         p84s = self.ingestion_results["p84"]
 
         rmses, maes, ben_saschas = [], [], []
-        for mu, mu_hat, delta_mu_hat, p16, p84 in zip(mus, mu_hats, delta_mu_hats, p16s, p84s):
-            rmses.append(self.RMSE_score(mu, mu_hat, delta_mu_hat))
-            maes.append(self.MAE_score(mu, mu_hat, delta_mu_hat))
-            ben_saschas.append(self.Ben_Sasha_score(mu, p16, p84))
+        for i , mu in enumerate(mus):
+            for mu_hat, delta_mu_hat in zip(mu_hats, delta_mu_hats):
+                rmses.append(self.RMSE_score(mu, mu_hat, delta_mu_hat))
+                maes.append(self.MAE_score(mu, mu_hat, delta_mu_hat))
+            ben_saschas_score, ben_saschas_coverage = self.Ben_Sasha_score(mu,np.array(p16s),np.array(p84s)) 
+            ben_saschas.append(ben_saschas_score)
+            print(f"[*] --- Coverage for set_{i}: {ben_saschas_coverage}")
+            
 
         self.scores_dict = {
             "rmse": np.mean(rmses),
@@ -154,7 +160,8 @@ class Scoring:
 
         def Coverage(mu, p16, p84):
             """Compute the fraction of times scalar mu is within intervals defined by vectors p16 and p84."""
-            return np.mean((mu >= p16) & (mu <= p84))
+            return_coverage =  np.mean((mu >= p16) & (mu <= p84))
+            return return_coverage
 
         def f(x, a1=1/2.1626297577854667, a2=1/9.765625, b1=0, b2=0.36, c1=1.36, c2=1):
             """U-shaped function with mn at 0.68 and f(0.68)=1"""
@@ -162,8 +169,8 @@ class Scoring:
                 return a1 / ((x - b1) * (c1 - x) + eps)
             else:
                 return a2 / ((x - b2) * (c2 - x) + eps)
-
-        return (Interval(p16, p84) + eps) * f(Coverage(mu, p16, p84))
+        coverage = Coverage(mu, p16, p84)
+        return (Interval(p16, p84) + eps) * f(coverage), coverage
 
     def write_scores(self):
         print("[*] Writing scores")

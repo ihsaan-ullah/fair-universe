@@ -14,30 +14,32 @@ warnings.filterwarnings("ignore")
 # ------------------------------------------
 # Default Directories
 # ------------------------------------------
-# # Root directory
-# root_dir = "./"
-# # Input data directory to read training and test data from
-# input_dir = os.path.join(root_dir, "input_data")
-# # Output data directory to write predictions to
-# output_dir = os.path.join(root_dir, "sample_result_submission")
-# # Program directory
-# program_dir = os.path.join(root_dir, "ingestion_program")
-# # Directory to read submitted submissions from
-# submission_dir = os.path.join(root_dir, "sample_code_submission")
+# Root directory
+module_dir= os.path.dirname(os.path.realpath(__file__))
+
+root_dir = os.path.dirname(module_dir)
+# Input data directory to read training and test data from
+input_dir = os.path.join(root_dir, "input_data")
+# Output data directory to write predictions to
+output_dir = os.path.join(root_dir, "sample_result_submission")
+# Program directory
+program_dir = os.path.join(root_dir, "ingestion_program")
+# Directory to read submitted submissions from
+submission_dir = os.path.join(root_dir, "sample_code_submission")
 
 # ------------------------------------------
 # Codabench Directories
 # ------------------------------------------
-# Root directory
-root_dir = "/app"
-# Input data directory to read training and test data from
-input_dir = os.path.join(root_dir, "input_data")
-# Output data directory to write predictions to
-output_dir = os.path.join(root_dir, "output")
-# Program directory
-program_dir = os.path.join(root_dir, "program")
-# Directory to read submitted submissions from
-submission_dir = os.path.join(root_dir, "ingested_program")
+# # Root directory
+# root_dir = "/app"
+# # Input data directory to read training and test data from
+# input_dir = os.path.join(root_dir, "input_data")
+# # Output data directory to write predictions to
+# output_dir = os.path.join(root_dir, "output")
+# # Program directory
+# program_dir = os.path.join(root_dir, "program")
+# # Directory to read submitted submissions from
+# submission_dir = os.path.join(root_dir, "ingested_program")
 
 path.append(input_dir)
 path.append(output_dir)
@@ -54,7 +56,7 @@ from systematics import Systematics
 # Import Model
 # ------------------------------------------
 
-from model import Model
+from model_fake_2 import Model
 
 
 class Ingestion():
@@ -123,11 +125,11 @@ class Ingestion():
     def load_test_sets(self):
         print("[*] Loading Test data")
         self.test_sets = []
-        for i in range(0, 10):
-            test_data_file = os.path.join(input_dir, 'test', 'data', 'data_'+str(i)+'.csv')
+        for i in range(0, 100):
+            test_data_file = os.path.join(input_dir, 'test','set_1', 'data', 'data_'+str(i)+'.csv')
             test_data = pd.read_csv(test_data_file)
 
-            test_weights_file = os.path.join(input_dir, 'test', 'weights', 'data_'+str(i)+'.weights')
+            test_weights_file = os.path.join(input_dir, 'test','set_1', 'weights', 'data_'+str(i)+'.weights')
             with open(test_weights_file) as f:
                 test_weights = np.array(f.read().splitlines(), dtype=float)
 
