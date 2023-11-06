@@ -29,20 +29,83 @@ phases:
     end: 2023-11-30
     tasks:
       - 0
-      - 0
-      - 0
-      - 0
-      - 0
-      - 0
-      - 0
-      - 0
-      - 0
-      - 0
+      - 1
+      - 2
+      - 3
+      - 4
+      - 5
+      - 6
+      - 7
+      - 8
+      - 9
 
 tasks:
   - index: 0
-    name: FU HEP Scores Stability
-    description: FU HEP Scores Stability
+    name: FU HEP Scores Stability Task 1
+    description: FU HEP Scores Stability Task 1
+    input_data: input_data/
+    reference_data: reference_data/  
+    scoring_program: scoring_program/
+    ingestion_program: ingestion_program/
+  - index: 1
+    name: FU HEP Scores Stability Task 2
+    description: FU HEP Scores Stability Task 2
+    input_data: input_data/
+    reference_data: reference_data/  
+    scoring_program: scoring_program/
+    ingestion_program: ingestion_program/
+  - index: 2
+    name: FU HEP Scores Stability Task 3
+    description: FU HEP Scores Stability Task 3
+    input_data: input_data/
+    reference_data: reference_data/  
+    scoring_program: scoring_program/
+    ingestion_program: ingestion_program/
+  - index: 3
+    name: FU HEP Scores Stability Task 4
+    description: FU HEP Scores Stability Task 4
+    input_data: input_data/
+    reference_data: reference_data/  
+    scoring_program: scoring_program/
+    ingestion_program: ingestion_program/
+  - index: 4
+    name: FU HEP Scores Stability Task 5
+    description: FU HEP Scores Stability Task 5
+    input_data: input_data/
+    reference_data: reference_data/  
+    scoring_program: scoring_program/
+    ingestion_program: ingestion_program/
+  - index: 5
+    name: FU HEP Scores Stability Task 6
+    description: FU HEP Scores Stability Task 6
+    input_data: input_data/
+    reference_data: reference_data/  
+    scoring_program: scoring_program/
+    ingestion_program: ingestion_program/
+  - index: 6
+    name: FU HEP Scores Stability Task 7
+    description: FU HEP Scores Stability Task 7
+    input_data: input_data/
+    reference_data: reference_data/  
+    scoring_program: scoring_program/
+    ingestion_program: ingestion_program/
+  - index: 7
+    name: FU HEP Scores Stability Task 8
+    description: FU HEP Scores Stability Task 8
+    input_data: input_data/
+    reference_data: reference_data/  
+    scoring_program: scoring_program/
+    ingestion_program: ingestion_program/
+  - index: 8
+    name: FU HEP Scores Stability Task 9
+    description: FU HEP Scores Stability Task 9
+    input_data: input_data/
+    reference_data: reference_data/  
+    scoring_program: scoring_program/
+    ingestion_program: ingestion_program/
+  - index: 9
+    name: FU HEP Scores Stability Task 10
+    description: FU HEP Scores Stability Task 10
     input_data: input_data/
     reference_data: reference_data/  
     scoring_program: scoring_program/
