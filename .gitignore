@@ -15,5 +15,8 @@ Competition Bundles/HEP/*.ipynb
 Competition Bundles/HEP_Scores_Stability/input_data/
 Competition Bundles/HEP_Scores_Stability/reference_data/
 
+Competition Bundles/HEP/input_data/
+Competition Bundles/HEP/reference_data/
+
 
 Competition Bundles/HEP_Inverted/sample_code_submission/
