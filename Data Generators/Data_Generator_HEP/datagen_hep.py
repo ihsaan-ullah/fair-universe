@@ -1,42 +1,23 @@
+from systematics import Systematics
+from bootstrap import bootstrap_data
+
 import pandas as pd
-from sys import path
 import numpy as np
 from sklearn.model_selection import train_test_split
 import os
 import warnings
 warnings.filterwarnings("ignore")
 
-module_dir = os.path.dirname(os.path.realpath(__file__))
-module_dir_parent = os.path.dirname(module_dir)
-module_dir_grandparent = os.path.dirname(module_dir_parent)
 
-root_dir = os.path.join(module_dir_grandparent,'Competition Bundles','HEP_Scores_Stability')
-ingestion_dir = os.path.join(root_dir,'ingestion_program')
+root_dir = os.path.dirname(os.path.realpath(__file__))
 
-
-path.append(ingestion_dir)
-
-from systematics import Systematics
-from bootstrap import bootstrap_data
 
 # Load the CSV file
 def dataGenerator(verbose=0):
-    
-    # Get the directory of the current script (datagen_temp.py)
 
-    module_dir = os.path.dirname(os.path.realpath(__file__))
-    module_dir_parent = os.path.dirname(module_dir)
-    module_dir_grandparent = os.path.dirname(module_dir_parent)
-
-    print ('module - dir',module_dir)
-    print ('module - par dir',module_dir_parent)
-    print ('module - gra par dir',module_dir_grandparent)
-    print ('root - dir',root_dir)
-    print ('ingestion - dir',ingestion_dir)
-    
-    # Construct the absolute path to something.csv
-    reference_dir = os.path.dirname(module_dir_grandparent)
-    csv_file_path = os.path.join(reference_dir, 'reference_data.csv')
+    print('root - dir', root_dir)
+    # Put reference_data.csv in the same dir as the datagen_hep.py
+    csv_file_path = os.path.join(root_dir, 'reference_data.csv')
     df = pd.read_csv(csv_file_path)
 
     # Remove the "label" and "weights" columns from the data
