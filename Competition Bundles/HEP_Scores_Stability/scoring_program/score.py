@@ -9,34 +9,34 @@ from datetime import datetime as dt
 # ------------------------------------------
 # Default Directories
 # ------------------------------------------
-# root directory
-module_dir= os.path.dirname(os.path.realpath(__file__))
+# # root directory
+# module_dir= os.path.dirname(os.path.realpath(__file__))
 
-root_dir = os.path.dirname(module_dir)
-# Directory to output computed score into
-output_dir = os.path.join(root_dir, "scoring_output")
-# reference data (test labels)
-reference_dir = os.path.join(root_dir, "reference_data")
-# submitted/predicted lables
-prediction_dir = os.path.join(root_dir, "sample_result_submission")
-# score file to write score into
-score_file = os.path.join(output_dir, "scores.json")
+# root_dir = os.path.dirname(module_dir)
+# # Directory to output computed score into
+# output_dir = os.path.join(root_dir, "scoring_output")
+# # reference data (test labels)
+# reference_dir = os.path.join(root_dir, "reference_data")
+# # submitted/predicted lables
+# prediction_dir = os.path.join(root_dir, "sample_result_submission")
+# # score file to write score into
+# score_file = os.path.join(output_dir, "scores.json")
 
 # ------------------------------------------
 # Codabench Directories
 # ------------------------------------------
-# # root directory
-# root_dir = "/app"
-# # Directory read predictions and solutions from
-# input_dir = os.path.join(root_dir, "input")
-# # Directory to output computed score into
-# output_dir = os.path.join(root_dir, "output")
-# # reference data (test labels)
-# reference_dir = os.path.join(input_dir, 'ref')  # Ground truth data
-# # submitted/predicted labels
-# prediction_dir = os.path.join(input_dir, 'res')
-# # score file to write score into
-# score_file = os.path.join(output_dir, 'scores.json')
+# root directory
+root_dir = "/app"
+# Directory read predictions and solutions from
+input_dir = os.path.join(root_dir, "input")
+# Directory to output computed score into
+output_dir = os.path.join(root_dir, "output")
+# reference data (test labels)
+reference_dir = os.path.join(input_dir, 'ref')  # Ground truth data
+# submitted/predicted labels
+prediction_dir = os.path.join(input_dir, 'res')
+# score file to write score into
+score_file = os.path.join(output_dir, 'scores.json')
 
 
 class Scoring:
@@ -44,7 +44,6 @@ class Scoring:
         # Initialize class variables
         self.start_time = None
         self.end_time = None
-        # self.test_labels = None
         self.test_settings = None
         self.ingestion_results = None
 
@@ -75,52 +74,76 @@ class Scoring:
     def load_test_settings(self):
         print("[*] Reading test settings")
         self.test_settings = []
-        for i in range(0, 1):
-            settings_file = os.path.join(
-                reference_dir, f'set_{1}',"settings", "data.json"
-            )
-            with open(settings_file) as f:
-                self.test_settings.append(json.load(f))
+        # loop over sets (1 value of mu, total 10 sets)
+        for i in range(0, 10):
+            test_settings_per_mu = []
+            # loop over test sets, total 100 test sets
+            for j in range(0, 100):
+                settings_file = os.path.join(
+                    reference_dir, f'set_{i}', "settings", "data.json"
+                )
+                with open(settings_file) as f:
+                    test_settings_per_mu.append(json.load(f))
+            self.test_settings.append(test_settings_per_mu)
 
         print("[✔]")
 
     def load_ingestion_results(self):
         print("[*] Reading predictions")
-
-        results_file = os.path.join(prediction_dir, "result.json")
-        with open(results_file) as f:
-            self.ingestion_results = json.load(f)
+        self.ingestion_results = []
+        # loop over sets (1 value of mu, total 10 sets)
+        for i in range(0, 10):
+            results_file = os.path.join(prediction_dir, "result_"+str(i)+".json")
+            with open(results_file) as f:
+                self.ingestion_results.append(json.load(f))
 
         print("[✔]")
 
     def compute_scores(self):
         print("[*] Computing scores")
 
-        mus = [test_setting["ground_truth_mu"] for test_setting in self.test_settings]
-        mu_hats = self.ingestion_results["mu_hats"]
-        delta_mu_hats = self.ingestion_results["delta_mu_hats"]
-        p16s = self.ingestion_results["p16"]
-        p84s = self.ingestion_results["p84"]
+        # loop over ingestion results
+        rmses, maes, coverage_scores = [], [], []
+        for i, (ingestion_result, test_settings) in enumerate(zip(self.ingestion_results, self.test_settings)):
 
-        rmses, maes, ben_saschas = [], [], []
-        for i , mu in enumerate(mus):
+            # just get the first test set mu
+            mu = test_settings[0]["ground_truth_mu"]
+            mu_hats = ingestion_result["mu_hats"]
+            delta_mu_hats = ingestion_result["delta_mu_hats"]
+            p16s = ingestion_result["p16"]
+            p84s = ingestion_result["p84"]
+
+            set_rmses, set_maes = [], []
             for mu_hat, delta_mu_hat in zip(mu_hats, delta_mu_hats):
-                rmses.append(self.RMSE_score(mu, mu_hat, delta_mu_hat))
-                maes.append(self.MAE_score(mu, mu_hat, delta_mu_hat))
-            ben_saschas_score, ben_saschas_coverage = self.Ben_Sasha_score(mu,np.array(p16s),np.array(p84s)) 
-            ben_saschas.append(ben_saschas_score)
-            print(f"[*] --- Coverage for set_{i}: {ben_saschas_coverage}")
-            
+                set_rmses.append(self.RMSE_score(mu, mu_hat, delta_mu_hat))
+                set_maes.append(self.MAE_score(mu, mu_hat, delta_mu_hat))
+            set_coverage_score, set_coverage = self.Coverage_score(mu, np.array(p16s), np.array(p84s))
+
+            set_mae = np.mean(set_maes)
+            set_rmse = np.mean(set_rmses)
+
+            print("------------------")
+            print(f"Set {i}")
+            print("------------------")
+            print(f"MAE (avg): {set_mae}")
+            print(f"RMSE (avg): {set_rmse}")
+            print(f"Coverage: {set_coverage}")
+            print(f"Coverage Score: {set_coverage_score}")
+
+            # Save set scores in lists
+            rmses.append(set_rmse)
+            maes.append(set_mae)
+            coverage_scores.append(set_coverage_score)
 
         self.scores_dict = {
             "rmse": np.mean(rmses),
             "mae": np.mean(maes),
-            "ben_sascha": np.mean(ben_saschas)
+            "coverage_score": np.mean(coverage_scores)
 
         }
-        print(f"[*] --- rmse: {round(np.mean(rmses), 3)}")
-        print(f"[*] --- mae: {round(np.mean(maes), 3)}")
-        print(f"[*] --- ben_sascha: {round(np.mean(ben_saschas), 3)}")
+        print(f"[*] --- RMSE: {round(np.mean(rmses), 3)}")
+        print(f"[*] --- MAE: {round(np.mean(maes), 3)}")
+        print(f"[*] --- Coverage score: {round(np.mean(coverage_scores), 3)}")
 
         print("[✔]")
 
@@ -152,7 +175,7 @@ class Scoring:
 
         return MAE(mu, mu_hat) + MAE2(mu, mu_hat, delta_mu_hat)
 
-    def Ben_Sasha_score(self, mu, p16, p84, eps=1e-10):
+    def Coverage_score(self, mu, p16, p84, eps=1e-10):
 
         def Interval(p16, p84):
             """Compute the average of the intervals defined by vectors p16 and p84."""

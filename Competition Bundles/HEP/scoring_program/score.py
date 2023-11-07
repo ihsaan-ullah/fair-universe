@@ -5,13 +5,14 @@ import os
 import numpy as np
 import json
 from datetime import datetime as dt
-from sklearn.metrics import mean_absolute_error as mae, mean_squared_error as mse
 
 # ------------------------------------------
 # Default Directories
 # ------------------------------------------
 # # root directory
-# root_dir = "./"
+# module_dir= os.path.dirname(os.path.realpath(__file__))
+
+# root_dir = os.path.dirname(module_dir)
 # # Directory to output computed score into
 # output_dir = os.path.join(root_dir, "scoring_output")
 # # reference data (test labels)
@@ -43,7 +44,6 @@ class Scoring:
         # Initialize class variables
         self.start_time = None
         self.end_time = None
-        # self.test_labels = None
         self.test_settings = None
         self.ingestion_results = None
 
@@ -74,122 +74,126 @@ class Scoring:
     def load_test_settings(self):
         print("[*] Reading test settings")
         self.test_settings = []
+        # loop over sets (1 value of mu, total 10 sets)
         for i in range(0, 10):
-            settings_file = os.path.join(
-                reference_dir, "settings", "data_" + str(i) + ".json"
-            )
-            with open(settings_file) as f:
-                self.test_settings.append(json.load(f))
+            test_settings_per_mu = []
+            # loop over test sets, total 100 test sets
+            for j in range(0, 100):
+                settings_file = os.path.join(
+                    reference_dir, f'set_{i}', "settings", "data.json"
+                )
+                with open(settings_file) as f:
+                    test_settings_per_mu.append(json.load(f))
+            self.test_settings.append(test_settings_per_mu)
 
         print("[✔]")
 
     def load_ingestion_results(self):
         print("[*] Reading predictions")
+        self.ingestion_results = []
+        # loop over sets (1 value of mu, total 10 sets)
+        for i in range(0, 10):
+            results_file = os.path.join(prediction_dir, "result_"+str(i)+".json")
+            with open(results_file) as f:
+                self.ingestion_results.append(json.load(f))
 
-        results_file = os.path.join(prediction_dir, "result.json")
-        with open(results_file) as f:
-            self.ingestion_results = json.load(f)
-
-        # Load predictions for q_1 and q_2
-        self.q_1 = self.ingestion_results["q_1"]
-        self.q_2 = self.ingestion_results["q_2"]
         print("[✔]")
 
     def compute_scores(self):
         print("[*] Computing scores")
 
-        C = 0.02
-        mus = [test_setting["ground_truth_mu"] for test_setting in self.test_settings]
-        mu_hats = self.ingestion_results["mu_hats"]
-        delta_mus = [mu - mu_hat for mu, mu_hat in zip(mus, mu_hats)]
-        delta_mu_hat = self.ingestion_results["delta_mu_hat"]
-        delta_mu_hats = np.repeat(delta_mu_hat, len(delta_mus))
+        # loop over ingestion results
+        rmses, maes, coverage_scores = [], [], []
+        for i, (ingestion_result, test_settings) in enumerate(zip(self.ingestion_results, self.test_settings)):
 
-        # Compute J_q
-        # score_J_q = self.compute_J_q(self.q_1, self.q_2)
+            # just get the first test set mu
+            mu = test_settings[0]["ground_truth_mu"]
+            mu_hats = ingestion_result["mu_hats"]
+            delta_mu_hats = ingestion_result["delta_mu_hats"]
+            p16s = ingestion_result["p16"]
+            p84s = ingestion_result["p84"]
 
-        # Compute MAE
-        mae_mu = self.compute_MAE(mus, mu_hats)
-        mae_delta_mu = self.compute_MAE(delta_mus, delta_mu_hats)
+            set_rmses, set_maes = [], []
+            for mu_hat, delta_mu_hat in zip(mu_hats, delta_mu_hats):
+                set_rmses.append(self.RMSE_score(mu, mu_hat, delta_mu_hat))
+                set_maes.append(self.MAE_score(mu, mu_hat, delta_mu_hat))
+            set_coverage_score, set_coverage = self.Coverage_score(mu, np.array(p16s), np.array(p84s))
 
-        # Compute MSE
-        mse_mu = self.compute_MSE(mus, mu_hats)
-        mse_delta_mu = self.compute_MSE(delta_mus, delta_mu_hats)
+            set_mae = np.mean(set_maes)
+            set_rmse = np.mean(set_rmses)
 
-        # Compute Coverage
-        coverage_mu = self.compute_coverage(mus, mu_hats, delta_mu_hat, None)
-        coverage_C = self.compute_coverage(mus, mu_hats, None, C)
+            print("------------------")
+            print(f"Set {i}")
+            print("------------------")
+            print(f"MAE (avg): {set_mae}")
+            print(f"RMSE (avg): {set_rmse}")
+            print(f"Coverage: {set_coverage}")
+            print(f"Coverage Score: {set_coverage_score}")
 
-        # Compute Score
-        score_mae = self.compute_score(mae_mu, mae_delta_mu)
-        score_mse = self.compute_score(mse_mu, mse_delta_mu)
+            # Save set scores in lists
+            rmses.append(set_rmse)
+            maes.append(set_mae)
+            coverage_scores.append(set_coverage_score)
 
         self.scores_dict = {
-            "mu_hat": np.mean(mu_hats),
-            "delta_mu_hat": delta_mu_hat,
-            "mae_mu": mae_mu,
-            "mse_mu": mse_mu,
-            "mae_delta_mu": mae_delta_mu,
-            "mse_delta_mu": mse_delta_mu,
-            "coverage_mu": coverage_mu,
-            "coverage_C": coverage_C,
-            "score_mae": score_mae,
-            "score_mse": score_mse,
-            # "score_J_q": score_J_q,
+            "rmse": np.mean(rmses),
+            "mae": np.mean(maes),
+            "coverage_score": np.mean(coverage_scores)
+
         }
-        print(f"[*] --- delta_mu_hat: {round(delta_mu_hat, 3)}")
-        print(f"[*] --- MAE (mu): {round(mae_mu, 3)}")
-        print(f"[*] --- MSE (mu): {round(mse_mu, 3)}")
-        print(f"[*] --- MAE (delta mu): {round(mae_delta_mu, 3)}")
-        print(f"[*] --- MSE (delta mu): {round(mse_delta_mu, 3)}")
-        print(f"[*] --- coverage (mu): {coverage_mu}")
-        print(f"[*] --- coverage (C): {coverage_C}")
-        print(f"[*] --- score (MAE): {round(score_mae, 3)}")
-        print(f"[*] --- score (MSE): {round(score_mse, 3)}")
-        # print(f"[*] --- score (J_q): {round(score_J_q, 3)}")
+        print(f"[*] --- RMSE: {round(np.mean(rmses), 3)}")
+        print(f"[*] --- MAE: {round(np.mean(maes), 3)}")
+        print(f"[*] --- Coverage score: {round(np.mean(coverage_scores), 3)}")
 
         print("[✔]")
 
-    def compute_J_q(self, q1, q2, order=2, eps=1e-4):
-        delta_mu = np.mean(q2 - q1)  # average over all tests
-        N_test = len(self.test_settings)
-        N_in = 0
-        for test_setting in self.test_settings:
-            if (
-                test_setting["ground_truth_mu"] >= q1
-                and test_setting["ground_truth_mu"] <= q2
-            ):
-                N_in += 1
+    def RMSE_score(self, mu, mu_hat, delta_mu_hat):
+        """Compute the sum of MSE and MSE2."""
 
-        return (delta_mu + eps) * inv_pol(N_in / N_test, order=order)
+        def MSE(mu, mu_hat):
+            """Compute the mean squared error between scalar mu and vector mu_hat."""
+            return np.mean((mu_hat - mu) ** 2)
 
-    def compute_MAE(self, actual, calculated):
-        return mae(actual, calculated)
+        def MSE2(mu, mu_hat, delta_mu_hat):
+            """Compute the mean squared error between computed delta_mu = mu_hat - mu and delta_mu_hat."""
+            adjusted_diffs = (mu_hat - mu)**2 - delta_mu_hat**2
+            return np.mean(adjusted_diffs**2)
 
-    def compute_MSE(self, actual, calculated):
-        return mse(actual, calculated)
+        return np.sqrt(MSE(mu, mu_hat) + MSE2(mu, mu_hat, delta_mu_hat))
 
-    def compute_coverage(self, mus, mu_hats, delta_mu_hat=None, C=None):
-        coverage = 0
-        n = len(mus)
+    def MAE_score(self, mu, mu_hat, delta_mu_hat):
+        """Compute the sum of MAE and MAE2."""
 
-        for mu, mu_hat in zip(mus, mu_hats):
-            # calculate mu+ and mu-
-            if C is None:
-                mu_plus = mu_hat + delta_mu_hat
-                mu_minu = mu_hat - delta_mu_hat
+        def MAE(mu, mu_hat):
+            """Compute the mean absolute error between scalar mu and vector mu_hat."""
+            return np.mean(np.abs(mu_hat - mu))
+
+        def MAE2(mu, mu_hat, delta_mu_hat):
+            """Compute the mean absolute error based on the provided definitions."""
+            adjusted_diffs = np.abs(mu_hat - mu) - delta_mu_hat
+            return np.mean(np.abs(adjusted_diffs))
+
+        return MAE(mu, mu_hat) + MAE2(mu, mu_hat, delta_mu_hat)
+
+    def Coverage_score(self, mu, p16, p84, eps=1e-10):
+
+        def Interval(p16, p84):
+            """Compute the average of the intervals defined by vectors p16 and p84."""
+            return np.mean(p84 - p16)
+
+        def Coverage(mu, p16, p84):
+            """Compute the fraction of times scalar mu is within intervals defined by vectors p16 and p84."""
+            return_coverage =  np.mean((mu >= p16) & (mu <= p84))
+            return return_coverage
+
+        def f(x, a1=1/2.1626297577854667, a2=1/9.765625, b1=0, b2=0.36, c1=1.36, c2=1):
+            """U-shaped function with mn at 0.68 and f(0.68)=1"""
+            if x < 0.68:
+                return a1 / ((x - b1) * (c1 - x) + eps)
             else:
-                mu_plus = mu_hat + (C / 2)
-                mu_minu = mu_hat - (C / 2)
-
-            # calculate how many times the groundtruth mu is between mu+ and mu-
-            if mu >= mu_minu and mu <= mu_plus:
-                coverage += 1
-
-        return coverage / n
-
-    def compute_score(self, mu_score, delta_mu_score):
-        return mu_score + delta_mu_score
+                return a2 / ((x - b2) * (c2 - x) + eps)
+        coverage = Coverage(mu, p16, p84)
+        return (Interval(p16, p84) + eps) * f(coverage), coverage
 
     def write_scores(self):
         print("[*] Writing scores")
@@ -199,23 +203,6 @@ class Scoring:
 
         print("[✔]")
         pass
-
-
-def inv_pol(x, order=2):
-    """Inverse of polynomial p(x) used to score quantile predictions.
-
-    p(x) = 4 * x * (1 - x)) ** order
-
-    Args:
-        x (_type_): esetimate of coverage
-        order (int, optional): Raise the inverse polynomial to this power to
-            control shape of loss curve (higher order results in higher
-            penalties for a given departure form x=0.5). Defaults to 2.
-
-    Returns:
-        float: value of (4x(1 - x)) ** order
-    """
-    return (1.0 / (4.0 * (x * (1.0 - x)))) ** order
 
 
 if __name__ == "__main__":

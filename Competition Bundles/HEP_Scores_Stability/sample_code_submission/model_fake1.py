@@ -1,28 +1,25 @@
-import numpy as np
-import pandas as pd
+# ------------------------------
+# Imports
+# ------------------------------
 import os
-from sklearn.model_selection import train_test_split
-from xgboost import XGBClassifier
-from sklearn.metrics import roc_auc_score
-from sklearn.preprocessing import StandardScaler
-from lightgbm import LGBMClassifier
-
-import lightgbm as lgb
-from math import sqrt
-from math import log
 from sys import path
+import numpy as np
+from sklearn.preprocessing import StandardScaler
 
+
+# ------------------------------
+# Import local modules
+# ------------------------------
 module_dir= os.path.dirname(os.path.realpath(__file__))
-
 root_dir = os.path.dirname(module_dir)
-
 path.append(root_dir)
-
 from bootstrap import bootstrap
 
+
+# ------------------------------
+# Constants
+# ------------------------------
 EPSILON = np.finfo(float).eps
-
-
 
 
 # ------------------------------
@@ -49,7 +46,7 @@ class Model():
             test_sets=[],
             systematics=None,
             model_name="BDT",
-            
+
     ):
         """
         Model class constructor
@@ -74,21 +71,9 @@ class Model():
         """
 
         # Set class variables from parameters
-
         self.model_name = model_name
         self.train_set = train_set
         self.test_sets = test_sets
-        # self.test_sets_weights = []
-        # self.test_labels = []
-        # for test_set in test_sets:
-        #     self.test_sets.append({"data": test_set})
-
-        # for test_set_weights in test_sets_weights:
-        #     self.test_sets_weights.append(test_set_weights) 
-
-        # for test_label in test_labels:
-        #     self.test_labels.append(test_label)
-
 
         self.systematics = systematics
 
@@ -97,11 +82,6 @@ class Model():
         self.theta_candidates = np.arange(0.9, 0.96, 0.01)
         self.best_theta = 0.9
         self.scaler = StandardScaler()
-
-
-        # # Hyper params
-        # self.num_epochs = 10
-        # self.batch_size = 32
 
     def fit(self):
         """
@@ -142,17 +122,16 @@ class Model():
             "p16": self.p16,
             "p84": self.p84
         }
-    
-    def _init_model(self):
-        print("[*] - Intialize NN model")
 
-        
+    def _init_model(self):
+        print("[*] - Intialize model")
+
     def _fit(self):
         print("[*] --- Fitting Model")
-    
+
     def _predict(self):
         print("[*] --- Predicting")
-    
+
     def N_calc_2(self, weights, n=10000):
         total_weights = []
         for i in range(n):
@@ -162,7 +141,6 @@ class Model():
         n_calc_array = np.array(total_weights)
 
         return n_calc_array
-
 
     def N_calc(self, weights, n=10000):
         total_weights = []
@@ -181,12 +159,8 @@ class Model():
         print(f'[*] --- p16: {p16} --- p84: {p84}')
         return np.array([guss_mean, sigma, p16, p84])
 
-
-
     def _test(self):
         print("[*] - Testing")
-
-
 
     def _compute_test_result(self):
 
@@ -205,19 +179,10 @@ class Model():
 
             # Compute mu_hat
             N_ = self.N_calc_2(weights_test)
-
-
             N = weights_train.sum()
-
-            mu_hat = ((N_ - N)/s_train) + 1 
-            
-
+            mu_hat = ((N_ - N)/s_train) + 1
             sigma_mu_hat = np.std(mu_hat)
-
-
             delta_mu_hat = 2*sigma_mu_hat
-
-
 
             mu_p16 = np.percentile(mu_hat, 16)
             mu_p84 = np.percentile(mu_hat, 84)
@@ -228,18 +193,12 @@ class Model():
 
             mu_hats.append(np.mean(mu_hat))
 
-            print(f"[*] --- delta_mu_hat: {delta_mu_hat}")
-            print(f"[*] --- p16: {mu_p16} --- p84: {mu_p84}")
-
-
-        print("\n")
-
         # Save mu_hat from test
         self.mu_hats = mu_hats
         self.p16 = p16s
         self.p84 = p84s
 
-        # right now we are using test set delta mu hat, 
+        # right now we are using test set delta mu hat,
         self.delta_mu_hats = self.test_set_delta_mu_hats
 
         # uncomment the next line if you want to use validation delta mu hat
@@ -250,3 +209,4 @@ class Model():
         print(f"[*] --- delta_mu_hat (avg): {np.round(np.mean(self.delta_mu_hats), 4)}")
         print(f"[*] --- delta_mu_hat (std): {np.round(np.std(self.delta_mu_hats), 4)}")
         print(f"[*] --- p16 (avg): {np.round(np.mean(self.p16), 4)}")
+        print(f"[*] --- p84 (avg): {np.round(np.mean(self.p84), 4)}")
