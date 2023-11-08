@@ -40,6 +40,8 @@ def dataGenerator(verbose=0):
         for feature in features:
             print(feature)
 
+    df = df.round(3)
+    weights = weights.round(4)
 
     if verbose > 0:
         print (f"[*] --- sum of weights : {np.sum(weights)}")
@@ -182,6 +184,7 @@ def dataGenerator(verbose=0):
             tes=tes
             ).data
 
+            data_syst = data_syst.round(3)
 
             # Save the current subset as a CSV file
             data_file_path = os.path.join(test_data_path, f'data_{j}.csv')
