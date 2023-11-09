@@ -103,7 +103,7 @@ class Scoring:
         print("[*] Computing scores")
 
         # loop over ingestion results
-        rmses, maes, coverage_scores = [], [], []
+        rmses, maes, intervals, coverages, quantiles_scores = [], [], [], [], []
         for i, (ingestion_result, test_settings) in enumerate(zip(self.ingestion_results, self.test_settings)):
 
             # just get the first test set mu
@@ -117,7 +117,7 @@ class Scoring:
             for mu_hat, delta_mu_hat in zip(mu_hats, delta_mu_hats):
                 set_rmses.append(self.RMSE_score(mu, mu_hat, delta_mu_hat))
                 set_maes.append(self.MAE_score(mu, mu_hat, delta_mu_hat))
-            set_coverage_score, set_coverage = self.Coverage_score(mu, np.array(p16s), np.array(p84s))
+            set_interval, set_coverage, set_quantiles_score = self.Quantiles_Score(mu, np.array(p16s), np.array(p84s))
 
             set_mae = np.mean(set_maes)
             set_rmse = np.mean(set_rmses)
@@ -127,23 +127,30 @@ class Scoring:
             print("------------------")
             print(f"MAE (avg): {set_mae}")
             print(f"RMSE (avg): {set_rmse}")
+            print(f"Interval: {set_interval}")
             print(f"Coverage: {set_coverage}")
-            print(f"Coverage Score: {set_coverage_score}")
+            print(f"Quantiles Score: {set_quantiles_score}")
 
             # Save set scores in lists
             rmses.append(set_rmse)
             maes.append(set_mae)
-            coverage_scores.append(set_coverage_score)
+            intervals.append(set_interval)
+            coverages.append(set_coverage)
+            quantiles_scores.append(set_quantiles_score)
 
         self.scores_dict = {
             "rmse": np.mean(rmses),
             "mae": np.mean(maes),
-            "coverage_score": np.mean(coverage_scores)
+            "interval": np.mean(intervals),
+            "coverage": np.mean(coverages),
+            "quantiles_score": np.mean(quantiles_scores)
 
         }
-        print(f"[*] --- RMSE: {round(np.mean(rmses), 3)}")
+        print(f"\n\n[*] --- RMSE: {round(np.mean(rmses), 3)}")
         print(f"[*] --- MAE: {round(np.mean(maes), 3)}")
-        print(f"[*] --- Coverage score: {round(np.mean(coverage_scores), 3)}")
+        print(f"[*] --- Interval: {round(np.mean(intervals), 3)}")
+        print(f"[*] --- Coverage: {round(np.mean(coverages), 3)}")
+        print(f"[*] --- Quantiles score: {round(np.mean(quantiles_scores), 3)}")
 
         print("[✔]")
 
@@ -175,7 +182,7 @@ class Scoring:
 
         return MAE(mu, mu_hat) + MAE2(mu, mu_hat, delta_mu_hat)
 
-    def Coverage_score(self, mu, p16, p84, eps=1e-10):
+    def Quantiles_Score(self, mu, p16, p84, eps=1e-10):
 
         def Interval(p16, p84):
             """Compute the average of the intervals defined by vectors p16 and p84."""
@@ -183,7 +190,7 @@ class Scoring:
 
         def Coverage(mu, p16, p84):
             """Compute the fraction of times scalar mu is within intervals defined by vectors p16 and p84."""
-            return_coverage =  np.mean((mu >= p16) & (mu <= p84))
+            return_coverage = np.mean((mu >= p16) & (mu <= p84))
             return return_coverage
 
         def f(x, a1=1/2.1626297577854667, a2=1/9.765625, b1=0, b2=0.36, c1=1.36, c2=1):
@@ -192,8 +199,11 @@ class Scoring:
                 return a1 / ((x - b1) * (c1 - x) + eps)
             else:
                 return a2 / ((x - b2) * (c2 - x) + eps)
+
         coverage = Coverage(mu, p16, p84)
-        return (Interval(p16, p84) + eps) * f(coverage), coverage
+        interval = Interval(p16, p84)
+        score = (interval + eps) * f(coverage)
+        return interval, coverage, score
 
     def write_scores(self):
         print("[*] Writing scores")
