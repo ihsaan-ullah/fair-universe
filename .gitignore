@@ -14,9 +14,15 @@ Competition_Bundles/HEP/*.ipynb
 
 Competition_Bundles/HEP_Scores_Stability/input_data/
 Competition_Bundles/HEP_Scores_Stability/reference_data/
+Competition_Bundles/HEP_Scores_Stability/sample_result_submission/*
+
 
 Competition_Bundles/HEP/input_data/
 Competition_Bundles/HEP/reference_data/
+Competition_Bundles/HEP/sample_result_submission/*
 
+Data_Generators/Data_Generator_HEP/input_data
+Data_Generators/Data_Generator_HEP/reference_data/
+Data_Generators/Data_Generator_HEP/reference_data.csv
 
 Competition_Bundles/HEP_Inverted/sample_code_submission/
