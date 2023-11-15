@@ -144,47 +144,62 @@ class Ingestion():
                 test_sets_per_mu.append(test_set)
             self.test_sets.append(test_sets_per_mu)
 
-    def run_tasks(self):
-        print("[*] Running Tasks")
+    def init_submission(self):
+        print("[*] Initializing Submmited Model")
+        self.model = Model(
+            train_set=self.train_set,
+            systematics=Systematics
+        )
 
-        # Loop over tasks (10 tasks or 10 values of mu)
-        # each task has 100 test sets
-        for i in range(0, 10):
-            print("--------------------")
-            print(f"[*] Running Task {i}")
-            print("--------------------")
+    def fit_submission(self):
+        print("[*] Calling fit method of submitted model")
+        self.model.fit()
 
-            # initialize submission
-            self.model = Model(
-                train_set=self.train_set,
-                test_sets=self.test_sets[i],
-                systematics=Systematics
-            )
+    def predict_submission(self):
+        print("[*] Calling predict method of submitted model")
+        self.results_list = []
+        for test_sets_per_mu in self.test_sets:
+            mu_hats, delta_mu_hats, p16s, p84s = [], [], [], []
 
-            # Fit model
-            print("[*] Calling fit method of submitted model")
-            self.model.fit()
+            # Create an array of indices for the test sets
+            num_test_sets = len(test_sets_per_mu)
+            shuffled_indices = np.random.permutation(num_test_sets)
 
-            # Predict model
-            print("[*] Calling predict method of submitted model")
-            predicted_dict = self.model.predict()
-            mu_hats = predicted_dict["mu_hats"]
-            delta_mu_hats = predicted_dict["delta_mu_hats"]
-            p16 = predicted_dict["p16"]
-            p84 = predicted_dict["p84"]
+            # Create a mapping between shuffled indices and original indices
+            index_mapping = {shuffled_index: original_index for original_index, shuffled_index in enumerate(shuffled_indices)}
 
-            # Save results
-            print("[*] Saving result")
+            for shuffled_index in shuffled_indices:
+                # Use the shuffled index to access the test set
+                test_set = test_sets_per_mu[shuffled_index]
+
+                predicted_dict = self.model.predict(test_set)
+                mu_hats.append(predicted_dict["mu_hat"])
+                delta_mu_hats.append(predicted_dict["delta_mu_hat"])
+                p16s.append(predicted_dict["p16"])
+                p84s.append(predicted_dict["p84"])
+
+            # Reorder the results using the original order of test sets
+            mu_hats = [mu_hats[index_mapping[i]] for i in range(num_test_sets)]
+            delta_mu_hats = [delta_mu_hats[index_mapping[i]] for i in range(num_test_sets)]
+            p16s = [p16s[index_mapping[i]] for i in range(num_test_sets)]
+            p84s = [p84s[index_mapping[i]] for i in range(num_test_sets)]
+
+            print(f"\n[*] delta_mu_hats (avg): {np.mean(delta_mu_hats)}")
+            print(f"[*] mu_hats (avg): {np.mean(mu_hats)}")
+            print(f"[*] p16 (avg): {np.mean(p16s)}")
+            print(f"[*] p84 (avg): {np.mean(p84s)}")
+
             result_dict = {
                 "delta_mu_hats": delta_mu_hats,
                 "mu_hats": mu_hats,
-                "p16": p16,
-                "p84": p84
+                "p16": p16s,
+                "p84": p84s
             }
-            print(f"[*] --- delta_mu_hats (avg): {np.mean(delta_mu_hats)}")
-            print(f"[*] --- mu_hats (avg): {np.mean(mu_hats)}")
-            print(f"[*] --- p16 (avg): {np.mean(p16)}")
-            print(f"[*] --- p84 (avg): {np.mean(p84)}")
+            self.results_list.append(result_dict)
+
+    def save_result(self):
+        print("[*] Saving Ingestion result")
+        for i, result_dict in enumerate(self.results_list):
 
             result_file = os.path.join(output_dir, "result_"+str(i)+".json")
 
@@ -210,8 +225,17 @@ if __name__ == '__main__':
     # load test set
     ingestion.load_test_sets()
 
-    # run tasks
-    ingestion.run_tasks()
+    # initialize submission
+    ingestion.init_submission()
+
+    # fit submission
+    ingestion.fit_submission()
+
+    # predict submission
+    ingestion.predict_submission()
+
+    # save result
+    ingestion.save_result()
 
     # Stop timer
     ingestion.stop_timer()

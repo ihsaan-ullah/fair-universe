@@ -11,7 +11,6 @@ from datetime import datetime as dt
 # ------------------------------------------
 # # root directory
 # module_dir= os.path.dirname(os.path.realpath(__file__))
-
 # root_dir = os.path.dirname(module_dir)
 # # Directory to output computed score into
 # output_dir = os.path.join(root_dir, "scoring_output")

@@ -1,21 +1,22 @@
+import os
+from sys import path
 import numpy as np
 import pandas as pd
-import os
-from sklearn.model_selection import train_test_split
-from xgboost import XGBClassifier
+from math import sqrt, log
+from xgboost import XGBRegressor
+from sklearn.utils import shuffle
 from sklearn.metrics import roc_auc_score
+from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-from math import sqrt
-from math import log
-from sys import path
+from sklearn.multioutput import MultiOutputRegressor
 
+# ------------------------------
+# Absolute path to submission dir
+# ------------------------------
 submissions_dir = os.path.dirname(os.path.abspath(__file__))
 path.append(submissions_dir)
 
-# from lightgbm import LGBMClassifier
-# import lightgbm as lgb
-from bootstrap import bootstrap
-
+from bootstrap import *
 
 # ------------------------------
 # Constants
@@ -44,7 +45,6 @@ class Model():
     def __init__(
             self,
             train_set=None,
-            test_sets=[],
             systematics=None
     ):
         """
@@ -66,14 +66,14 @@ class Model():
 
         # Set class variables from parameters
         self.train_set = train_set
-        self.test_sets = test_sets
         self.systematics = systematics
 
         # Intialize class variables
         self.validation_sets = None
-        self.theta_candidates = np.arange(0.9, 0.96, 0.01)
+        self.theta_candidates = np.arange(0.0, 0.99, 0.01)
         self.best_theta = 0.9
         self.scaler = StandardScaler()
+        self.scaler_tes = StandardScaler()
 
     def fit(self):
         """
@@ -95,7 +95,7 @@ class Model():
         self._validate()
         self._compute_validation_result()
 
-    def predict(self):
+    def predict(self, test_set):
         """
         Params:
             None
@@ -107,25 +107,52 @@ class Model():
             dict with keys
                 - mu_hat
                 - delta_mu_hat
+                - p16
+                - p84
         """
 
-        self._test()
-        self._compute_test_result()
+        print("[*] - Testing")
+        test_df = test_set['data']
+        test_df = self.scaler.transform(test_df)
+        Y_hat_test = self._predict(test_df, self.best_theta)
+
+        print("[*] - Computing Test result")
+        weights_train = self.train_set["weights"].copy()
+        weights_test = test_set["weights"].copy()
+
+        print(f"[*] --- total weight test: {weights_test.sum()}") 
+        print(f"[*] --- total weight train: {weights_train.sum()}")
+        print(f"[*] --- total weight mu_cals_set: {self.mu_calc_set['weights'].sum()}")
+
+        # get n_roi
+        n_roi = self.N_calc_2(weights_test[Y_hat_test == 1])
+
+        mu_hat = (n_roi - self.beta_roi)/self.gamma_roi
+
+        sigma_mu_hat = np.std(mu_hat)
+
+        delta_mu_hat = 2*sigma_mu_hat
+
+        mu_p16 = np.percentile(mu_hat, 16) - delta_mu_hat
+        mu_p84 = np.percentile(mu_hat, 84) + delta_mu_hat
+
+        print(f"[*] --- mu_hat: {mu_hat.mean()}")
+        print(f"[*] --- delta_mu_hat: {delta_mu_hat}")
+        print(f"[*] --- p16: {mu_p16}")
+        print(f"[*] --- p84: {mu_p84}")
 
         return {
-            "mu_hats": self.mu_hats,
-            "delta_mu_hat": self.delta_mu_hat
+            "mu_hat": mu_hat.mean(),
+            "delta_mu_hat": delta_mu_hat,
+            "p16": mu_p16,
+            "p84": mu_p84
         }
 
     def _init_model(self):
-        print("[*] - Intialize Baseline Model (XGBoost Classifier)")
+        print("[*] - Intialize Baseline Model (LGBM bases Uncertainty Estimator Model)")
 
-        self.model = XGBClassifier(
-            tree_method="hist",
-            use_label_encoder=False,
-            eval_metric=['logloss', 'auc']
-        )
-        # self.model = LGBMClassifier(metric=['logloss','auc'])
+        xgb = XGBRegressor(learning_rate=0.05, n_estimators=100)
+        self.model = MultiOutputRegressor(xgb)
 
     def _generate_validation_sets(self):
         print("[*] - Generating Validation sets")
@@ -168,7 +195,7 @@ class Model():
         mu_calc_set_weights[mu_calc_set_labels == 1] *= signal_weights / mu_calc_set_signal_weights
         mu_calc_set_weights[mu_calc_set_labels == 0] *= background_weights / mu_calc_set_background_weights
 
-        train_df = self.scaler.fit_transform(train_df)
+        self.train_df = train_df
 
         self.train_set = {
             "data": train_df,
@@ -219,24 +246,62 @@ class Model():
         print(f"[*] --- mu_calc_set signal: {mu_calc_set_signal_weights} --- mu_calc_set background: {mu_calc_set_background_weights}")
 
     def _train(self):
-        print("[*] - Train Neural Network")
 
-        self._init_model()
+        tes_sets = []
 
-        weights_train = self.train_set["weights"].copy()
+        for i in range(0, 10):
+            tes_set = self.train_df.copy()
+            tes_set = pd.DataFrame(tes_set)
+            tes_set["weights"] = self.train_set["weights"]
+            tes_set["labels"] = self.train_set["labels"]
 
-        class_weights_train = (weights_train[self.train_set['labels'] == 0].sum(), weights_train[self.train_set['labels'] == 1].sum())
+            # adding systematics to the tes set
+            # Extract the TES information from the JSON file
+            tes = round(np.random.uniform(0.9, 1.10), 2)
+            # tes = 1.0
+
+            syst_set = tes_set.copy()
+            data_syst = self.systematics(
+                data=syst_set,
+                verbose=0,
+                tes=tes
+            ).data
+
+            data_syst = data_syst.round(3)
+            tes_set = data_syst.copy()
+            tes_set['tes'] = (tes*10)*2
+            tes_sets.append(tes_set)
+            del data_syst
+            del tes_set
+
+        tes_sets_df = pd.concat(tes_sets)
+
+        train_tes_data = shuffle(tes_sets_df)
+
+        tes_label_1 = train_tes_data.pop('tes')
+        tes_label_2 = train_tes_data.pop('labels')
+        tes_label = [tes_label_1, tes_label_2]
+        tes_label = np.array(tes_label).T
+        tes_weights = train_tes_data.pop('weights')
+
+        weights_train = tes_weights.copy()
+
+        class_weights_train = (weights_train[tes_label_2 == 0].sum(), weights_train[tes_label_2 == 1].sum())
 
         for i in range(len(class_weights_train)):  # loop on B then S target
             # training dataset: equalize number of background and signal
-            weights_train[self.train_set['labels'] == i] *= max(class_weights_train) / class_weights_train[i]
+            weights_train[tes_label_2 == i] *= max(class_weights_train) / class_weights_train[i]
             # test dataset : increase test weight to compensate for sampling
 
         print("[*] --- Training Model")
-        self._fit(self.train_set['data'], self.train_set['labels'], weights_train)
+        train_tes_data = self.scaler.fit_transform(train_tes_data)
+
+        print("[*] --- shape of train tes data", train_tes_data.shape)
+
+        self._fit(train_tes_data, tes_label, weights_train)
 
         print("[*] --- Predicting Train set")
-        self.train_set['predictions'] = self._predict(self.train_set['data'], self.best_theta)
+        self.train_set['predictions'] = (self.train_set['data'], self.best_theta)
 
         self.train_set['score'] = self._return_score(self.train_set['data'])
 
@@ -249,12 +314,10 @@ class Model():
 
     def _fit(self, X, y, w):
         print("[*] --- Fitting Model")
-        print("sum of signal", w[y == 1].sum())
-        print("sum of background", w[y == 0].sum())
-        self.model.fit(X, y, sample_weight=w, eval_set=self.eval_set)
+        self.model.fit(X, y, sample_weight=w)
 
     def _return_score(self, X):
-        y_predict = self.model.predict_proba(X)[:, 1]
+        y_predict = self.model.predict(X)[:, 1]
         return y_predict
 
     def _predict(self, X, theta):
@@ -262,18 +325,13 @@ class Model():
         predictions = np.where(Y_predict > theta, 1, 0)
         return predictions
 
-    def N_calc(self, weights, n=10000):
+    def N_calc_2(self, weights, n=100):
         total_weights = []
         for i in range(n):
             bootstrap_weights = bootstrap(weights=weights, seed=42+i)
             total_weights.append(np.array(bootstrap_weights).sum())
-
         n_calc_array = np.array(total_weights)
-        guss_mean = np.mean(n_calc_array)
-        sigma = np.sqrt(sum((n_calc_array - guss_mean)**2)/n)
-
-        print(f'[*] --- mean N: {guss_mean} --- sigma N: {sigma}')
-        return np.array([guss_mean, sigma])
+        return n_calc_array
 
     def mu_hat_calc(self):
 
@@ -295,7 +353,6 @@ class Model():
         self.beta_roi = (weights_mu_calc_set_bkg[Y_hat_mu_calc_set_bkg == 1]).sum()
         if self.gamma_roi == 0:
             self.gamma_roi = EPSILON
-
 
     def amsasimov_x(self, s, b):
         '''
@@ -397,12 +454,12 @@ class Model():
         for valid_set in self.validation_sets:
             valid_set['data'] = self.scaler.transform(valid_set['data'])
             valid_set['predictions'] = self._predict(valid_set['data'], self.best_theta)
-            valid_set['score'] = self.model.predict_proba(valid_set['data'])[:,1]
+            valid_set['score'] = self._return_score(valid_set['data'])
 
     def _compute_validation_result(self):
         print("[*] - Computing Validation result")
 
-        delta_mu_hats = []
+        self.validation_delta_mu_hats = []
         for valid_set in self.validation_sets:
             Y_hat_train = self.train_set["predictions"]
             Y_train = self.train_set["labels"]
@@ -410,7 +467,6 @@ class Model():
             Y_valid = valid_set["labels"]
             Score_train = self.train_set["score"]
             Score_valid = valid_set["score"]
-
 
             auc_valid = roc_auc_score(y_true=valid_set["labels"], y_score=Score_valid,sample_weight=valid_set['weights'])
             print(f"\n[*] --- AUC validation : {auc_valid} --- tes : {valid_set['tes']}")
@@ -439,8 +495,9 @@ class Model():
             print(f"[*] --- delta_mu_stat : {delta_mu_stat}")
 
             # get n_roi
-            n_roi = self.N_calc(weights_valid[Y_hat_valid == 1])[0]
+            n_roi = self.N_calc_2(weights_valid[Y_hat_valid == 1])
 
+            mu_hat = ((n_roi - self.beta_roi)/self.gamma_roi).mean()
             # get region of interest
             nu_roi = self.beta_roi + self.gamma_roi
 
@@ -455,75 +512,14 @@ class Model():
                 gamma_roi = EPSILON
 
             # Compute mu_hat
-            mu_hat = ((n_roi - beta_roi)/gamma_roi)
 
             # Compute delta mu hat (absolute value)
             delta_mu_hat = np.abs(valid_set["settings"]["ground_truth_mu"] - mu_hat)
 
-            delta_mu_hats.append(delta_mu_hat)
+            self.validation_delta_mu_hats.append(delta_mu_hat)
 
             print(f"[*] --- nu_roi: {nu_roi} --- n_roi: {n_roi} --- beta_roi: {beta_roi} --- gamma_roi: {gamma_roi}")
 
             print(f"[*] --- mu: {np.round(valid_set['settings']['ground_truth_mu'], 4)} --- mu_hat: {np.round(mu_hat, 4)} --- delta_mu_hat: {np.round(delta_mu_hat, 4)}")
 
-        # Average delta mu_hat
-        self.delta_mu_hat = np.mean(delta_mu_hats)
-        print(f"[*] --- delta_mu_hat (avg): {np.round(self.delta_mu_hat, 4)}")
-
-    def _test(self):
-        print("[*] - Testing")
-        # Get predictions from trained model
-        for test_set in self.test_sets:
-            test_df = test_set['data']
-            test_df = self.scaler.transform(test_df)
-            test_set['predictions'] = self._predict(test_df, self.best_theta)
-            test_set['score'] = self.model.predict_proba(test_df)[:,1]
-
-    def _compute_test_result(self):
-
-        print("[*] - Computing Test result")
-
-        mu_hats = []
-        delta_mu_hats = []
-
-        for test_set in self.test_sets:
-            Y_hat_test = test_set["predictions"]
-
-            weights_train = self.train_set["weights"].copy()
-            weights_test = test_set["weights"].copy()
-
-            print(f"[*] --- total weight test: {weights_test.sum()}") 
-            print(f"[*] --- total weight train: {weights_train.sum()}")
-            print(f"[*] --- total weight mu_cals_set: {self.mu_calc_set['weights'].sum()}")
-
-            # get n_roi
-            [n_roi ,sigma] = self.N_calc(weights_test[Y_hat_test == 1])
-
-            n_plus_1_sigma = n_roi + sigma
-            n_minus_1_sigma = n_roi - sigma
-
-            print(f"[*] --- signal: {self.gamma_roi} --- background: {self.beta_roi}")
-
-            # Compute mu_hat
-            mu_hat = (n_roi - self.beta_roi)/self.gamma_roi
-            mu_plus_1_sigma = ((n_plus_1_sigma - self.beta_roi)/self.gamma_roi)
-            mu_minus_1_sigma = ((n_minus_1_sigma - self.beta_roi)/self.gamma_roi)
-            delta_mu_hat = mu_plus_1_sigma - mu_minus_1_sigma
-
-            delta_mu_hats.append(delta_mu_hat)
-
-            print(f"[*] --- delta_mu_hat: {delta_mu_hat}")
-            mu_hats.append(mu_hat)
-
-            print(f"\n[*] --- mu hat test :{mu_hat} + {(n_plus_1_sigma - self.beta_roi)/self.gamma_roi} - {(n_minus_1_sigma - self.beta_roi)/self.gamma_roi}")
-
-        print("\n")
-
-        # Save mu_hat from test
-        self.mu_hats = (mu_hats)
-        self.delta_mu_hat = np.mean(delta_mu_hats)
-
-        print(f"[*] --- mu_hats (avg): {np.mean(mu_hats)}")
-        print(f"[*] --- mu_hats (std): {np.std(mu_hats)}")
-        print(f"[*] --- delta_mu_hat (avg): {np.round(self.delta_mu_hat, 4)}")
-        print(f"[*] --- delta_mu_hat (std): {np.round(np.std(delta_mu_hats), 4)}")
+        print(f"[*] --- validation delta_mu_hat (avg): {np.round(np.mean(self.validation_delta_mu_hats), 4)}")
