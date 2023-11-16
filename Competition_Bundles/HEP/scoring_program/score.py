@@ -5,6 +5,9 @@ import os
 import numpy as np
 import json
 from datetime import datetime as dt
+import matplotlib.pyplot as plt
+import io
+import base64
 
 # ------------------------------------------
 # Default Directories
@@ -20,6 +23,8 @@ from datetime import datetime as dt
 # prediction_dir = os.path.join(root_dir, "sample_result_submission")
 # # score file to write score into
 # score_file = os.path.join(output_dir, "scores.json")
+# # html file to write score and figures into
+# html_file = os.path.join(output_dir, 'detailed_results.html')
 
 # ------------------------------------------
 # Codabench Directories
@@ -36,6 +41,8 @@ reference_dir = os.path.join(input_dir, 'ref')  # Ground truth data
 prediction_dir = os.path.join(input_dir, 'res')
 # score file to write score into
 score_file = os.path.join(output_dir, 'scores.json')
+# html file to write score and figures into
+html_file = os.path.join(output_dir, 'detailed_results.html')
 
 
 class Scoring:
@@ -101,6 +108,7 @@ class Scoring:
     def compute_scores(self):
         print("[*] Computing scores")
 
+        self.write_html("<h1>Detailed results</h1>")
         # loop over ingestion results
         rmses, maes, intervals, coverages, quantiles_scores = [], [], [], [], []
         for i, (ingestion_result, test_settings) in enumerate(zip(self.ingestion_results, self.test_settings)):
@@ -121,14 +129,16 @@ class Scoring:
             set_mae = np.mean(set_maes)
             set_rmse = np.mean(set_rmses)
 
-            print("------------------")
-            print(f"Set {i}")
-            print("------------------")
-            print(f"MAE (avg): {set_mae}")
-            print(f"RMSE (avg): {set_rmse}")
-            print(f"Interval: {set_interval}")
-            print(f"Coverage: {set_coverage}")
-            print(f"Quantiles Score: {set_quantiles_score}")
+            self._print("------------------")
+            self._print(f"Set {i}")
+            self._print("------------------")
+            self._print(f"MAE (avg): {set_mae}")
+            self._print(f"RMSE (avg): {set_rmse}")
+            self._print(f"Interval: {set_interval}")
+            self._print(f"Coverage: {set_coverage}")
+            self._print(f"Quantiles Score: {set_quantiles_score}")
+
+            self.save_figure(mu=mu, p16s=p16s, p84s=p84s, set=i)
 
             # Save set scores in lists
             rmses.append(set_rmse)
@@ -145,11 +155,14 @@ class Scoring:
             "quantiles_score": np.mean(quantiles_scores)
 
         }
-        print(f"\n\n[*] --- RMSE: {round(np.mean(rmses), 3)}")
-        print(f"[*] --- MAE: {round(np.mean(maes), 3)}")
-        print(f"[*] --- Interval: {round(np.mean(intervals), 3)}")
-        print(f"[*] --- Coverage: {round(np.mean(coverages), 3)}")
-        print(f"[*] --- Quantiles score: {round(np.mean(quantiles_scores), 3)}")
+        self._print("\n\n==================")
+        self._print("Overall Score")
+        self._print("==================")
+        self._print(f"[*] --- RMSE: {round(np.mean(rmses), 3)}")
+        self._print(f"[*] --- MAE: {round(np.mean(maes), 3)}")
+        self._print(f"[*] --- Interval: {round(np.mean(intervals), 3)}")
+        self._print(f"[*] --- Coverage: {round(np.mean(coverages), 3)}")
+        self._print(f"[*] --- Quantiles score: {round(np.mean(quantiles_scores), 3)}")
 
         print("[✔]")
 
@@ -211,7 +224,32 @@ class Scoring:
             f_score.write(json.dumps(self.scores_dict, indent=4))
 
         print("[✔]")
-        pass
+
+    def write_html(self, content):
+        with open(html_file, 'a', encoding="utf-8") as f:
+            f.write(content)
+
+    def _print(self, content):
+        print(content)
+        self.write_html(content + "<br>")
+
+    def save_figure(self, mu, p16s, p84s, set=0):
+        fig = plt.figure(figsize=(5, 5))
+        # plot horizontal lines from p16 to p84
+        for i, (p16, p84) in enumerate(zip(p16s, p84s)):
+            plt.hlines(y=i, xmin=p16, xmax=p84, colors='b')
+        plt.vlines(x=mu, ymin=0, ymax=len(p16s), colors='r', linestyles='dashed', label="true $\mu$")
+        plt.xlabel('mu')
+        plt.ylabel('psuedo-experiments')
+        plt.title(f'mu distribution - Set {set}')
+        plt.legend()
+
+        buf = io.BytesIO()
+        fig.savefig(buf, format='png')
+        buf.seek(0)
+        fig_b64 = base64.b64encode(buf.getvalue()).decode('ascii')
+
+        self.write_html(f"<img src='data:image/png;base64,{fig_b64}'><br>")
 
 
 if __name__ == "__main__":
