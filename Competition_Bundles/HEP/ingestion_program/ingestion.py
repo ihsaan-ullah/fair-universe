@@ -121,28 +121,20 @@ class Ingestion():
             "weights": train_weights
         }
 
-    def load_test_sets(self):
-        print("[*] Loading Test data")
+    def load_test_set(self, set_index, test_set_index):
 
-        self.test_sets = []
-        # loop over sets (1 value of mu, total 10 sets)
-        for i in range(0, 10):
-            test_sets_per_mu = []
-            # loop over test sets, total 100 test sets
-            for j in range(0, 100):
-                test_data_file = os.path.join(input_dir, 'test', 'set_'+str(i), 'data', 'data_'+str(j)+'.csv')
-                test_data = pd.read_csv(test_data_file)
+        test_data_file = os.path.join(input_dir, 'test', 'set_'+str(set_index), 'data', 'data_'+str(test_set_index)+'.csv')
+        test_data = pd.read_csv(test_data_file)
 
-                test_weights_file = os.path.join(input_dir, 'test', 'set_'+str(i), 'weights', 'data_'+str(j)+'.weights')
-                with open(test_weights_file) as f:
-                    test_weights = np.array(f.read().splitlines(), dtype=float)
+        test_weights_file = os.path.join(input_dir, 'test', 'set_'+str(set_index), 'weights', 'data_'+str(test_set_index)+'.weights')
+        with open(test_weights_file) as f:
+            test_weights = np.array(f.read().splitlines(), dtype=float)
 
-                test_set = {
-                    "data": test_data,
-                    "weights": test_weights
-                }
-                test_sets_per_mu.append(test_set)
-            self.test_sets.append(test_sets_per_mu)
+        test_set = {
+            "data": test_data,
+            "weights": test_weights
+        }
+        return test_set
 
     def init_submission(self):
         print("[*] Initializing Submmited Model")
@@ -157,35 +149,38 @@ class Ingestion():
 
     def predict_submission(self):
         print("[*] Calling predict method of submitted model")
-        self.results_list = []
-        for test_sets_per_mu in self.test_sets:
+
+        num_sets = 10
+        num_test_sets = 100
+        set_shuffled_indices = np.random.permutation(num_sets)
+
+        # loop over sets
+        for set_shuffled_index in set_shuffled_indices:
+
+            test_set_shuffled_indices = np.random.permutation(num_test_sets)
+            test_set_index_mapping = {test_set_shuffled_index: test_set_original_index for test_set_original_index, test_set_shuffled_index in enumerate(test_set_shuffled_indices)}
             mu_hats, delta_mu_hats, p16s, p84s = [], [], [], []
 
-            # Create an array of indices for the test sets
-            num_test_sets = len(test_sets_per_mu)
-            shuffled_indices = np.random.permutation(num_test_sets)
-
-            # Create a mapping between shuffled indices and original indices
-            index_mapping = {shuffled_index: original_index for original_index, shuffled_index in enumerate(shuffled_indices)}
-
-            for shuffled_index in shuffled_indices:
-                # Use the shuffled index to access the test set
-                test_set = test_sets_per_mu[shuffled_index]
-
+            # loop over test sets
+            for test_set_shuffled_index in test_set_shuffled_indices:
+                test_set = self.load_test_set(set_index=set_shuffled_index, test_set_index=test_set_shuffled_index)
                 predicted_dict = self.model.predict(test_set)
                 mu_hats.append(predicted_dict["mu_hat"])
                 delta_mu_hats.append(predicted_dict["delta_mu_hat"])
                 p16s.append(predicted_dict["p16"])
                 p84s.append(predicted_dict["p84"])
 
-            # Reorder the results using the original order of test sets
-            mu_hats = [mu_hats[index_mapping[i]] for i in range(num_test_sets)]
-            delta_mu_hats = [delta_mu_hats[index_mapping[i]] for i in range(num_test_sets)]
-            p16s = [p16s[index_mapping[i]] for i in range(num_test_sets)]
-            p84s = [p84s[index_mapping[i]] for i in range(num_test_sets)]
+                del test_set
+                del predicted_dict
 
-            print(f"\n[*] delta_mu_hats (avg): {np.mean(delta_mu_hats)}")
-            print(f"[*] mu_hats (avg): {np.mean(mu_hats)}")
+            # Reorder the results using the original order of test sets
+            mu_hats = [mu_hats[test_set_index_mapping[i]] for i in range(num_test_sets)]
+            delta_mu_hats = [delta_mu_hats[test_set_index_mapping[i]] for i in range(num_test_sets)]
+            p16s = [p16s[test_set_index_mapping[i]] for i in range(num_test_sets)]
+            p84s = [p84s[test_set_index_mapping[i]] for i in range(num_test_sets)]
+
+            print(f"\n[*] mu_hats (avg): {np.mean(mu_hats)}")
+            print(f"[*] delta_mu_hats (avg): {np.mean(delta_mu_hats)}")
             print(f"[*] p16 (avg): {np.mean(p16s)}")
             print(f"[*] p84 (avg): {np.mean(p84s)}")
 
@@ -195,16 +190,14 @@ class Ingestion():
                 "p16": p16s,
                 "p84": p84s
             }
-            self.results_list.append(result_dict)
 
-    def save_result(self):
-        print("[*] Saving Ingestion result")
-        for i, result_dict in enumerate(self.results_list):
+            self.save_result(set_index=set_shuffled_index, result_dict=result_dict)
 
-            result_file = os.path.join(output_dir, "result_"+str(i)+".json")
-
-            with open(result_file, 'w') as f:
-                f.write(json.dumps(result_dict, indent=4))
+    def save_result(self, set_index, result_dict):
+        print("[*] Saving set result")
+        result_file = os.path.join(output_dir, "result_"+str(set_index)+".json")
+        with open(result_file, 'w') as f:
+            f.write(json.dumps(result_dict, indent=4))
 
 
 if __name__ == '__main__':
@@ -221,9 +214,6 @@ if __name__ == '__main__':
 
     # load test set
     ingestion.load_train_set()
-
-    # load test set
-    ingestion.load_test_sets()
 
     # initialize submission
     ingestion.init_submission()
