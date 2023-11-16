@@ -149,24 +149,25 @@ class Scoring:
             rmses.append(set_rmse)
             maes.append(set_mae)
 
-        overall_interval, overall__coverage, overall__quantiles_score = self.Quantiles_Score(np.array(all_mus), np.array(all_p16s), np.array(all_p84s))
+        overall_interval, overall_coverage, overall_quantiles_score = self.Quantiles_Score(np.array(all_mus), np.array(all_p16s), np.array(all_p84s))
 
         self.scores_dict = {
             "rmse": np.mean(rmses),
             "mae": np.mean(maes),
             "interval": overall_interval,
-            "coverage": overall__coverage,
-            "quantiles_score": overall__quantiles_score
+            "coverage": overall_coverage,
+            "quantiles_score": overall_quantiles_score
 
         }
+
         self._print("\n\n==================")
         self._print("Overall Score")
         self._print("==================")
         self._print(f"[*] --- RMSE: {round(np.mean(rmses), 3)}")
         self._print(f"[*] --- MAE: {round(np.mean(maes), 3)}")
         self._print(f"[*] --- Interval: {round(overall_interval, 3)}")
-        self._print(f"[*] --- Coverage: {round(overall__coverage, 3)}")
-        self._print(f"[*] --- Quantiles score: {round(overall__quantiles_score, 3)}")
+        self._print(f"[*] --- Coverage: {round(overall_coverage, 3)}")
+        self._print(f"[*] --- Quantiles score: {round(overall_quantiles_score, 3)}")
 
         print("[✔]")
 

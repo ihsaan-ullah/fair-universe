@@ -136,11 +136,6 @@ class Model():
         mu_p16 = np.percentile(mu_hat, 16) - delta_mu_hat
         mu_p84 = np.percentile(mu_hat, 84) + delta_mu_hat
 
-        print(f"[*] --- mu_hat: {mu_hat.mean()}")
-        print(f"[*] --- delta_mu_hat: {delta_mu_hat}")
-        print(f"[*] --- p16: {mu_p16}")
-        print(f"[*] --- p84: {mu_p84}")
-
         return {
             "mu_hat": mu_hat.mean(),
             "delta_mu_hat": delta_mu_hat,
