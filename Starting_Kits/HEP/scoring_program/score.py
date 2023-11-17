@@ -13,34 +13,18 @@ import base64
 # Default Directories
 # ------------------------------------------
 # root directory
-module_dir= os.path.dirname(os.path.realpath(__file__))
+module_dir = os.path.dirname(os.path.realpath(__file__))
 root_dir = os.path.dirname(module_dir)
 # Directory to output computed score into
 output_dir = os.path.join(root_dir, "scoring_output")
 # reference data (test labels)
-reference_dir = os.path.join(root_dir, "sample_data/test/")
+reference_dir = os.path.join(root_dir, "sample_data/test")
 # submitted/predicted lables
 prediction_dir = os.path.join(root_dir, "sample_result_submission")
 # score file to write score into
 score_file = os.path.join(output_dir, "scores.json")
 # html file to write score and figures into
 html_file = os.path.join(output_dir, 'detailed_results.html')
-
-# ------------------------------------------
-# Codabench Directories
-# ------------------------------------------
-# # root directory
-# root_dir = "/app"
-# # Directory read predictions and solutions from
-# input_dir = os.path.join(root_dir, "input")
-# # Directory to output computed score into
-# output_dir = os.path.join(root_dir, "output")
-# # reference data (test labels)
-# reference_dir = os.path.join(input_dir, 'ref')  # Ground truth data
-# # submitted/predicted labels
-# prediction_dir = os.path.join(input_dir, 'res')
-# # score file to write score into
-# score_file = os.path.join(output_dir, 'scores.json')
 
 
 class Scoring:
@@ -106,9 +90,9 @@ class Scoring:
     def compute_scores(self):
         print("[*] Computing scores")
 
-        self.write_html("<h1>Detailed results</h1>")
         # loop over ingestion results
-        rmses, maes, intervals, coverages, quantiles_scores = [], [], [], [], []
+        rmses, maes = [], []
+        all_p16s, all_p84s, all_mus = [], [], []
         for i, (ingestion_result, test_settings) in enumerate(zip(self.ingestion_results, self.test_settings)):
 
             # just get the first test set mu
@@ -117,6 +101,10 @@ class Scoring:
             delta_mu_hats = ingestion_result["delta_mu_hats"]
             p16s = ingestion_result["p16"]
             p84s = ingestion_result["p84"]
+
+            all_mus.extend(np.repeat(mu, len(p16s)))
+            all_p16s.extend(p16s)
+            all_p84s.extend(p84s)
 
             set_rmses, set_maes = [], []
             for mu_hat, delta_mu_hat in zip(mu_hats, delta_mu_hats):
@@ -136,31 +124,31 @@ class Scoring:
             self._print(f"Coverage: {set_coverage}")
             self._print(f"Quantiles Score: {set_quantiles_score}")
 
-            self.save_figure(mu=mu, p16s=p16s, p84s=p84s, set=i)
+            self.save_figure(mu=np.mean(mu_hats), p16s=p16s, p84s=p84s, set=i)
 
             # Save set scores in lists
             rmses.append(set_rmse)
             maes.append(set_mae)
-            intervals.append(set_interval)
-            coverages.append(set_coverage)
-            quantiles_scores.append(set_quantiles_score)
+
+        overall_interval, overall_coverage, overall_quantiles_score = self.Quantiles_Score(np.array(all_mus), np.array(all_p16s), np.array(all_p84s))
 
         self.scores_dict = {
             "rmse": np.mean(rmses),
             "mae": np.mean(maes),
-            "interval": np.mean(intervals),
-            "coverage": np.mean(coverages),
-            "quantiles_score": np.mean(quantiles_scores)
+            "interval": overall_interval,
+            "coverage": overall_coverage,
+            "quantiles_score": overall_quantiles_score
 
         }
+
         self._print("\n\n==================")
         self._print("Overall Score")
         self._print("==================")
         self._print(f"[*] --- RMSE: {round(np.mean(rmses), 3)}")
         self._print(f"[*] --- MAE: {round(np.mean(maes), 3)}")
-        self._print(f"[*] --- Interval: {round(np.mean(intervals), 3)}")
-        self._print(f"[*] --- Coverage: {round(np.mean(coverages), 3)}")
-        self._print(f"[*] --- Quantiles score: {round(np.mean(quantiles_scores), 3)}")
+        self._print(f"[*] --- Interval: {round(overall_interval, 3)}")
+        self._print(f"[*] --- Coverage: {round(overall_coverage, 3)}")
+        self._print(f"[*] --- Quantiles score: {round(overall_quantiles_score, 3)}")
 
         print("[✔]")
 
@@ -236,7 +224,7 @@ class Scoring:
         # plot horizontal lines from p16 to p84
         for i, (p16, p84) in enumerate(zip(p16s, p84s)):
             plt.hlines(y=i, xmin=p16, xmax=p84, colors='b')
-        plt.vlines(x=mu, ymin=0, ymax=len(p16s), colors='r', linestyles='dashed', label="true $\mu$")
+        plt.vlines(x=mu, ymin=0, ymax=len(p16s), colors='r', linestyles='dashed', label="average $\mu$")
         plt.xlabel('mu')
         plt.ylabel('psuedo-experiments')
         plt.title(f'mu distribution - Set {set}')

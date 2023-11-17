@@ -5,7 +5,6 @@ import pandas as pd
 from math import sqrt, log
 from xgboost import XGBRegressor
 from sklearn.utils import shuffle
-from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.multioutput import MultiOutputRegressor
@@ -111,18 +110,12 @@ class Model():
                 - p84
         """
 
-        print("[*] - Testing")
         test_df = test_set['data']
         test_df = self.scaler.transform(test_df)
         Y_hat_test = self._predict(test_df, self.best_theta)
 
-        print("[*] - Computing Test result")
         weights_train = self.train_set["weights"].copy()
         weights_test = test_set["weights"].copy()
-
-        print(f"[*] --- total weight test: {weights_test.sum()}") 
-        print(f"[*] --- total weight train: {weights_train.sum()}")
-        print(f"[*] --- total weight mu_cals_set: {self.mu_calc_set['weights'].sum()}")
 
         # get n_roi
         n_roi = self.N_calc_2(weights_test[Y_hat_test == 1])
@@ -136,11 +129,6 @@ class Model():
         mu_p16 = np.percentile(mu_hat, 16) - delta_mu_hat
         mu_p84 = np.percentile(mu_hat, 84) + delta_mu_hat
 
-        print(f"[*] --- mu_hat: {mu_hat.mean()}")
-        print(f"[*] --- delta_mu_hat: {delta_mu_hat}")
-        print(f"[*] --- p16: {mu_p16}")
-        print(f"[*] --- p84: {mu_p84}")
-
         return {
             "mu_hat": mu_hat.mean(),
             "delta_mu_hat": delta_mu_hat,
@@ -149,7 +137,7 @@ class Model():
         }
 
     def _init_model(self):
-        print("[*] - Intialize Baseline Model (LGBM bases Uncertainty Estimator Model)")
+        print("[*] - Intialize Baseline Model (XGBoostRegressor)")
 
         xgb = XGBRegressor(learning_rate=0.05, n_estimators=100)
         self.model = MultiOutputRegressor(xgb)
@@ -296,21 +284,12 @@ class Model():
         print("[*] --- Training Model")
         train_tes_data = self.scaler.fit_transform(train_tes_data)
 
-        print("[*] --- shape of train tes data", train_tes_data.shape)
-
         self._fit(train_tes_data, tes_label, weights_train)
 
         print("[*] --- Predicting Train set")
         self.train_set['predictions'] = (self.train_set['data'], self.best_theta)
 
         self.train_set['score'] = self._return_score(self.train_set['data'])
-
-        auc_train = roc_auc_score(
-            y_true=self.train_set['labels'],
-            y_score=self.train_set['score'],
-            sample_weight=self.train_set['weights']
-        )
-        print(f"[*] --- AUC train : {auc_train}")
 
     def _fit(self, X, y, w):
         print("[*] --- Fitting Model")
@@ -354,34 +333,6 @@ class Model():
         if self.gamma_roi == 0:
             self.gamma_roi = EPSILON
 
-    def amsasimov_x(self, s, b):
-        '''
-        This function calculates the Asimov crossection significance for a given number of signal and background events.
-        Parameters: s (float) - number of signal events
-
-        Returns:    float - Asimov crossection significance
-        '''
-
-        if b <= 0 or s <= 0:
-            return 0
-        try:
-            return s/sqrt(s+b)
-        except ValueError:
-            print(1+float(s)/b)
-            print(2*((s+b)*log(1+float(s)/b)-s))
-        # return s/sqrt(s+b)
-
-    def del_mu_stat(self, s, b):
-        '''
-        This function calculates the statistical uncertainty on the signal strength.
-        Parameters: s (float) - number of signal events
-                    b (float) - number of background events
-
-        Returns:    float - statistical uncertainty on the signal strength
-
-        '''
-        return (np.sqrt(s + b)/s)
-
     def get_meta_validation_set(self):
 
         meta_validation_data = []
@@ -402,7 +353,6 @@ class Model():
     def _choose_theta(self):
 
         print("[*] Choose best theta")
-
         meta_validation_set = self.get_meta_validation_set()
         theta_sigma_squared = []
 
@@ -468,16 +418,10 @@ class Model():
             Score_train = self.train_set["score"]
             Score_valid = valid_set["score"]
 
-            auc_valid = roc_auc_score(y_true=valid_set["labels"], y_score=Score_valid,sample_weight=valid_set['weights'])
-            print(f"\n[*] --- AUC validation : {auc_valid} --- tes : {valid_set['tes']}")
-
             # print(f"[*] --- PRI_had_pt : {valid_set['had_pt']}")
             # del Score_valid
             weights_train = self.train_set["weights"].copy()
             weights_valid = valid_set["weights"].copy()
-
-            print(f'[*] --- total weights train: {weights_train.sum()}')
-            print(f'[*] --- total weights valid: {weights_valid.sum()}')
 
             signal_valid = weights_valid[Y_valid == 1]
             background_valid = weights_valid[Y_valid == 0]
@@ -488,21 +432,12 @@ class Model():
             signal = signal_valid[Y_hat_valid_signal == 1].sum()
             background = background_valid[Y_hat_valid_bkg == 1].sum()
 
-            significance = self.amsasimov_x(signal,background)
-            print(f"[*] --- Significance : {significance}")
-
-            delta_mu_stat = self.del_mu_stat(signal,background)
-            print(f"[*] --- delta_mu_stat : {delta_mu_stat}")
-
             # get n_roi
             n_roi = self.N_calc_2(weights_valid[Y_hat_valid == 1])
 
             mu_hat = ((n_roi - self.beta_roi)/self.gamma_roi).mean()
             # get region of interest
             nu_roi = self.beta_roi + self.gamma_roi
-
-            print(f'[*] --- number of events in roi validation {n_roi}')
-            print(f'[*] --- number of events in roi train {nu_roi}')
 
             gamma_roi = self.gamma_roi
 
@@ -517,8 +452,6 @@ class Model():
             delta_mu_hat = np.abs(valid_set["settings"]["ground_truth_mu"] - mu_hat)
 
             self.validation_delta_mu_hats.append(delta_mu_hat)
-
-            print(f"[*] --- nu_roi: {nu_roi} --- n_roi: {n_roi} --- beta_roi: {beta_roi} --- gamma_roi: {gamma_roi}")
 
             print(f"[*] --- mu: {np.round(valid_set['settings']['ground_truth_mu'], 4)} --- mu_hat: {np.round(mu_hat, 4)} --- delta_mu_hat: {np.round(delta_mu_hat, 4)}")
 

@@ -7,6 +7,7 @@ import os
 import pandas as pd
 from datetime import datetime as dt
 import json
+from itertools import product
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -26,19 +27,6 @@ program_dir = os.path.join(root_dir, "ingestion_program")
 # Directory to read submitted submissions from
 submission_dir = os.path.join(root_dir, "sample_code_submission")
 
-# ------------------------------------------
-# Codabench Directories
-# ------------------------------------------
-# # Root directory
-# root_dir = "/app"
-# # Input data directory to read training and test data from
-# input_dir = os.path.join(root_dir, "input_data")
-# # Output data directory to write predictions to
-# output_dir = os.path.join(root_dir, "output")
-# # Program directory
-# program_dir = os.path.join(root_dir, "program")
-# # Directory to read submitted submissions from
-# submission_dir = os.path.join(root_dir, "ingested_program")
 
 path.append(input_dir)
 path.append(output_dir)
@@ -121,28 +109,20 @@ class Ingestion():
             "weights": train_weights
         }
 
-    def load_test_sets(self):
-        print("[*] Loading Test data")
+    def load_test_set(self, set_index, test_set_index):
 
-        self.test_sets = []
-        # loop over sets (1 value of mu, total 10 sets)
-        for i in range(0, 10):
-            test_sets_per_mu = []
-            # loop over test sets, total 100 test sets
-            for j in range(0, 100):
-                test_data_file = os.path.join(input_dir, 'test', 'set_'+str(i), 'data', 'data_'+str(j)+'.csv')
-                test_data = pd.read_csv(test_data_file)
+        test_data_file = os.path.join(input_dir, 'test', 'set_'+str(set_index), 'data', 'data_'+str(test_set_index)+'.csv')
+        test_data = pd.read_csv(test_data_file)
 
-                test_weights_file = os.path.join(input_dir, 'test', 'set_'+str(i), 'weights', 'data_'+str(j)+'.weights')
-                with open(test_weights_file) as f:
-                    test_weights = np.array(f.read().splitlines(), dtype=float)
+        test_weights_file = os.path.join(input_dir, 'test', 'set_'+str(set_index), 'weights', 'data_'+str(test_set_index)+'.weights')
+        with open(test_weights_file) as f:
+            test_weights = np.array(f.read().splitlines(), dtype=float)
 
-                test_set = {
-                    "data": test_data,
-                    "weights": test_weights
-                }
-                test_sets_per_mu.append(test_set)
-            self.test_sets.append(test_sets_per_mu)
+        test_set = {
+            "data": test_data,
+            "weights": test_weights
+        }
+        return test_set
 
     def init_submission(self):
         print("[*] Initializing Submmited Model")
@@ -157,54 +137,54 @@ class Ingestion():
 
     def predict_submission(self):
         print("[*] Calling predict method of submitted model")
-        self.results_list = []
-        for test_sets_per_mu in self.test_sets:
-            mu_hats, delta_mu_hats, p16s, p84s = [], [], [], []
 
-            # Create an array of indices for the test sets
-            num_test_sets = len(test_sets_per_mu)
-            shuffled_indices = np.random.permutation(num_test_sets)
+        # get set indices (0-9)
+        set_indices = np.arange(0, 10)
+        # get test set indices per set (0-99)
+        test_set_indices = np.arange(0, 100)
 
-            # Create a mapping between shuffled indices and original indices
-            index_mapping = {shuffled_index: original_index for original_index, shuffled_index in enumerate(shuffled_indices)}
+        # create a product of set and test set indices all combinations of tuples
+        all_combinations = list(product(set_indices, test_set_indices))
+        # randomly shuffle all combinations of indices
+        np.random.shuffle(all_combinations)
 
-            for shuffled_index in shuffled_indices:
-                # Use the shuffled index to access the test set
-                test_set = test_sets_per_mu[shuffled_index]
+        self.results_dict = {}
+        for set_index, test_set_index in all_combinations:
 
-                predicted_dict = self.model.predict(test_set)
-                mu_hats.append(predicted_dict["mu_hat"])
-                delta_mu_hats.append(predicted_dict["delta_mu_hat"])
-                p16s.append(predicted_dict["p16"])
-                p84s.append(predicted_dict["p84"])
+            test_set = self.load_test_set(set_index=set_index, test_set_index=test_set_index)
+            predicted_dict = self.model.predict(test_set)
+            predicted_dict["test_set_index"] = test_set_index
 
-            # Reorder the results using the original order of test sets
-            mu_hats = [mu_hats[index_mapping[i]] for i in range(num_test_sets)]
-            delta_mu_hats = [delta_mu_hats[index_mapping[i]] for i in range(num_test_sets)]
-            p16s = [p16s[index_mapping[i]] for i in range(num_test_sets)]
-            p84s = [p84s[index_mapping[i]] for i in range(num_test_sets)]
+            print(f"[*] - mu_hat: {predicted_dict['mu_hat']} - delta_mu_hat: {predicted_dict['delta_mu_hat']} - p16: {predicted_dict['p16']} - p84: {predicted_dict['p84']}")
 
-            print(f"\n[*] delta_mu_hats (avg): {np.mean(delta_mu_hats)}")
-            print(f"[*] mu_hats (avg): {np.mean(mu_hats)}")
-            print(f"[*] p16 (avg): {np.mean(p16s)}")
-            print(f"[*] p84 (avg): {np.mean(p84s)}")
+            if set_index not in self.results_dict:
+                self.results_dict[set_index] = []
 
-            result_dict = {
-                "delta_mu_hats": delta_mu_hats,
-                "mu_hats": mu_hats,
-                "p16": p16s,
-                "p84": p84s
-            }
-            self.results_list.append(result_dict)
+            self.results_dict[set_index].append(predicted_dict)
 
     def save_result(self):
-        print("[*] Saving Ingestion result")
-        for i, result_dict in enumerate(self.results_list):
+        print("[*] Saving ingestion result")
 
+        # loop over sets
+        for i in range(0, 10):
+            set_result = self.results_dict[i]
+            set_result.sort(key=lambda x: x['test_set_index'])
+            mu_hats, delta_mu_hats, p16, p84 = [], [], [], []
+            for test_set_dict in set_result:
+                mu_hats.append(test_set_dict["mu_hat"])
+                delta_mu_hats.append(test_set_dict["delta_mu_hat"])
+                p16.append(test_set_dict["p16"])
+                p84.append(test_set_dict["p84"])
+
+            ingestion_result_dict = {
+                "mu_hats": mu_hats,
+                "delta_mu_hats": delta_mu_hats,
+                "p16": p16,
+                "p84": p84,
+            }
             result_file = os.path.join(output_dir, "result_"+str(i)+".json")
-
             with open(result_file, 'w') as f:
-                f.write(json.dumps(result_dict, indent=4))
+                f.write(json.dumps(ingestion_result_dict, indent=4))
 
 
 if __name__ == '__main__':
@@ -221,9 +201,6 @@ if __name__ == '__main__':
 
     # load test set
     ingestion.load_train_set()
-
-    # load test set
-    ingestion.load_test_sets()
 
     # initialize submission
     ingestion.init_submission()
