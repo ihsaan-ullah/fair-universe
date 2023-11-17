@@ -108,7 +108,6 @@ class Scoring:
     def compute_scores(self):
         print("[*] Computing scores")
 
-        self.write_html("<h1>Detailed results</h1>")
         # loop over ingestion results
         rmses, maes = [], []
         all_p16s, all_p84s, all_mus = [], [], []

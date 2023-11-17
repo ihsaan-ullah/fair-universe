@@ -1,4 +1,6 @@
 # Overview 
+***
+
 ## Introduction 
 In 2012, the discovery of the Higgs Boson in the CMS and ATLAS detectors of the Large Hadron Collider (LHC) at CERN in Geneva, Switzerland was a significant milestone in the history of physics. However, despite the validation it provided to the Standard Model (SM), there are still numerous questions in physics that the SM is yet to answer. To uncover some of these mysteries, physicists worldwide are working in different fields. One approach is to study the Higgs Boson and its decay channels in detail, as numerous Beyond Standard Model physics rely on precise measurements of the Higgs decay channel. For the past decade, physicists at CERN and their collaborators have been working on different production and decay channels of the Higgs Boson.
 
@@ -77,18 +79,6 @@ $\Large \hat{\mu} = \frac{N_{ROI} - \beta_{ROI}}{\gamma_{ROI}}$
 
 In the presence of weights, the number of events is given by the sum of weights
 
-$N_{ROI} = \sum_{i = 0}^n w_{test} $ number of events in ROI in the test set
-
-$\nu_{ROI} = \sum_{i = 0}^n w_{train}$ number of events in ROI in training set
-
-$\gamma_{ROI} = \sum_{i = 0}^n w_{train}  \forall i \in {S} $ number of signal events in ROI in training set
-
-$\beta_{ROI} = \sum_{i = 0}^n w_{train}   \forall i \in {B} $ number of Background events in ROI in training set
-
-$\Large \hat{\mu} =  \frac{N_{ROI} - \beta_{ROI}}{\gamma_{ROI}}   $
-
-Alternate formulation of $\mu$
-
 $ w_{pseudo} = Poisson(w_i)$, where $w_i$ the weights of event i 
 
 $N_{pseudo} = \sum_{i = 0}^l w_{pseudo}$ where l is the number of elements in one pseudo dataset
@@ -97,9 +87,9 @@ $N_{ROI_{BS}} = \frac{\sum_{i = 0}^m N_{pseudo}}{m} $  where m is the number of 
 
 $\sigma_{ROI_{BS}} =  \frac{\sum_{i = 0}^m (N_{pseudo} - N_{ROI_{BS}} )^2}{m}$
 
-$\gamma_{ROI} = \sum_{i = 0}^n w_{valid}  \forall i \in {S} $ number of signal events in ROI in Validation set
+$\gamma_{ROI} = \sum_{i = 0}^n w_{eval}  \forall i \in {S} $ number of signal events in ROI in evaluation set
 
-$\beta_{ROI} = \sum_{i = 0}^n w_{valid}   \forall i \in {B} $ number of Background events in ROI in Validation set
+$\beta_{ROI} = \sum_{i = 0}^n w_{eval}   \forall i \in {B} $ number of Background events in ROI in evaluation set
 
 $\Large \hat{\mu} =  \frac{N_{ROI_{BS}} - \beta_{ROI}}{\gamma_{ROI}}   $
 
@@ -125,8 +115,17 @@ Here $\gamma_{ROI}$ and $\beta_{ROI}$ are NOT assumed to be known constants (lik
 
 ## Credits
 ***
+#### Lawrence Berkeley National Laboratory 
+- Benjamin Nachman
+- Chris Harris
+- Elham e Khoda
+- Sascha Diefenbacher
+- Wahid Bhimji
+
+#### ChaLearn
 - Isabelle Guyon
-- David Rousseau
 - Ihsan Ullah
-- Mathis Reymond
+
+#### Université Paris-Saclay
+- David Rousseau
 - Ragansu Chakkappai
