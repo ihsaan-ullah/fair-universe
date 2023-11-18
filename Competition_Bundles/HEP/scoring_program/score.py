@@ -13,7 +13,7 @@ import base64
 # Default Directories
 # ------------------------------------------
 # # root directory
-# module_dir= os.path.dirname(os.path.realpath(__file__))
+# module_dir = os.path.dirname(os.path.realpath(__file__))
 # root_dir = os.path.dirname(module_dir)
 # # Directory to output computed score into
 # output_dir = os.path.join(root_dir, "scoring_output")
@@ -128,7 +128,7 @@ class Scoring:
             for mu_hat, delta_mu_hat in zip(mu_hats, delta_mu_hats):
                 set_rmses.append(self.RMSE_score(mu, mu_hat, delta_mu_hat))
                 set_maes.append(self.MAE_score(mu, mu_hat, delta_mu_hat))
-            set_interval, set_coverage, set_quantiles_score = self.Quantiles_Score(mu, np.array(p16s), np.array(p84s))
+            set_interval, set_coverage, set_quantiles_score = self.Quantiles_Score(np.repeat(mu, len(p16s)), np.array(p16s), np.array(p84s))
 
             set_mae = np.mean(set_maes)
             set_rmse = np.mean(set_rmses)
@@ -224,7 +224,7 @@ class Scoring:
 
         coverage = Coverage(mu, p16, p84)
         interval = Interval(p16, p84)
-        score = (interval + eps) * f(coverage, n=mu.shape[0])
+        score = (interval + eps) * f(coverage, n_tries=mu.shape[0])
         return interval, coverage, score
 
     def write_scores(self):
