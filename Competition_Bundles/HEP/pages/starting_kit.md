@@ -11,6 +11,8 @@ This sample submission is a real submission with a baseline method that trains o
 
 ### ⬇️ [Sample Submission](https://www.codabench.org/datasets/download/c2bfca36-bf79-4216-bcd9-4dcb2e535484/)
 
+#### ⚠️ Note:
+Participants can submit a pre-trained model zipped together with the `model.py`. It is the participants responsibility to load the pre-trained model in the Model class. In this case participants may want to ignore the train_set provided as input of the Model class.
 
 ## Starting Kit
 We are providing a starting kit as a Google Colab notebook to demonstrate the problem and a solution for it which can be submitted as a submission the competition. You can copy the Colab notebook and make changes as you want.  

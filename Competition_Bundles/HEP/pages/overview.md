@@ -117,10 +117,15 @@ Here $\gamma_{ROI}$ and $\beta_{ROI}$ are NOT assumed to be known constants (lik
 ***
 #### Lawrence Berkeley National Laboratory 
 - Benjamin Nachman
+- Ben Thorne
 - Chris Harris
-- Elham e Khoda
 - Sascha Diefenbacher
+- Steven Farrell
 - Wahid Bhimji
+
+#### University of Washington
+- Elham e Khoda
+- Shih-Chieh Hsu
 
 #### ChaLearn
 - Isabelle Guyon
@@ -129,3 +134,6 @@ Here $\gamma_{ROI}$ and $\beta_{ROI}$ are NOT assumed to be known constants (lik
 #### Université Paris-Saclay
 - David Rousseau
 - Ragansu Chakkappai
+
+#### UC Irvine
+- Aishik Ghosh
