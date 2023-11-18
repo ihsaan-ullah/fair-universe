@@ -110,7 +110,7 @@ class Scoring:
             for mu_hat, delta_mu_hat in zip(mu_hats, delta_mu_hats):
                 set_rmses.append(self.RMSE_score(mu, mu_hat, delta_mu_hat))
                 set_maes.append(self.MAE_score(mu, mu_hat, delta_mu_hat))
-            set_interval, set_coverage, set_quantiles_score = self.Quantiles_Score(mu, np.array(p16s), np.array(p84s))
+            set_interval, set_coverage, set_quantiles_score = self.Quantiles_Score(np.repeat(mu, len(p16s)), np.array(p16s), np.array(p84s))
 
             set_mae = np.mean(set_maes)
             set_rmse = np.mean(set_rmses)
@@ -180,7 +180,7 @@ class Scoring:
 
         return MAE(mu, mu_hat) + MAE2(mu, mu_hat, delta_mu_hat)
 
-    def Quantiles_Score(self, mu, p16, p84, eps=1e-10):
+    def Quantiles_Score(self, mu, p16, p84, eps=1e-3):
 
         def Interval(p16, p84):
             """Compute the average of the intervals defined by vectors p16 and p84."""
@@ -191,16 +191,22 @@ class Scoring:
             return_coverage = np.mean((mu >= p16) & (mu <= p84))
             return return_coverage
 
-        def f(x, a1=1/2.1626297577854667, a2=1/9.765625, b1=0, b2=0.36, c1=1.36, c2=1):
-            """U-shaped function with mn at 0.68 and f(0.68)=1"""
-            if x < 0.68:
-                return a1 / ((x - b1) * (c1 - x) + eps)
-            else:
-                return a2 / ((x - b2) * (c2 - x) + eps)
+        def f(x, n_tries, max_coverage=1e4, one_sigma = 0.6827):
+                sigma68 = np.sqrt(((1-one_sigma)*one_sigma*n_tries))/n_tries
+
+                if (x >= one_sigma-2*sigma68 and x <= one_sigma+2*sigma68):
+                    out = 1
+                elif (x < one_sigma-2*sigma68):
+                    out = 1 + abs((x-(one_sigma-2*sigma68))/sigma68)**4
+                elif (x > one_sigma+2*sigma68):
+                    out = 1 + abs((x-(one_sigma+2*sigma68))/sigma68)**3
+                out = min((out, max_coverage))
+                return out
+
 
         coverage = Coverage(mu, p16, p84)
         interval = Interval(p16, p84)
-        score = (interval + eps) * f(coverage)
+        score = (interval + eps) * f(coverage, n_tries=mu.shape[0])
         return interval, coverage, score
 
     def write_scores(self):
