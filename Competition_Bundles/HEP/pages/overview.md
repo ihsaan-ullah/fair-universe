@@ -113,6 +113,18 @@ Here $\gamma_{ROI}$ and $\beta_{ROI}$ are NOT assumed to be known constants (lik
 - Submit the downloaded file
 
 
+## How to get Public Data?
+***
+- Go to the "Files" tab
+- Download the "FU HEP Public Training data"
+
+
+## Submissions
+***
+This competition allows code submissions. Participants can submit either of the following:
+- code submission without any trained model
+- code submission with pre-trained model
+
 ## Credits
 ***
 #### Lawrence Berkeley National Laboratory 
