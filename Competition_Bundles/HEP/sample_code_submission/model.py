@@ -126,8 +126,8 @@ class Model():
 
         delta_mu_hat = 2*sigma_mu_hat
 
-        mu_p16 = np.percentile(mu_hat, 16) - delta_mu_hat
-        mu_p84 = np.percentile(mu_hat, 84) + delta_mu_hat
+        mu_p16 = np.percentile(mu_hat, 16)
+        mu_p84 = np.percentile(mu_hat, 84)
 
         return {
             "mu_hat": mu_hat.mean(),
