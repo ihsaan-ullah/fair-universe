@@ -150,8 +150,10 @@ class Model():
         n_cols = self.train_set["data"].shape[1]
 
         self.model = Sequential()
-        self.model.add(Dense(10, input_dim=n_cols, activation='swish'))
-        self.model.add(Dense(10, activation='swish'))
+        self.model.add(Dense(1000, input_dim=n_cols, activation='swish'))
+        self.model.add(Dense(1000, activation='swish'))
+        self.model.add(Dense(1000, activation='swish'))
+        self.model.add(Dense(1000, activation='swish'))
         self.model.add(Dense(2, activation='linear'))
         self.model.compile(loss='mean_squared_error', optimizer='adam')
 
@@ -283,7 +285,7 @@ class Model():
 
     def _fit(self, X, y, w):
         print("[*] --- Fitting Model")
-        self.model.fit(X, y, sample_weight=w, epochs=5, batch_size=1000, verbose=0)
+        self.model.fit(X, y, sample_weight=w, epochs=100, batch_size=1000, verbose=0)
 
     def _return_score(self, X):
         y_predict = self.model.predict(X)[:, 1]

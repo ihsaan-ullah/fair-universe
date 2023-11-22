@@ -10,6 +10,9 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.multioutput import MultiOutputRegressor
 
+
+from keras.models import Sequential
+from keras.layers import Dense,Dropout
 # ------------------------------
 # Absolute path to submission dir
 # ------------------------------
@@ -151,11 +154,19 @@ class Model():
     def _init_model(self):
         print("[*] - Intialize Baseline Model (XBM bases Uncertainty Estimator Model)")
 
-        self.model = XGBClassifier(
-            tree_method="hist",
-            use_label_encoder=False,
-            eval_metric=['logloss', 'auc']
-        )
+        n_cols = self.train_set["data"].shape[1]
+        dropout_fraction = 0.15
+        self.model = Sequential()
+        self.model.add(Dense(1000, input_dim=n_cols, activation='swish'))
+        self.model.add(Dense(1000, activation='swish'))
+        self.model.add(Dropout(dropout_fraction))
+        self.model.add(Dense(1000, activation='swish'))
+        self.model.add(Dropout(dropout_fraction))
+        self.model.add(Dense(1000, activation='swish'))
+        self.model.add(Dropout(dropout_fraction))
+        self.model.add(Dense(1, activation='sigmoid'))
+        self.model.compile(loss='mean_squared_error', optimizer='adam')
+
     def _generate_validation_sets(self):
         print("[*] - Generating Validation sets")
 
@@ -281,10 +292,10 @@ class Model():
 
     def _fit(self, X, y, w):
         print("[*] --- Fitting Model")
-        self.model.fit(X, y, sample_weight=w)
+        self.model.fit(X, y, sample_weight=w,epochs=100, batch_size=256)
 
     def _return_score(self, X):
-        y_predict = self.model.predict(X)
+        y_predict = self.model.predict(X).ravel()
         return y_predict
 
     def _predict(self, X, theta):
@@ -292,7 +303,7 @@ class Model():
         predictions = np.where(Y_predict > theta, 1, 0)
         return predictions
 
-    def N_calc_2(self, weights, n=1000):
+    def N_calc_2(self, weights, n=10000):
         total_weights = []
         for i in range(n):
             bootstrap_weights = bootstrap(weights=weights, seed=42+i)

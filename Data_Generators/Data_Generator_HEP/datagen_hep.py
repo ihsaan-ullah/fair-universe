@@ -1,4 +1,4 @@
-from systematics import Systematics
+from systematics import Systematics,postprocess,DER_data
 from bootstrap import bootstrap_data
 
 import pandas as pd
@@ -10,6 +10,10 @@ warnings.filterwarnings("ignore")
 
 
 root_dir = os.path.dirname(os.path.realpath(__file__))
+parent_dir = os.path.dirname(root_dir)
+write_dir = os.path.join(parent_dir, 'Datagenerator_no_sys')
+
+
 
 
 # Load the CSV file
@@ -17,7 +21,7 @@ def dataGenerator(verbose=0):
 
     print('root - dir', root_dir)
     # Put reference_data.csv in the same dir as the datagen_hep.py
-    csv_file_path = os.path.join(root_dir, 'reference_data.csv')
+    csv_file_path = os.path.join(root_dir, 'FU_challenge_2023_FullData.csv')
     df = pd.read_csv(csv_file_path)
 
     # Remove the "label" and "weights" columns from the data
@@ -26,7 +30,6 @@ def dataGenerator(verbose=0):
     flag = df.pop('Process_flag')
     label = df.pop('Label')
     weights = df.pop('Weight')
-    entry = df.pop('entry')
     eventid = df.pop('EventId')
     df.pop('PRI_lep_charge')
     df.pop('PRI_had_charge')    
@@ -56,19 +59,19 @@ def dataGenerator(verbose=0):
     train_df, test_df, train_label, test_label, train_weights, test_weights = train_test_split(df, label, weights, test_size=0.2)
 
     # Create directories to store the label and weight files
-    train_label_path =  os.path.join(root_dir, 'input_data','train','labels')
+    train_label_path =  os.path.join(write_dir, 'input_data','train','labels')
     if not os.path.exists(train_label_path):
         os.makedirs(train_label_path)
 
-    train_weights_path =  os.path.join(root_dir, 'input_data','train','weights')
+    train_weights_path =  os.path.join(write_dir, 'input_data','train','weights')
     if not os.path.exists(train_weights_path):
         os.makedirs(train_weights_path)
 
-    train_data_path =  os.path.join(root_dir, 'input_data','train','data')
+    train_data_path =  os.path.join(write_dir, 'input_data','train','data')
     if not os.path.exists(train_data_path):
         os.makedirs(train_data_path)
 
-    train_settings_path =  os.path.join(root_dir, 'input_data','train','settings')
+    train_settings_path =  os.path.join(write_dir, 'input_data','train','settings')
     if not os.path.exists(train_settings_path):
         os.makedirs(train_settings_path)
 
@@ -97,6 +100,19 @@ def dataGenerator(verbose=0):
     with open(Settings_file_path, 'w') as json_file:
         json.dump(train_settings, json_file, indent=4)
 
+    train_df['Weight'] = train_weights
+    train_df['Label'] = train_label
+
+    train_df = postprocess(train_df)
+
+    train_weights = train_df.pop('Weight')
+    train_label = train_df.pop('Label')
+    train_df = train_df.round(3)
+    print (f"[*] --- Signal in Training set " , np.sum(train_weights[train_label==1]))
+    print (f"[*] --- Background in Training set" , np.sum(train_weights[train_label==0]))
+    train_data_path = os.path.join(train_data_path, 'data.csv')
+    train_df.to_csv(train_data_path, index=False)
+
     # Save the label and weight files for the training set
     train_label_path =  os.path.join(train_label_path, 'data.labels')
     train_label.to_csv(train_label_path, index=False, header=False)
@@ -123,19 +139,19 @@ def dataGenerator(verbose=0):
             print(f'[*] --- mu = {mu}')
 
 
-        reference_label_path =  os.path.join(root_dir, 'reference_data',f'set_{i}','labels')
+        reference_label_path =  os.path.join(write_dir, 'reference_data',f'set_{i}','labels')
         if not os.path.exists(reference_label_path):
             os.makedirs(reference_label_path)
 
-        reference_settings_path =  os.path.join(root_dir, 'reference_data',f'set_{i}','settings')
+        reference_settings_path =  os.path.join(write_dir, 'reference_data',f'set_{i}','settings')
         if not os.path.exists(reference_settings_path):
             os.makedirs(reference_settings_path)
 
-        test_weights_path =  os.path.join(root_dir, 'input_data','test',f'set_{i}','weights')
+        test_weights_path =  os.path.join(write_dir, 'input_data','test',f'set_{i}','weights')
         if not os.path.exists(test_weights_path):
             os.makedirs(test_weights_path)
 
-        test_data_path =  os.path.join(root_dir, 'input_data','test',f'set_{i}','data')
+        test_data_path =  os.path.join(write_dir, 'input_data','test',f'set_{i}','data')
         if not os.path.exists(test_data_path):
             os.makedirs(test_data_path)
 
@@ -161,11 +177,11 @@ def dataGenerator(verbose=0):
 
 
 
-            bootstrap_test_data = bootstrap_data(data = test_df, weights = test_weights_set, label =  test_label, n = 20000, seed=42 + j) 
+            bootstrap_test_data = bootstrap_data(data = test_df, weights = test_weights_set, label =  test_label, n = 100_000, seed=42 + j) 
 
             test_df_bs = bootstrap_test_data['data']
-            test_weights_bs = bootstrap_test_data['weights']
-            test_label_bs = bootstrap_test_data['label']
+            test_df_bs['Weight'] = bootstrap_test_data['weights']
+            test_df_bs['Label'] = bootstrap_test_data['label']
 
 
             #adding systematics to the test set
@@ -183,6 +199,10 @@ def dataGenerator(verbose=0):
             verbose=verbose,
             tes=tes
             ).data
+
+            test_weights_bs = data_syst.pop('Weight')
+            test_label_bs = data_syst.pop('Label')
+
 
             data_syst = data_syst.round(3)
 
@@ -228,11 +248,7 @@ def dataGenerator(verbose=0):
 
 
     # Save the training set as a CSV file
-    train_data_path = os.path.join(train_data_path, 'data.csv')
-    train_df.to_csv(train_data_path, index=False)
 
-    if verbose > 0:
-        print ("Shape of train set : ",np.shape(train_df)) 
 
 
 
