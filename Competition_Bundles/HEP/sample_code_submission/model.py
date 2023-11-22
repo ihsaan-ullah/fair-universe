@@ -202,14 +202,21 @@ class Model():
 
         self.validation_sets = []
         # Loop 10 times to generate 10 validation sets
-        for i in range(0, 10):
+        for i in range(0, 20):
             tes = round(np.random.uniform(0.9, 1.10), 2)
             # apply systematics
+            valid_df_temp = valid_df.copy()
+            valid_df_temp["weights"] = valid_weights
+            valid_df_temp["labels"] = valid_labels
+
             valid_with_systematics_temp = self.systematics(
                 data=valid_df,
                 tes=tes
             ).data
 
+            valid_with_systematics_temp = valid_with_systematics_temp.round(3)
+            valid_labels = valid_with_systematics_temp.pop('labels')
+            valid_weights = valid_with_systematics_temp.pop('weights')
             valid_with_systematics = valid_with_systematics_temp.copy()
 
             self.validation_sets.append({
@@ -220,6 +227,8 @@ class Model():
                 "tes": tes
             })
             del valid_with_systematics_temp
+            del valid_df_temp
+
 
         train_signal_weights = train_weights[train_labels == 1].sum()
         train_background_weights = train_weights[train_labels == 0].sum()
