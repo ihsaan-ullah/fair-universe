@@ -1,4 +1,4 @@
-from systematics import Systematics,postprocess,DER_data
+from systematics import Systematics
 from bootstrap import bootstrap_data
 
 import pandas as pd
@@ -11,7 +11,7 @@ warnings.filterwarnings("ignore")
 
 root_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.dirname(root_dir)
-write_dir = os.path.join(parent_dir, 'Datagenerator_no_sys')
+write_dir = os.path.join(parent_dir, 'Datagenerator_syst')
 
 
 
@@ -100,13 +100,7 @@ def dataGenerator(verbose=0):
     with open(Settings_file_path, 'w') as json_file:
         json.dump(train_settings, json_file, indent=4)
 
-    train_df['Weight'] = train_weights
-    train_df['Label'] = train_label
-
-    train_df = postprocess(train_df)
-
-    train_weights = train_df.pop('Weight')
-    train_label = train_df.pop('Label')
+    # Save the training set as a CSV file
     train_df = train_df.round(3)
     print (f"[*] --- Signal in Training set " , np.sum(train_weights[train_label==1]))
     print (f"[*] --- Background in Training set" , np.sum(train_weights[train_label==0]))
