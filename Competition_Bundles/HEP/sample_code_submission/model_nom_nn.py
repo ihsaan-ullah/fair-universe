@@ -258,20 +258,19 @@ class Model():
                 tes=tes
             ).data
 
-            valid_labels = valid_with_systematics_temp.pop('labels')
-            valid_weights = valid_with_systematics_temp.pop('weights')
+            valid_labels_temp = valid_with_systematics_temp.pop('labels')
+            valid_weights_temp = valid_with_systematics_temp.pop('weights')
             valid_with_systematics = valid_with_systematics_temp.copy()
 
             self.validation_sets.append({
                 "data": valid_with_systematics,
-                "labels": valid_labels,
-                "weights": valid_weights,
+                "labels": valid_labels_temp,
+                "weights": valid_weights_temp,
                 "settings": self.train_set["settings"],
                 "tes": tes
             })
             del valid_with_systematics_temp
             del valid_df_temp
-
 
         train_signal_weights = train_weights[train_labels == 1].sum()
         train_background_weights = train_weights[train_labels == 0].sum()

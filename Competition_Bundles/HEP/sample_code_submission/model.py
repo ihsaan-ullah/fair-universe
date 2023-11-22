@@ -202,7 +202,7 @@ class Model():
 
         mu_calc_set_weights = mu_calc_set_df.pop('weights')
         mu_calc_set_labels = mu_calc_set_df.pop('labels')
-        
+
 
 
         self.mu_calc_set = {
@@ -225,14 +225,14 @@ class Model():
                 tes=tes
             ).data
 
-            valid_labels = valid_with_systematics_temp.pop('labels')
-            valid_weights = valid_with_systematics_temp.pop('weights')
+            valid_labels_temp = valid_with_systematics_temp.pop('labels')
+            valid_weights_temp = valid_with_systematics_temp.pop('weights')
             valid_with_systematics = valid_with_systematics_temp.copy()
 
             self.validation_sets.append({
                 "data": valid_with_systematics,
-                "labels": valid_labels,
-                "weights": valid_weights,
+                "labels": valid_labels_temp,
+                "weights": valid_weights_temp,
                 "settings": self.train_set["settings"],
                 "tes": tes
             })
