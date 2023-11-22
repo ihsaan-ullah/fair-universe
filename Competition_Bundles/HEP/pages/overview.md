@@ -4,50 +4,11 @@
 ## Introduction 
 In 2012, the Nobel-prize-winning discovery of the Higgs Boson by the ATLAS and CMS experiments at the Large Hadron Collider (LHC) at CERN in Geneva, Switzerland was a major milestone in the history of physics. However, despite the validation it provided of the Standard Model of particle physics (SM), there are still numerous questions in physics that the SM does not answer. One promissing approach to uncover some of these mysteries is to study the Higgs Boson in great detail, as the rate of Higgs Boson production and its decay properties may hold the secrets to the nature of dark matter and other phenomena not explained by the SM.
 
-The LHC collides protons together at high energy and at a high rate. Each proton collision produces many outgoing particles. A small fraction of the time, a Higgs boson is produced and then decays into other particles that can be detected by experiments such as ATLAS and CMS. In this challenge we focus on the Higgs boson decay to two $\tau$ particles which themselves further decay into other particles before being detected. Measuring this “signal” of interest is complicated by the presence of “background” decays which can produce the same detector signatures. The aim of this challenge is to determine methods to improve the precision of the Higgs boson production rate (“signal strength” or $\mu$), which is defined below, based on feature variables that are derived from simulated measurements made in an ATLAS-like detector. This builds on a previous Kaggle challenge but focuses directly on the statistical inference, where the goal is not only to isolate Higgs boson events (previous challenge), but to determine the precision on $\mu$ in the presence of uncertainty. Technical details on the signal and background decay channels and features of the dataset are given below, but participants not familiar with particle physics can consider any of these simply as input feature variables for their proposed method except the EventId, Weight and Label (which is essentially the target).
+The LHC collides protons together at high energy and at a high rate. Each proton collision produces many outgoing particles. A small fraction of the time, a Higgs boson is produced and then decays into other particles that can be detected by experiments such as ATLAS and CMS. In this challenge we focus on the Higgs boson decay to two $\tau$ particles which themselves further decay into other particles before being detected. Measuring this “signal” of interest is complicated by the presence of “background” decays which can produce the same detector signatures. The aim of this challenge is to determine methods to improve the precision of the Higgs boson production rate (“signal strength” or $\mu$), which is defined below, based on feature variables that are derived from simulated measurements made in an ATLAS-like detector. This builds on a previous [Kaggle challenge](https://www.kaggle.com/c/higgs-boson) but focuses directly on the statistical inference, where the goal is not only to isolate Higgs boson events (previous challenge), but to determine the precision on $\mu$ in the presence of uncertainty. Technical details on the signal and background decay channels and features of the dataset are given below, but participants not familiar with particle physics can consider any of these simply as input feature variables for their proposed method except the EventId, Weight and Label (which is essentially the target).
 
 ## Problem Setting
 ***
 The objective of this challenge is to improve the signal strength of the Higgs boson decay, specifically in the $H \rightarrow \tau \tau$ decay mode and in the 1 lepton 1 hadron decay channel and in the presence of the background $Z \rightarrow \tau \tau$ process. Additionally, there are systematic uncertainties, specifically in this dataset applied to the Tau Energy Scale (TES).
-
-**The following are the features in this data set.**
-
-|     | Variable                     | Description                                                                                       |
-| --- | ---------------------------- | ------------------------------------------------------------------------------------------------- |
-| 1.  | EventId                      | A unique integer identifier of the event. {should **NOT** be used for training} |
-| 2.  | DER_mass_transverse_met_lep  | The transverse mass between the missing transverse energy and the lepton.                         |
-| 3.  | DER_mass_vis                 | The invariant mass of the hadronic tau and the lepton.                                           |
-| 4.  | DER_pt_h                     | The modulus of the vector sum of the transverse momentum of the hadronic tau, the lepton and the missing transverse energy vector. |
-| 5.  | DER_deltaeta_jet_jet         | The absolute value of the pseudorapidity separation between the two jets (undefined if PRI_jet_num ≤ 1). |
-| 6.  | DER_mass_jet_jet             | The invariant mass of the two jets (undefined if PRI_jet_num ≤ 1).                                |
-| 7.  | DER_prodeta_jet_jet          | The product of the pseudorapidities of the two jets (undefined if PRI_jet_num ≤ 1).              |
-| 8.  | DER_deltar_had_lep           | The R separation between the hadronic tau and the lepton.                                        |
-| 9. | DER_pt_tot                   | The modulus of the vector sum of the missing transverse momenta and the transverse momenta of the hadronic tau, the lepton, the leading jet (if PRI_jet_num ≥ 1) and the subleading jet (if PRI_jet_num = 2) (but not of any additional jets). |
-| 10. | DER_sum_pt                   | The sum of the moduli of the transverse momenta of the hadronic tau, the lepton, the leading jet (if PRI_jet_num ≥ 1) and the subleading jet (if PRI_jet_num = 2) and the other jets (if PRI_jet_num = 3). |
-| 11. | DER_pt_ratio_lep_tau         | The ratio of the transverse momenta of the lepton and the hadronic tau.                           |
-| 12. | DER_met_phi_centrality       | The centrality of the azimuthal angle of the missing transverse energy vector w.r.t. the hadronic tau and the lepton. |
-| 13. | DER_lep_eta_centrality       | The centrality of the pseudorapidity of the lepton w.r.t. the two jets (undefined if PRI_jet_num ≤ 1). |
-| 14. | Eletron Flag                 | 1 if it is an electron 0 if it not.                                                               |
-| 15. | muon Flag                    | 1 if it is a muon 0 if it not.                                                                   |
-| 16. | PRI_had_pt                   | The transverse momentum $\sqrt{{p_x}^2 + {p_x}^2}$ of the hadronic tau.                          |
-| 17. | PRI_had_eta                  | The pseudorapidity $\eta$ of the hadronic tau.                                                    |
-| 18. | PRI_had_phi                  | The azimuth angle $\phi$ of the hadronic tau.                                                     |
-| 19. | PRI_lep_pt                   | The transverse momentum $\sqrt{{p_x}^2 + {p_x}^2}$ of the lepton (electron or muon).             |
-| 20. | PRI_lep_eta                  | The pseudorapidity $\eta$ of the lepton.                                                           |
-| 21. | PRI_lep_phi                  | The azimuth angle $\phi$ of the lepton.                                                            |
-| 22. | PRI_met                      | The missing transverse energy $\overrightarrow{E}^{miss}_{T}$.                                    |
-| 23. | PRI_met_phi                  | The azimuth angle $\phi$ of the missing transverse energy.                                        |
-| 24. | PRI_jet_num                  | The number of jets (integer with a value of 0, 1, 2 or 3; possible larger values have been capped at 3). |
-| 25. | PRI_jet_leading_pt           | The transverse momentum $\sqrt{{p_x}^2 + {p_x}^2}$ of the leading jet, that is the jet with the largest transverse momentum (undefined if PRI_jet_num = 0). |
-| 26. | PRI_jet_leading_eta          | The pseudorapidity $\eta$ of the leading jet (undefined if PRI_jet_num = 0).                     |
-| 27. | PRI_jet_leading_phi          | The azimuth angle $\phi$ of the leading jet (undefined if PRI_jet_num = 0).                      |
-| 28. | PRI_jet_subleading_pt        | The transverse momentum $\sqrt{{p_x}^2 + {p_x}^2}$ of the leading jet, that is, the jet with the second largest transverse momentum (undefined if PRI_jet_num ≤ 1). |
-| 29. | PRI_jet_subleading_eta       | The pseudorapidity $\eta$ of the subleading jet (undefined if PRI_jet_num ≤ 1).                  |
-| 30. | PRI_jet_subleading_phi       | The azimuth angle $\phi$ of the subleading jet (undefined if PRI_jet_num ≤ 1).                   |
-| 31. | PRI_jet_all_pt               | The scalar sum of the transverse momentum of all the jets of the events.                          |
-| 32. | Weight                       | The event weight $w_i$.  {should **NOT** be used for training}                                                                         |
-| 33. | Label                        | The event label $y_i \in \{1,0\}$ (1 for signal, 0 for background). {should **NOT** be used for training}                               |
-
 
 The Large Hadron Collider (LHC) produces high energy events which can be modeled as a Poisson process with an expected arrival rate of $\nu$.Among these high-energy events, physicists search for interesting events that may provide insights into new discoveries. However, most of the events observed are "background" events that are expected and unrelated to new physics. The expected arrival rate of background events, denoted as $\beta$, is well characterized from past experiments and simulations. On the other hand, the arrival rate of signal events, denoted as $\mu \gamma$, is to be measured. Here, $\gamma$ represents the estimated arrival rate of signal events obtained from the Standard Model (SM), which is known to be incomplete. The factor $\mu$ represents the "signal strength" that must be evaluated from the new experiment. All three arrival processes (high energy events, signal, and background) are assumed to be Poisson processes, and their arrival rate expectations are related by the equation $\nu = \beta + \mu \gamma$.
 
@@ -109,12 +70,6 @@ Here $\gamma_{ROI}$ and $\beta_{ROI}$ are NOT assumed to be known constants (lik
 - Download the "Dummy sample submission" or "sample submission"
 - Go to the "My Submissions" tab
 - Submit the downloaded file
-
-
-## How to get Public Data?
-***
-- Go to the "Files" tab
-- Download the "FU HEP Public Training data"
 
 
 ## Submissions
