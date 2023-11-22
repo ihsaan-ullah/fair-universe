@@ -210,7 +210,7 @@ class Model():
             valid_df_temp["labels"] = valid_labels
 
             valid_with_systematics_temp = self.systematics(
-                data=valid_df,
+                data=valid_df_temp,
                 tes=tes
             ).data
 
