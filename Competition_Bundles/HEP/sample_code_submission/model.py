@@ -16,6 +16,7 @@ submissions_dir = os.path.dirname(os.path.abspath(__file__))
 path.append(submissions_dir)
 
 from bootstrap import *
+from systematics import postprocess
 
 # ------------------------------
 # Constants
@@ -69,7 +70,7 @@ class Model():
 
         # Intialize class variables
         self.validation_sets = None
-        self.theta_candidates = np.arange(0.0, 0.99, 0.01)
+        self.theta_candidates = np.arange(0.5, 0.99, 0.01)
         self.best_theta = 0.9
         self.scaler = StandardScaler()
         self.scaler_tes = StandardScaler()
@@ -194,6 +195,16 @@ class Model():
 
         self.eval_set = [(self.train_set['data'], self.train_set['labels']), (valid_df.to_numpy(), valid_labels)]
 
+        mu_calc_set_df = mu_calc_set_df.copy()
+        mu_calc_set_df["weights"] = mu_calc_set_weights
+        mu_calc_set_df["labels"] = mu_calc_set_labels
+        mu_calc_set_df = postprocess(mu_calc_set_df)
+
+        mu_calc_set_weights = mu_calc_set_df.pop('weights')
+        mu_calc_set_labels = mu_calc_set_df.pop('labels')
+        
+
+
         self.mu_calc_set = {
                 "data": mu_calc_set_df,
                 "labels": mu_calc_set_labels,
@@ -214,7 +225,6 @@ class Model():
                 tes=tes
             ).data
 
-            valid_with_systematics_temp = valid_with_systematics_temp.round(3)
             valid_labels = valid_with_systematics_temp.pop('labels')
             valid_weights = valid_with_systematics_temp.pop('weights')
             valid_with_systematics = valid_with_systematics_temp.copy()

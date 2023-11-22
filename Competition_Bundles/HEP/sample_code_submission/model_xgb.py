@@ -17,7 +17,7 @@ submissions_dir = os.path.dirname(os.path.abspath(__file__))
 path.append(submissions_dir)
 
 from bootstrap import *
-
+from systematics import postprocess
 # ------------------------------
 # Constants
 # ------------------------------
@@ -70,7 +70,7 @@ class Model():
 
         # Intialize class variables
         self.validation_sets = None
-        self.theta_candidates = np.arange(0.0, 0.99, 0.01)
+        self.theta_candidates = np.arange(0.5, 0.99, 0.01)
         self.best_theta = 0.5
         self.scaler = StandardScaler()
         self.scaler_tes = StandardScaler()
@@ -149,7 +149,7 @@ class Model():
         }
 
     def _init_model(self):
-        print("[*] - Intialize Baseline Model (XBM bases Uncertainty Estimator Model)")
+        print("[*] - Intialize Baseline Model (XBM Classifier Model)")
 
         self.model = XGBClassifier(
             tree_method="hist",
@@ -180,6 +180,24 @@ class Model():
             shuffle=True,
             stratify=train_labels
         )
+
+        train_df = train_df.copy()
+        train_df["weights"] = train_weights
+        train_df["labels"] = train_labels
+        train_df = postprocess(train_df)
+
+        train_weights = train_df.pop('weights')
+        train_labels = train_df.pop('labels')
+        
+
+        mu_calc_set_df = mu_calc_set_df.copy()
+        mu_calc_set_df["weights"] = mu_calc_set_weights
+        mu_calc_set_df["labels"] = mu_calc_set_labels
+        mu_calc_set_df = postprocess(mu_calc_set_df)
+
+        mu_calc_set_weights = mu_calc_set_df.pop('weights')
+        mu_calc_set_labels = mu_calc_set_df.pop('labels')
+
 
         # Calculate the sum of weights for signal and background in the training and validation sets
         train_signal_weights = train_weights[train_labels == 1].sum()
@@ -228,7 +246,6 @@ class Model():
                 tes=tes
             ).data
 
-            valid_with_systematics_temp = valid_with_systematics_temp.round(3)
             valid_labels = valid_with_systematics_temp.pop('labels')
             valid_weights = valid_with_systematics_temp.pop('weights')
             valid_with_systematics = valid_with_systematics_temp.copy()
