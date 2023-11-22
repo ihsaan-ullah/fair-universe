@@ -16,6 +16,7 @@ submissions_dir = os.path.dirname(os.path.abspath(__file__))
 path.append(submissions_dir)
 
 from bootstrap import *
+from systematics import postprocess
 
 # ------------------------------
 # Constants
@@ -69,7 +70,7 @@ class Model():
 
         # Intialize class variables
         self.validation_sets = None
-        self.theta_candidates = np.arange(0.0, 0.99, 0.01)
+        self.theta_candidates = np.arange(0.5, 0.99, 0.01)
         self.best_theta = 0.9
         self.scaler = StandardScaler()
         self.scaler_tes = StandardScaler()
@@ -126,8 +127,8 @@ class Model():
 
         delta_mu_hat = 2*sigma_mu_hat
 
-        mu_p16 = np.percentile(mu_hat, 16) - delta_mu_hat
-        mu_p84 = np.percentile(mu_hat, 84) + delta_mu_hat
+        mu_p16 = np.percentile(mu_hat, 16)
+        mu_p84 = np.percentile(mu_hat, 84)
 
         return {
             "mu_hat": mu_hat.mean(),
@@ -194,6 +195,16 @@ class Model():
 
         self.eval_set = [(self.train_set['data'], self.train_set['labels']), (valid_df.to_numpy(), valid_labels)]
 
+        mu_calc_set_df = mu_calc_set_df.copy()
+        mu_calc_set_df["weights"] = mu_calc_set_weights
+        mu_calc_set_df["labels"] = mu_calc_set_labels
+        mu_calc_set_df = postprocess(mu_calc_set_df)
+
+        mu_calc_set_weights = mu_calc_set_df.pop('weights')
+        mu_calc_set_labels = mu_calc_set_df.pop('labels')
+
+
+
         self.mu_calc_set = {
                 "data": mu_calc_set_df,
                 "labels": mu_calc_set_labels,
@@ -202,24 +213,32 @@ class Model():
 
         self.validation_sets = []
         # Loop 10 times to generate 10 validation sets
-        for i in range(0, 10):
+        for i in range(0, 20):
             tes = round(np.random.uniform(0.9, 1.10), 2)
             # apply systematics
+            valid_df_temp = valid_df.copy()
+            valid_df_temp["weights"] = valid_weights
+            valid_df_temp["labels"] = valid_labels
+
             valid_with_systematics_temp = self.systematics(
-                data=valid_df,
+                data=valid_df_temp,
                 tes=tes
             ).data
 
+            valid_labels_temp = valid_with_systematics_temp.pop('labels')
+            valid_weights_temp = valid_with_systematics_temp.pop('weights')
             valid_with_systematics = valid_with_systematics_temp.copy()
 
             self.validation_sets.append({
                 "data": valid_with_systematics,
-                "labels": valid_labels,
-                "weights": valid_weights,
+                "labels": valid_labels_temp,
+                "weights": valid_weights_temp,
                 "settings": self.train_set["settings"],
                 "tes": tes
             })
             del valid_with_systematics_temp
+            del valid_df_temp
+
 
         train_signal_weights = train_weights[train_labels == 1].sum()
         train_background_weights = train_weights[train_labels == 0].sum()
