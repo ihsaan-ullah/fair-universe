@@ -17,6 +17,6 @@ Competition_Bundles/HEP_Scores_Stability/reference_data/
 
 Competition_Bundles/HEP/input_data/
 Competition_Bundles/HEP/reference_data/
-
+Competition_Bundles/HEP/sample_result_submission/*
 
 Competition_Bundles/HEP_Inverted/sample_code_submission/

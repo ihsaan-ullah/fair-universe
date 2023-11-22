@@ -12,7 +12,7 @@ import base64
 # ------------------------------------------
 # Default Directories
 # ------------------------------------------
-# # root directory
+# root directory
 # module_dir = os.path.dirname(os.path.realpath(__file__))
 # root_dir = os.path.dirname(module_dir)
 # # Directory to output computed score into
@@ -218,13 +218,12 @@ class Scoring:
                     out = 1 + abs((x-(one_sigma-2*sigma68))/sigma68)**4
                 elif (x > one_sigma+2*sigma68):
                     out = 1 + abs((x-(one_sigma+2*sigma68))/sigma68)**3
-                out = min((out, max_coverage))
                 return out
 
 
         coverage = Coverage(mu, p16, p84)
         interval = Interval(p16, p84)
-        score = (interval + eps) * f(coverage, n_tries=mu.shape[0])
+        score = -np.log((interval + eps) * f(coverage, n_tries=mu.shape[0]))
         return interval, coverage, score
 
     def write_scores(self):

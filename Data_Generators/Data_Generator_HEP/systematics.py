@@ -778,6 +778,14 @@ def DER_data(data):
     data = f_del_DER(data)
     return data
 
+def postprocess(data):
+
+    data = data.drop(data[data.PRI_had_pt<20].index)
+    data = data.drop(data[data.PRI_lep_pt<26].index)
+    # data = data.drop(data[data.PRI_met>70].index)
+
+    return data
+
 
 # ==================================================================================
 #  MAIN : here is defined the behaviour of this module as a main script
@@ -855,4 +863,5 @@ class Systematics:
         if verbose > 0:
             print("Tau energy rescaling :", self.tes)
         self.data = mom4_manipulate(data=self.data,systTauEnergyScale = self.tes,systJetEnergyScale = self.jes,softMET = self.softMET,seed=seed)
+        self.data = postprocess(self.data)
         self.data = DER_data(self.data)
