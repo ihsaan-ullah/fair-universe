@@ -327,7 +327,9 @@ class Model():
         total_weights = []
         for i in range(n):
             bootstrap_weights = bootstrap(weights=weights, seed=42+i)
-            total_weights.append(np.array(bootstrap_weights).sum())
+            bootstrap_weights_array = np.array(bootstrap_weights)
+            effective_number = np.sqrt((bootstrap_weights_array**2).sum())
+            total_weights.append(effective_number)
         n_calc_array = np.array(total_weights)
         return n_calc_array
 
