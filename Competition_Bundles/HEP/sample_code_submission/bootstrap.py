@@ -7,25 +7,61 @@ import json
 root_dir = "./"
 input_dir = root_dir + "input_data"
 
+def shuffle_dataframe(df):
+    # Convert DataFrame to NumPy array
+    array = df.to_numpy()
+
+    # Shuffle the array
+    np.random.shuffle(array)
+
+    # Convert the shuffled array back to a DataFrame
+    shuffled_df = pd.DataFrame(array, columns=df.columns)
+
+    return shuffled_df
+
 
 def bootstrap(weights, seed=42):
-
+    
     prng = RandomState(seed)
     n_obs = len(weights)
     new_weights = prng.poisson(lam=weights)
     return new_weights
 
+def bootstrap_data(data,weights,label, n = 1000,seed=42):
 
-def bootstrap_data(data, weights, label, n=1000, seed=42):
+    total_signal_weight = np.sum(weights[label==1])
+    total_background_weight = np.sum(weights[label==0])
+
+    data_BS = data.copy()
+    data_BS['weights'] = weights
+    data_BS['label'] = label
+
+    del data
+
+    data = data_BS.sample(n=n, replace=True, random_state=seed)
+
+    data_bootstrap = shuffle_dataframe(data)
+    del data_BS, data
+
+    subset_signal_weight = np.sum(data_bootstrap['weights'][data_bootstrap['label']==1])
+    subset_background_weight = np.sum(data_bootstrap['weights'][data_bootstrap['label']==0])
+
+    print("total_signal_weight: ", total_signal_weight)
+    print("total_background_weight: ", total_background_weight)
+    print("subset_signal_weight: ", subset_signal_weight)
+    print("subset_background_weight: ", subset_background_weight)
+
+    data_bootstrap['weights'][data_bootstrap['label']==1] *= total_signal_weight / subset_signal_weight
+    data_bootstrap['weights'][data_bootstrap['label']==0] *= total_background_weight / subset_background_weight
 
     prng = RandomState(seed)
-    n_obs = len(weights)
-    new_weights = prng.poisson(lam=weights)
 
-    data['weights'] = new_weights
-    data['label'] = label
-    data_bootstrap = data.sample(n)
-    return data_bootstrap
+    data_bootstrap['weights'] = prng.poisson(lam=data_bootstrap['weights'])
+
+    weights_bootstrap = data_bootstrap.pop('weights')
+    label_bootstrap = data_bootstrap.pop('label')
+
+    return {'data':data_bootstrap, 'weights':weights_bootstrap, 'label':label_bootstrap}
 
 
 if __name__ == '__main__':
@@ -46,10 +82,11 @@ if __name__ == '__main__':
     # read train settings
     with open(train_settings_file) as f:
         train_settings = json.load(f)
-
+    
     # read train weights
     with open(train_weights_file) as f:
         train_weights = np.array(f.read().splitlines(), dtype=float)
+
 
     train_set = {
         "data": train_data,
@@ -66,3 +103,9 @@ if __name__ == '__main__':
 
     total_weights_distribution_array = np.array(total_weights_distribution)
     np.histogram(total_weights_distribution_array, bins=100)
+
+
+
+
+
+

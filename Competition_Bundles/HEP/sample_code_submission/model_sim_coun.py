@@ -14,6 +14,7 @@ module_dir= os.path.dirname(os.path.realpath(__file__))
 root_dir = os.path.dirname(module_dir)
 path.append(root_dir)
 from bootstrap import bootstrap
+from systematics import postprocess
 
 
 # ------------------------------
@@ -142,15 +143,25 @@ class Model():
     def _test(self, test_set=None):
         print("[*] - Testing")
 
-        weights_train = self.train_set["weights"].copy()
+        data_train = self.train_set["data"].copy()
+        data_train['weights'] = self.train_set["weights"].copy()
+        data_train['label'] = self.train_set["labels"].copy()
+
+        data_train_pp = postprocess(data_train)
+        weights_train = data_train_pp.pop('weights')
+        label_train = data_train_pp.pop('label')
+
+
         weights_test = test_set["weights"].copy()
 
-        s_train = weights_train[self.train_set['labels'] == 1].sum()
+        gamma = weights_train[label_train == 1].sum()
+        beta = weights_train[label_train == 0].sum()
 
         # Compute mu_hat
         N_ = self.N_calc_2(weights_test)
-        N = weights_train.sum()
-        mu_hat = ((N_ - N)/s_train) + 1
+        
+        mu_hat = ((N_ - beta) / gamma)
+
         sigma_mu_hat = np.std(mu_hat)
         delta_mu_hat = 2*sigma_mu_hat
 
