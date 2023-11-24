@@ -134,7 +134,7 @@ def dataGenerator(verbose=0):
 
 
 
-    print (f"[*] --- Signal in  test set " , np.sum(test_weights_path[test_label==1]))
+    print (f"[*] --- Signal in  test set " , np.sum(test_weights[test_label==1]))
     print (f"[*] --- Background in  test set " , np.sum(test_weights[test_label==0]))
     print (f"[*] --- Total Events in  test set " , np.sum(test_weights)) 
 
