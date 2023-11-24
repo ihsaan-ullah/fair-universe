@@ -134,7 +134,6 @@ def dataGenerator(verbose=0):
 
 
 
-    print (f"[*] --- mu in test set : ", mu)
     print (f"[*] --- Signal in  test set " , np.sum(test_weights_path[test_label==1]))
     print (f"[*] --- Background in  test set " , np.sum(test_weights[test_label==0]))
     print (f"[*] --- Total Events in  test set " , np.sum(test_weights)) 
@@ -155,6 +154,7 @@ def dataGenerator(verbose=0):
 
     mu = np.random.uniform(0, 3, 10)
     mu = np.round(mu, 3)
+    print (f"[*] --- mu in test set : ", mu)
 
     test_settings = {"ground_truth_mu": mu}
     Settings_file_path = os.path.join(reference_settings_path, 'data.json')
