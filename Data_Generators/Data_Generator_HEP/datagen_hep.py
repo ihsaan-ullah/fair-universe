@@ -134,10 +134,10 @@ def dataGenerator(verbose=0):
 
 
 
-    print (f"[*] --- mu in test set {i} : ", mu)
-    print (f"[*] --- Signal in  test set {i}" , np.sum(test_weights_path[test_label==1]))
-    print (f"[*] --- Background in  test set {i}" , np.sum(test_weights[test_label==0]))
-    print (f"[*] --- Total Events in  test set {i}" , np.sum(test_weights)) 
+    print (f"[*] --- mu in test set : ", mu)
+    print (f"[*] --- Signal in  test set " , np.sum(test_weights_path[test_label==1]))
+    print (f"[*] --- Background in  test set " , np.sum(test_weights[test_label==0]))
+    print (f"[*] --- Total Events in  test set " , np.sum(test_weights)) 
 
     print (f"[*] --- avegare weight of signal in test set : ", np.mean(test_weights[test_label==1]))
     print (f"[*] --- avegare weight of background in test set : ", np.mean(test_weights[test_label==0]))
