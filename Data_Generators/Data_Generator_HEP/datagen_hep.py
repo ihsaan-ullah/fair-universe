@@ -6,6 +6,7 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 import os
 import warnings
+import json
 warnings.filterwarnings("ignore")
 
 
@@ -84,12 +85,6 @@ def dataGenerator(verbose=0):
     train_weights[train_label==1] *= total_signal_weight / subset_signal_weight
     train_weights[train_label==0] *= total_background_weight / subset_background_weight
 
-    if verbose > 1:
-        print (f"[*] --- Signal in Training set " , np.sum(train_weights[train_label==1]))
-        print (f"[*] --- Background in Training set" , np.sum(train_weights[train_label==0]))
-
-    import json
-
     train_settings = {"tes": 1.0, "ground_truth_mu": 1.0}
 
     # Specify the file path
@@ -135,7 +130,7 @@ def dataGenerator(verbose=0):
     test_settings_path =  os.path.join(write_dir, 'input_data','test','settings')
     if not os.path.exists(test_settings_path):
         os.makedirs(test_settings_path)
-        
+
 
 
     print (f"[*] --- Signal in  test set " , np.sum(test_weights[test_label==1]))
