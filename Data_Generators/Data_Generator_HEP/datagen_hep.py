@@ -154,7 +154,8 @@ def dataGenerator(verbose=0):
 
     mu = np.random.uniform(0, 3, 10)
     mu = np.round(mu, 3)
-    print (f"[*] --- mu in test set : ", mu)
+    mu_list = mu.tolist()
+    print (f"[*] --- mu in test set : ", mu_list)
 
     test_settings = {"ground_truth_mu": mu}
     Settings_file_path = os.path.join(reference_settings_path, 'data.json')
