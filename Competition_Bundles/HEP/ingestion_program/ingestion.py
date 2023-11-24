@@ -8,24 +8,26 @@ import pandas as pd
 from datetime import datetime as dt
 import json
 from itertools import product
+from numpy.random import RandomState
 import warnings
+from copy import deepcopy
 warnings.filterwarnings("ignore")
 
 
 # ------------------------------------------
 # Default Directories
 # ------------------------------------------
-# Root directory
-module_dir = os.path.dirname(os.path.realpath(__file__))
-root_dir = os.path.dirname(module_dir)
-# Input data directory to read training and test data from
-input_dir = os.path.join("D:", "Uncertainty_Challenge_input_data")
-# Output data directory to write predictions to
-output_dir = os.path.join(root_dir, "sample_result_submission")
-# Program directory
-program_dir = os.path.join(root_dir, "ingestion_program")
-# Directory to read submitted submissions from
-submission_dir = os.path.join(root_dir, "sample_code_submission")
+# # Root directory
+# module_dir = os.path.dirname(os.path.realpath(__file__))
+# root_dir = os.path.dirname(module_dir)
+# # Input data directory to read training and test data from
+# input_dir = os.path.join(root_dir, "input_data")
+# # Output data directory to write predictions to
+# output_dir = os.path.join(root_dir, "sample_result_submission")
+# # Program directory
+# program_dir = os.path.join(root_dir, "ingestion_program")
+# # Directory to read submitted submissions from
+# submission_dir = os.path.join(root_dir, "sample_code_submission")
 
 # ------------------------------------------
 # Codabench Directories
@@ -68,7 +70,6 @@ class Ingestion():
         self.end_time = None
         self.model = None
         self.train_set = None
-        self.test_sets = []
 
     def start_timer(self):
         self.start_time = dt.now()
@@ -122,20 +123,52 @@ class Ingestion():
             "weights": train_weights
         }
 
-    def load_test_set(self, set_index, test_set_index):
+    def load_test_set(self):
+        print("[*] Loading Test data")
 
-        test_data_file = os.path.join(input_dir, 'test', 'set_'+str(set_index), 'data', 'data_'+str(test_set_index)+'.csv')
+        test_data_file = os.path.join(input_dir, 'test', 'data', 'data.csv')
+        test_settings_file = os.path.join(input_dir, 'test', 'settings', "data.json")
+        test_weights_file = os.path.join(input_dir, 'test', 'weights', "data.weights")
+
+        # read test data
         test_data = pd.read_csv(test_data_file)
 
-        test_weights_file = os.path.join(input_dir, 'test', 'set_'+str(set_index), 'weights', 'data_'+str(test_set_index)+'.weights')
+        # read test settings
+        with open(test_settings_file) as f:
+            self.test_settings = json.load(f)
+
+        # read train weights
         with open(test_weights_file) as f:
             test_weights = np.array(f.read().splitlines(), dtype=float)
 
-        test_set = {
+        self.test_set = {
             "data": test_data,
             "weights": test_weights
         }
-        return test_set
+
+    def get_bootstraped_dataset(self, mu=1.0, tes=1.0, seed=42):
+
+        temp_df = deepcopy(self.test_set["data"])
+        temp_df["weights"] = self.test_set["weights"]
+
+        # Apply systematics to the sampled data
+        data_syst = Systematics(
+            data=temp_df,
+            tes=tes
+        ).data
+
+        # Apply weight scaling factor mu to the data
+        data_syst['weights'] *= mu
+
+        prng = RandomState(seed)
+        new_weights = prng.poisson(lam=data_syst['weights'])
+
+        data_syst['weights'] = new_weights
+
+        return {
+            "data": data_syst.drop("weights", axis=1),
+            "weights": new_weights
+        }
 
     def init_submission(self):
         print("[*] Initializing Submmited Model")
@@ -163,8 +196,16 @@ class Ingestion():
 
         self.results_dict = {}
         for set_index, test_set_index in all_combinations:
+            # random tes value (one per test set)
+            tes = np.random.uniform(0.9, 1.1)
+            # create a seed
+            seed = (set_index*100) + test_set_index
+            # get mu value of set from test settings
+            set_mu = self.test_settings["ground_truth_mus"][set_index]
 
-            test_set = self.load_test_set(set_index=set_index, test_set_index=test_set_index)
+            # get bootstrapped dataset from the original test set
+            test_set = self.get_bootstraped_dataset(mu=set_mu, tes=tes, seed=seed)
+
             predicted_dict = self.model.predict(test_set)
             predicted_dict["test_set_index"] = test_set_index
 
@@ -172,7 +213,6 @@ class Ingestion():
 
             if set_index not in self.results_dict:
                 self.results_dict[set_index] = []
-
             self.results_dict[set_index].append(predicted_dict)
 
     def save_result(self):
@@ -212,8 +252,11 @@ if __name__ == '__main__':
     # Start timer
     ingestion.start_timer()
 
-    # load test set
+    # load train set
     ingestion.load_train_set()
+
+    # load test set
+    ingestion.load_test_set()
 
     # initialize submission
     ingestion.init_submission()

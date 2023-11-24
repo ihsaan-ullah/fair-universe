@@ -45,4 +45,4 @@
 ## How to get Public Data?
 ***
 - Go to the "Files" tab
-- Download the "FU HEP Public Training data"
+- Download the "Uncertainty_Challenge_public_data"
