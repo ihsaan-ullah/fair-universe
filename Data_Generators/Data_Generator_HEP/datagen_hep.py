@@ -157,7 +157,7 @@ def dataGenerator(verbose=0):
     mu_list = mu.tolist()
     print (f"[*] --- mu in test set : ", mu_list)
 
-    test_settings = {"ground_truth_mu": mu}
+    test_settings = {"ground_truth_mu": mu_list}
     Settings_file_path = os.path.join(reference_settings_path, 'data.json')
     with open(Settings_file_path, 'w') as json_file:
         json.dump(test_settings, json_file, indent=4)
