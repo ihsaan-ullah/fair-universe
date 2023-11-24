@@ -19,7 +19,7 @@ warnings.filterwarnings("ignore")
 module_dir = os.path.dirname(os.path.realpath(__file__))
 root_dir = os.path.dirname(module_dir)
 # Input data directory to read training and test data from
-input_dir = os.path.join("D:", "input_data")
+input_dir = os.path.join("D:", "Uncertainty_Challenge_input_data")
 # Output data directory to write predictions to
 output_dir = os.path.join(root_dir, "sample_result_submission")
 # Program directory
@@ -56,7 +56,7 @@ from systematics import Systematics
 # Import Model
 # ------------------------------------------
 
-from model_1bin_nll import Model
+from model_sim_coun import Model
 
 
 class Ingestion():

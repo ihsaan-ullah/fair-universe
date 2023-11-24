@@ -18,7 +18,7 @@ root_dir = os.path.dirname(module_dir)
 # Directory to output computed score into
 output_dir = os.path.join(root_dir, "scoring_output")
 # reference data (test labels)
-reference_dir = os.path.join("D:", "reference_data")
+reference_dir = os.path.join("D:", "Uncertainty_Challenge_reference_data")
 # submitted/predicted lables
 prediction_dir = os.path.join(root_dir, "sample_result_submission")
 # score file to write score into
