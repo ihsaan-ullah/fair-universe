@@ -132,6 +132,10 @@ def dataGenerator(verbose=0):
     if not os.path.exists(test_data_path):
         os.makedirs(test_data_path)
 
+    test_settings_path =  os.path.join(write_dir, 'input_data','test','settings')
+    if not os.path.exists(test_settings_path):
+        os.makedirs(test_settings_path)
+        
 
 
     print (f"[*] --- Signal in  test set " , np.sum(test_weights[test_label==1]))
@@ -162,6 +166,9 @@ def dataGenerator(verbose=0):
     with open(Settings_file_path, 'w') as json_file:
         json.dump(test_settings, json_file, indent=4)
 
+    Settings_file_path = os.path.join(test_settings_path, 'data.json')
+    with open(Settings_file_path, 'w') as json_file:
+        json.dump(test_settings, json_file, indent=4)
 
 def dataSimulator(n=1000, verbose=0, tes=1.0, mu=1.0):
     '''
