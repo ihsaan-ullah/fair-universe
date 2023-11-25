@@ -70,7 +70,7 @@ class Model():
 
         # Intialize class variables
         self.validation_sets = None
-        self.theta_candidates = np.linspace(0.5, 1.0, 100)
+        self.theta_candidates = np.linspace(0.0, 1.0, 500)
         self.best_theta = 0.8
         self.scaler = StandardScaler()
         self.scaler_tes = StandardScaler()
@@ -420,7 +420,7 @@ class Model():
             mu_scan = np.linspace(0, 3, 100)
             hist_llr = self.calculate_NLL(mu_scan, weight,gamma_roi,beta_roi)
             hist_llr = np.array(hist_llr)
-            
+
             val =  np.abs(mu_scan[np.argmin(hist_llr)] - 1)
 
             if val < val_min:
@@ -434,9 +434,10 @@ class Model():
 
                 self.best_theta = theta
                 # hist_llr_best = hist_llr
+                self.gamma_roi = Gamma_roi
+                self.beta_roi = Beta_roi 
 
-        self.gamma_roi = Gamma_roi
-        self.beta_roi = Beta_roi        
+       
         print(f"[*] --- Best theta : {self.best_theta}")
 
     def _validate(self):
