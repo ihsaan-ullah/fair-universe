@@ -90,7 +90,7 @@ class Model():
         self._generate_validation_sets()
         self._init_model()
         self._train()
-        # self._choose_theta()
+        self._choose_theta()
         # self.mu_hat_calc()
         self._validate()
         self._compute_validation_result()
@@ -319,26 +319,26 @@ class Model():
         return n_calc_array
 
 
-    def mu_hat_calc(self):  
+    # def mu_hat_calc(self):  
 
-        self.mu_calc_set['data'] = self.scaler.transform(self.mu_calc_set['data'])
-        Y_hat_mu_calc_set = self._predict(self.mu_calc_set['data'], self.best_theta)
-        Y_mu_calc_set = self.mu_calc_set['labels']
-        weights_mu_calc_set = self.mu_calc_set['weights']
+    #     self.mu_calc_set['data'] = self.scaler.transform(self.mu_calc_set['data'])
+    #     Y_hat_mu_calc_set = self._predict(self.mu_calc_set['data'], self.best_theta)
+    #     Y_mu_calc_set = self.mu_calc_set['labels']
+    #     weights_mu_calc_set = self.mu_calc_set['weights']
 
-        # compute gamma_roi
-        weights_mu_calc_set_signal = weights_mu_calc_set[Y_mu_calc_set == 1]
-        weights_mu_calc_set_bkg = weights_mu_calc_set[Y_mu_calc_set == 0]
+    #     # compute gamma_roi
+    #     weights_mu_calc_set_signal = weights_mu_calc_set[Y_mu_calc_set == 1]
+    #     weights_mu_calc_set_bkg = weights_mu_calc_set[Y_mu_calc_set == 0]
 
-        Y_hat_mu_calc_set_signal = Y_hat_mu_calc_set[Y_mu_calc_set == 1]
-        Y_hat_mu_calc_set_bkg = Y_hat_mu_calc_set[Y_mu_calc_set == 0]
+    #     Y_hat_mu_calc_set_signal = Y_hat_mu_calc_set[Y_mu_calc_set == 1]
+    #     Y_hat_mu_calc_set_bkg = Y_hat_mu_calc_set[Y_mu_calc_set == 0]
 
-        self.gamma_roi = (weights_mu_calc_set_signal[Y_hat_mu_calc_set_signal == 1]).sum()
+    #     self.gamma_roi = (weights_mu_calc_set_signal[Y_hat_mu_calc_set_signal == 1]).sum()
 
-        # compute beta_roi
-        self.beta_roi = (weights_mu_calc_set_bkg[Y_hat_mu_calc_set_bkg == 1]).sum()
-        if self.gamma_roi == 0:
-            self.gamma_roi = EPSILON
+    #     # compute beta_roi
+    #     self.beta_roi = (weights_mu_calc_set_bkg[Y_hat_mu_calc_set_bkg == 1]).sum()
+    #     if self.gamma_roi == 0:
+    #         self.gamma_roi = EPSILON
 
     def amsasimov_x(self, s, b):
         '''
