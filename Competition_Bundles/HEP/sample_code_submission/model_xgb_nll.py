@@ -418,7 +418,7 @@ class Model():
             weight = weights_valid*(Y_hat_valid)
 
             mu_scan = np.linspace(0, 3, 100)
-            hist_llr = self.calculate_NLL(mu_scan, weight, use_CR=False)
+            hist_llr = self.calculate_NLL(mu_scan, weight)
             hist_llr = np.array(hist_llr)
 
             (mu_scan[np.argmin(hist_llr)])
