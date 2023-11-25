@@ -134,6 +134,12 @@ class Model():
         self.gamma_roi = (train_weights*(train_labels)).sum()
         self.beta_roi = (train_weights*(1-train_labels)).sum()   
 
+        print(f"[*] --- gamma_roi: {self.gamma_roi}")
+        print(f"[*] --- beta_roi: {self.beta_roi}")
+
+        significance = self.gamma_roi / np.sqrt(self.gamma_roi + self.beta_roi)
+        print(f"[*] --- significance: {significance}")
+
     def _sigma_asimov_SR(self,mu):
         return mu*self.gamma_roi + self.beta_roi
 
