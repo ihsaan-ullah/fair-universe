@@ -124,8 +124,9 @@ class Model():
         print(f"[*] --- total weight train: {weights_train.sum()}")
         print(f"[*] --- total weight mu_cals_set: {self.mu_calc_set['weights'].sum()}")
 
+        weight = weights_test*(Y_hat_test)
         # get n_roi
-        mu_hat,mu_p16,mu_p84 = self.bootstrap_results(weights_test[Y_hat_test == 1]) 
+        mu_hat,mu_p16,mu_p84 = self.bootstrap_results(weight)
         delta_mu_hat = np.abs(mu_p84 - mu_p16)
 
         print(f"[*] --- mu_hat: {mu_hat.mean()}")
@@ -309,24 +310,6 @@ class Model():
         predictions = (Y_predict > theta).astype(int)
         return predictions
 
-    def bootstrap_results(self, weights, n=1000):
-        mus = []
-        mu_p16s = []
-        mu_p84s = []
-        for i in range(n):
-            bootstrap_weights = bootstrap(weights=weights, seed=42+i)
-            mu_hat,mu_p16,mu_p84 = self._compute_result(bootstrap_weights)
-            mus.append(mu_hat)
-            mu_p16s.append(mu_p16)
-            mu_p84s.append(mu_p84)
-
-
-        mus = np.array(mus)
-        mu = mus.mean()
-        mu_p16 = np.array(mu_p16s).mean()
-        mu_p84 = np.array(mu_p84s).mean()
-        return mus, mu_p16, mu_p84
-
     def N_calc_2(self, weights, n=1000):
         total_weights = []
         for i in range(n):
@@ -423,9 +406,7 @@ class Model():
             w_holdout = self.mu_calc_set['weights']
             y_holdout = self.mu_calc_set['labels']
             y_pred = self._predict(X_holdout_sc, theta)
-            y_pred = y_pred[:,1]
-
-            y_pred = (y_pred>theta).astype(int)
+            
 
             gamma_roi = (w_holdout*(y_pred * y_holdout)).sum()
             beta_roi = (w_holdout*(y_pred * (1-y_holdout))).sum()
@@ -434,10 +415,7 @@ class Model():
             Y_hat_valid = self.self._predict(meta_validation_set_df, theta)
             weights_valid = meta_validation_set["weights"].copy() 
 
-            Y_hat_valid = Y_hat_valid[:,1]
-            Y_hat_valid = (Y_hat_valid>theta).astype(int)
-
-            weight = weights_valid*(y_pred)
+            weight = weights_valid*(Y_hat_valid)
 
             mu_scan = np.linspace(0, 3, 100)
             hist_llr = self.calculate_NLL(mu_scan, weight, use_CR=False)
@@ -469,11 +447,33 @@ class Model():
             valid_set['score'] = self._return_score(valid_set['data'])
 
 
+    def calculate_NLL( self,mu_scan, weight_data,gamma_roi,beta_roi):
+        def _sigma_asimov_SR(mu):
+            return mu*gamma_roi + beta_roi
+
+        sum_data_total_SR = weight_data.sum()
+        comb_llr = []
+        for i, mu in enumerate(mu_scan):
+            hist_llr = (
+                -2
+                * sum_data_total_SR
+                * np.log((_sigma_asimov_SR(mu) / _sigma_asimov_SR(1.0)))
+            ) + (2 * (_sigma_asimov_SR(mu) - _sigma_asimov_SR(1.0)))
+
+            comb_llr.append(hist_llr )
+
+        comb_llr = np.array(comb_llr)
+        comb_llr = comb_llr - np.amin(comb_llr)
+
+        return comb_llr
+
+    
     def _sigma_asimov_SR(self,mu):
         return mu*self.gamma_roi + self.beta_roi
 
-    def calculate_NLL( self,mu_scan, weight_data):
-        sum_data_total_SR = weight_data.sum()
+    def _compute_result(self,weights):
+        mu_scan = np.linspace(0, 5, 100)
+        sum_data_total_SR = weights.sum()
         comb_llr = []
         for i, mu in enumerate(mu_scan):
             hist_llr = (
@@ -486,21 +486,15 @@ class Model():
         comb_llr = np.array(comb_llr)
         comb_llr = comb_llr - np.amin(comb_llr)
 
-        return comb_llr
-    
-    def _compute_result(self,weights):
-        mu_scan = np.linspace(0, 5, 100)
-        nll = self.calculate_NLL(mu_scan, weights)
-        hist_llr = np.array(nll)
 
-        if (mu_scan[np.where((hist_llr <= 1.0) & (hist_llr >= 0.0))].size == 0):
+        if (mu_scan[np.where((comb_llr <= 1.0) & (comb_llr >= 0.0))].size == 0):
             p16 = 0
             p84 = 0
             mu = 0
         else:
-            p16 = min(mu_scan[np.where((hist_llr <= 1.0) & (hist_llr >= 0.0))])
-            p84 = max(mu_scan[np.where((hist_llr <= 1.0) & (hist_llr >= 0.0))]) 
-            mu = mu_scan[np.argmin(hist_llr)]
+            p16 = min(mu_scan[np.where((comb_llr <= 1.0) & (comb_llr >= 0.0))])
+            p84 = max(mu_scan[np.where((comb_llr <= 1.0) & (comb_llr >= 0.0))]) 
+            mu = mu_scan[np.argmin(comb_llr)]
         return mu, p16, p84
 
     def _compute_validation_result(self):
@@ -508,11 +502,7 @@ class Model():
 
         self.validation_delta_mu_hats = []
         for valid_set in self.validation_sets:
-            Y_hat_train = self.train_set["predictions"]
-            Y_train = self.train_set["labels"]
             Y_hat_valid = valid_set["predictions"]
-            Y_valid = valid_set["labels"]
-            Score_train = self.train_set["score"]
             Score_valid = valid_set["score"]
 
             auc_valid = roc_auc_score(y_true=valid_set["labels"], y_score=Score_valid,sample_weight=valid_set['weights'])
@@ -520,47 +510,13 @@ class Model():
 
             # print(f"[*] --- PRI_had_pt : {valid_set['had_pt']}")
             # del Score_valid
-            weights_train = self.train_set["weights"].copy()
             weights_valid = valid_set["weights"].copy()
 
-            print(f'[*] --- total weights train: {weights_train.sum()}')
-            print(f'[*] --- total weights valid: {weights_valid.sum()}')
+            weight = weights_valid*(Y_hat_valid)
 
-            signal_valid = weights_valid[Y_valid == 1]
-            background_valid = weights_valid[Y_valid == 0]
-
-            Y_hat_valid_signal = Y_hat_valid[Y_valid == 1]
-            Y_hat_valid_bkg = Y_hat_valid[Y_valid == 0]
-
-            signal = signal_valid[Y_hat_valid_signal == 1].sum()
-            background = background_valid[Y_hat_valid_bkg == 1].sum()
-
-            significance = self.amsasimov_x(signal,background)
-            print(f"[*] --- Significance : {significance}")
-
-            delta_mu_stat = self.del_mu_stat(signal,background)
-            print(f"[*] --- delta_mu_stat : {delta_mu_stat}")
-
-            # get n_roi
-            n_roi = self.N_calc_2(weights_valid[Y_hat_valid == 1])
-            mu_hat_, p16_, p84_ = self._compute_result(weights_valid[Y_hat_valid == 1])
-
-            mu_hats = ((n_roi - self.beta_roi)/self.gamma_roi)
-
-            mu_hat = mu_hats.mean() 
-            p16 = np.percentile(mu_hats, 16)
-            p84 = np.percentile(mu_hats, 84)
-            # get region of interest
+            mu_hat,mu_p16,mu_p84 = self._compute_result(weight)
 
 
-            gamma_roi = self.gamma_roi
-
-            # compute beta_roi
-            beta_roi = self.beta_roi
-            if gamma_roi == 0:
-                gamma_roi = EPSILON
-
-            # Compute mu_hat
 
             # Compute delta mu hat (absolute value)
             delta_mu_hat = np.abs(valid_set["settings"]["ground_truth_mu"] - mu_hat)
@@ -569,7 +525,6 @@ class Model():
 
 
             print(f"[*] --- mu: {np.round(valid_set['settings']['ground_truth_mu'], 4)} --- mu_hat: {np.round(mu_hat, 4)} --- delta_mu_hat: {np.round(delta_mu_hat, 4)}")
-            print(f"[*] --- p16: {np.round(p16, 4)} --- p84: {np.round(p84, 4)} --- mu_hat_: {np.round(mu_hat_, 4)}")
-            print(f"[*] --- p16: {np.round(p16_, 4)} --- p84: {np.round(p84_, 4)} --- mu_hat_: {np.round(mu_hat_, 4)}")
+            print(f"[*] --- p16: {np.round(mu_p16, 4)} --- p84: {np.round(mu_p84, 4)} --- mu_hat_: {np.round(mu_hat, 4)}")
 
         print(f"[*] --- validation delta_mu_hat (avg): {np.round(np.mean(self.validation_delta_mu_hats), 4)}")
