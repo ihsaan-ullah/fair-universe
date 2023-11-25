@@ -412,7 +412,7 @@ class Model():
             beta_roi = (w_holdout*(y_pred * (1-y_holdout))).sum()
 
 
-            Y_hat_valid = self.self._predict(meta_validation_set_df, theta)
+            Y_hat_valid = self._predict(meta_validation_set_df, theta)
             weights_valid = meta_validation_set["weights"].copy() 
 
             weight = weights_valid*(Y_hat_valid)
