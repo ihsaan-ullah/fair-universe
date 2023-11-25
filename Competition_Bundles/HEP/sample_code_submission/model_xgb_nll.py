@@ -390,7 +390,7 @@ class Model():
         print("[*] Choose best theta")
 
         meta_validation_set = self.get_meta_validation_set()
-        val = 1
+        val_min = 1
         # Loop over theta candidates
         # try each theta on meta-validation set
         # choose best theta
@@ -420,8 +420,7 @@ class Model():
             mu_scan = np.linspace(0, 3, 100)
             hist_llr = self.calculate_NLL(mu_scan, weight,gamma_roi,beta_roi)
             hist_llr = np.array(hist_llr)
-
-            (mu_scan[np.argmin(hist_llr)])
+            
             val =  np.abs(mu_scan[np.argmin(hist_llr)] - 1)
 
             if val < val_min:
