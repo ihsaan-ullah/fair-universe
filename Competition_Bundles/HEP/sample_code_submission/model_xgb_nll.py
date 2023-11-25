@@ -70,8 +70,8 @@ class Model():
 
         # Intialize class variables
         self.validation_sets = None
-        self.theta_candidates = np.arange(0.5, 0.99, 0.01)
-        self.best_theta = 0.9
+        self.theta_candidates = np.linspace(0.5, 1.0, 100)
+        self.best_theta = 0.8
         self.scaler = StandardScaler()
         self.scaler_tes = StandardScaler()
 
@@ -91,7 +91,7 @@ class Model():
         self._init_model()
         self._train()
         # self._choose_theta()
-        self.mu_hat_calc()
+        # self.mu_hat_calc()
         self._validate()
         self._compute_validation_result()
 
@@ -306,7 +306,7 @@ class Model():
 
     def _predict(self, X, theta):
         Y_predict = self._return_score(X)
-        predictions = np.where(Y_predict > theta, 1, 0)
+        predictions = (Y_predict > theta).astype(int)
         return predictions
 
     def bootstrap_results(self, weights, n=1000):
@@ -415,42 +415,52 @@ class Model():
         for theta in self.theta_candidates:
             meta_validation_set_df = self.scaler.transform(meta_validation_set["data"])    
             # Get predictions from trained model
-            Y_hat_valid = self._predict(meta_validation_set_df, theta)
-            Y_valid = meta_validation_set["labels"]
 
-            weights_valid = meta_validation_set["weights"].copy()
 
             # get region of interest
-            nu_roi = (weights_valid[Y_hat_valid == 1]).sum()/10
 
-            weights_valid_signal = weights_valid[Y_valid == 1]  
-            weights_valid_bkg = weights_valid[Y_valid == 0]
+            # predict probabilities for holdout
+            X_holdout_sc = self.scaler.transform(self.mu_calc_set['data'])
+            w_holdout = self.mu_calc_set['weights']
+            y_holdout = self.mu_calc_set['labels']
+            y_pred = self._predict(X_holdout_sc, theta)
+            y_pred = y_pred[:,1]
 
-            Y_hat_valid_signal = Y_hat_valid[Y_valid == 1]  
-            Y_hat_valid_bkg = Y_hat_valid[Y_valid == 0] 
+            y_pred = (y_pred>theta).astype(int)
 
-            # compute gamma_roi
-            gamma_roi = (weights_valid_signal[Y_hat_valid_signal == 1]).sum()/10
+            gamma_roi = (w_holdout*(y_pred * y_holdout)).sum()
+            beta_roi = (w_holdout*(y_pred * (1-y_holdout))).sum()
 
-            # compute beta_roi
-            beta_roi = (weights_valid_bkg[Y_hat_valid_bkg == 1]).sum()/10
 
-            # Compute sigma squared mu hat
-            sigma_squared_mu_hat = nu_roi/np.square(gamma_roi)
+            Y_hat_valid = self.self._predict(meta_validation_set_df, theta)
+            weights_valid = meta_validation_set["weights"].copy() 
 
-            # get N_ROI from predictions
-            theta_sigma_squared.append(sigma_squared_mu_hat)
+            Y_hat_valid = Y_hat_valid[:,1]
+            Y_hat_valid = (Y_hat_valid>theta).astype(int)
 
-            print(f"\n[*] --- theta: {theta}--- nu_roi: {nu_roi} --- beta_roi: {beta_roi} --- gamma_roi: {gamma_roi} --- sigma squared: {sigma_squared_mu_hat}")
+            weight = weights_valid*(y_pred)
 
-        # Choose theta with min sigma squared
-        try:
-            index_of_least_sigma_squared = np.nanargmin(theta_sigma_squared)
-        except:
-            print("[!] - WARNING! All sigma squared are nan")
-            index_of_least_sigma_squared = np.argmin(theta_sigma_squared)
+            mu_scan = np.linspace(0, 3, 100)
+            hist_llr = self.calculate_NLL(mu_scan, weight, use_CR=False)
+            hist_llr = np.array(hist_llr)
 
-        self.best_theta = self.theta_candidates[index_of_least_sigma_squared]
+            (mu_scan[np.argmin(hist_llr)])
+            val =  np.abs(mu_scan[np.argmin(hist_llr)] - 1)
+
+            if val < val_min:
+                val_min = val
+                print("val: ", val)
+                print("gamma_roi: ", gamma_roi)
+                print("beta_roi: ", beta_roi)
+                print("Uncertainity", np.sqrt(gamma_roi + beta_roi)/gamma_roi)
+                Beta_roi = beta_roi.copy()
+                Gamma_roi = gamma_roi.copy()
+
+                self.best_theta = theta
+                # hist_llr_best = hist_llr
+
+        self.gamma_roi = Gamma_roi
+        self.beta_roi = Beta_roi        
         print(f"[*] --- Best theta : {self.best_theta}")
 
     def _validate(self):
