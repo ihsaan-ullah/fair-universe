@@ -27,33 +27,10 @@ def bootstrap(weights, seed=42):
     new_weights = prng.poisson(lam=weights)
     return new_weights
 
-def bootstrap_data(data,weights,label, n = 1000,seed=42):
-
-    total_signal_weight = np.sum(weights[label==1])
-    total_background_weight = np.sum(weights[label==0])
-
-    data_BS = data.copy()
-    data_BS['weights'] = weights
-    data_BS['label'] = label
-
-    del data
-
-    data = data_BS.sample(n=n, replace=True, random_state=seed)
+def bootstrap_data(data,weights,label,seed=42):
 
     data_bootstrap = shuffle_dataframe(data)
     del data_BS, data
-
-    subset_signal_weight = np.sum(data_bootstrap['weights'][data_bootstrap['label']==1])
-    subset_background_weight = np.sum(data_bootstrap['weights'][data_bootstrap['label']==0])
-
-    print("total_signal_weight: ", total_signal_weight)
-    print("total_background_weight: ", total_background_weight)
-    print("subset_signal_weight: ", subset_signal_weight)
-    print("subset_background_weight: ", subset_background_weight)
-
-    data_bootstrap['weights'][data_bootstrap['label']==1] *= total_signal_weight / subset_signal_weight
-    data_bootstrap['weights'][data_bootstrap['label']==0] *= total_background_weight / subset_background_weight
-
     prng = RandomState(seed)
 
     data_bootstrap['weights'] = prng.poisson(lam=data_bootstrap['weights'])

@@ -179,7 +179,7 @@ class Model():
     def _test(self, test_set=None):
         print("[*] - Testing")
         weights_test = test_set["weights"].copy()
-
+        print(f"[*] --- weights_test: {weights_test.sum()}")
 
         mu_hat, mu_p16, mu_p84 = self._compute_result(weights_test)
         delta_mu_hat = mu_p84 - mu_p16
