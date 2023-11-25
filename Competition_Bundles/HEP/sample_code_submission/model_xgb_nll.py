@@ -407,8 +407,7 @@ class Model():
         print("[*] Choose best theta")
 
         meta_validation_set = self.get_meta_validation_set()
-        theta_sigma_squared = []
-
+        val = 1
         # Loop over theta candidates
         # try each theta on meta-validation set
         # choose best theta
