@@ -166,13 +166,13 @@ class Model():
         nll = self.calculate_NLL(mu_scan, weights)
         hist_llr = np.array(nll)
 
-        if (mu_scan[np.where((hist_llr <= 1.0) & (hist_llr >= 0.0))].size == 0):
+        if (mu_scan[np.where((hist_llr <= 25.0) & (hist_llr >= 0.0))].size == 0):
             p16 = 0
             p84 = 0
             mu = 0
         else:
-            p16 = min(mu_scan[np.where((hist_llr <= 1.0) & (hist_llr >= 0.0))])
-            p84 = max(mu_scan[np.where((hist_llr <= 1.0) & (hist_llr >= 0.0))]) 
+            p16 = min(mu_scan[np.where((hist_llr <= 25.0) & (hist_llr >= 0.0))])
+            p84 = max(mu_scan[np.where((hist_llr <= 25.0) & (hist_llr >= 0.0))]) 
             mu = mu_scan[np.argmin(hist_llr)]
         return mu, p16, p84
     
