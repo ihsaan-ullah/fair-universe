@@ -5,6 +5,7 @@ import os
 from sys import path
 import numpy as np
 from sklearn.preprocessing import StandardScaler
+from systematics import postprocess
 
 
 # ------------------------------
@@ -121,7 +122,16 @@ class Model():
 
     def _init_model(self):
         print("[*] - Intialize model")
+        train_df = self.train_set["data"].copy()
+        train_df['weights'] = self.train_set["weights"].copy()
+        train_df['labels'] = self.train_set["labels"].copy()
 
+        train_df = postprocess(train_df)
+
+        self.train_set["labels"] = train_df.pop("labels")
+        self.train_set["weights"] = train_df.pop("weights")
+        self.train_set["data"] = train_df
+        
     def _fit(self):
         print("[*] --- Fitting Model")
         

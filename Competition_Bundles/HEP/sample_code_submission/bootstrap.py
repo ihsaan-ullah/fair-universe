@@ -30,7 +30,7 @@ def bootstrap(weights, seed=42):
 def bootstrap_data(data,weights,label,seed=42):
 
     data_bootstrap = shuffle_dataframe(data)
-    del data_BS, data
+    del data
     prng = RandomState(seed)
 
     data_bootstrap['weights'] = prng.poisson(lam=data_bootstrap['weights'])
