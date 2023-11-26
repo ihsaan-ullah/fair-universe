@@ -194,6 +194,15 @@ class Model():
         }
 
         self.eval_set = [(self.train_set['data'], self.train_set['labels']), (valid_df.to_numpy(), valid_labels)]
+        
+        train_df = train_df.copy()
+        train_df["weights"] = train_weights
+        train_df["labels"] = train_labels
+        train_df = postprocess(train_df)
+
+        train_weights = train_df.pop('weights')
+        train_labels = train_df.pop('labels')
+        
 
         mu_calc_set_df = mu_calc_set_df.copy()
         mu_calc_set_df["weights"] = mu_calc_set_weights
@@ -202,7 +211,6 @@ class Model():
 
         mu_calc_set_weights = mu_calc_set_df.pop('weights')
         mu_calc_set_labels = mu_calc_set_df.pop('labels')
-
 
 
         self.mu_calc_set = {

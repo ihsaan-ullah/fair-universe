@@ -76,9 +76,7 @@ class Model():
         self.systematics = systematics
 
         # Intialize class variables
-        self.validation_sets = None
-        self.theta_candidates = np.arange(0.9, 0.96, 0.01)
-        self.best_theta = 0.9
+        self.force_correction = 0
         self.scaler = StandardScaler()
 
     def fit(self):
@@ -149,6 +147,16 @@ class Model():
 
         significance = self.gamma_roi / np.sqrt(self.gamma_roi + self.beta_roi)
         print(f"[*] --- significance: {significance}")
+        
+        mu_hat, mu_p16, mu_p84 = self._compute_result(train_weights)
+        delta_mu_hat = mu_p84 - mu_p16
+        val = mu_hat - 1.0
+        print(f"[*] --- mu_hat: {mu_hat}")
+        print(f"[*] --- delta_mu_hat: {delta_mu_hat}")
+
+        # self.force_correction =  val
+
+
 
     def _sigma_asimov_SR(self,mu):
         return mu*self.gamma_roi + self.beta_roi
@@ -184,6 +192,11 @@ class Model():
             p16 = min(mu_scan[np.where((hist_llr <= 1.0) & (hist_llr >= 0.0))])
             p84 = max(mu_scan[np.where((hist_llr <= 1.0) & (hist_llr >= 0.0))]) 
             mu = mu_scan[np.argmin(hist_llr)]
+
+        mu = mu - self.force_correction
+        p16 = p16 - self.force_correction
+        p84 = p84 - self.force_correction
+
         return mu, p16, p84
     
     def _test(self, test_set=None):

@@ -21,7 +21,7 @@ warnings.filterwarnings("ignore")
 module_dir = os.path.dirname(os.path.realpath(__file__))
 root_dir = os.path.dirname(module_dir)
 # Input data directory to read training and test data from
-input_dir = os.path.join("D:","Uncertainity_challenge_input_data")
+input_dir = os.path.join(root_dir,"input_data")
 # Output data directory to write predictions to
 output_dir = os.path.join(root_dir, "sample_result_submission")
 # Program directory
@@ -58,7 +58,7 @@ from systematics import Systematics, postprocess
 # Import Model
 # ------------------------------------------
 
-from model_xgb import Model
+from model import Model
 
 
 class Ingestion():
@@ -159,12 +159,10 @@ class Ingestion():
         temp_df["labels"] = self.test_set["labels"]
 
         # Apply systematics to the sampled data
-        # data_syst = Systematics(
-        #     data=temp_df,
-        #     tes=tes
-        # ).data
-
-        data_syst = postprocess(temp_df)
+        data_syst = Systematics(
+            data=temp_df,
+            tes=tes
+        ).data
 
 
         # Apply weight scaling factor mu to the data

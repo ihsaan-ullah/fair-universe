@@ -175,23 +175,6 @@ class Model():
             stratify=train_labels
         )
 
-        train_df = train_df.copy()
-        train_df["weights"] = train_weights
-        train_df["labels"] = train_labels
-        train_df = postprocess(train_df)
-
-        train_weights = train_df.pop('weights')
-        train_labels = train_df.pop('labels')
-        
-
-        mu_calc_set_df = mu_calc_set_df.copy()
-        mu_calc_set_df["weights"] = mu_calc_set_weights
-        mu_calc_set_df["labels"] = mu_calc_set_labels
-        mu_calc_set_df = postprocess(mu_calc_set_df)
-
-        mu_calc_set_weights = mu_calc_set_df.pop('weights')
-        mu_calc_set_labels = mu_calc_set_df.pop('labels')
-
 
         # Calculate the sum of weights for signal and background in the training and validation sets
         train_signal_weights = train_weights[train_labels == 1].sum()
@@ -208,6 +191,36 @@ class Model():
         valid_weights[valid_labels == 0] *= background_weights / valid_background_weights
         mu_calc_set_weights[mu_calc_set_labels == 1] *= signal_weights / mu_calc_set_signal_weights
         mu_calc_set_weights[mu_calc_set_labels == 0] *= background_weights / mu_calc_set_background_weights
+
+        train_df = train_df.copy()
+        train_df["weights"] = train_weights
+        train_df["labels"] = train_labels
+        train_df = postprocess(train_df)
+
+        train_weights = train_df.pop('weights')
+        train_labels = train_df.pop('labels')
+        
+
+        mu_calc_set_df = mu_calc_set_df.copy()
+        mu_calc_set_df["weights"] = mu_calc_set_weights
+        mu_calc_set_df["labels"] = mu_calc_set_labels
+
+        mu_calc_set_df = postprocess(mu_calc_set_df)
+
+        mu_calc_set_weights = mu_calc_set_df.pop('weights')
+        mu_calc_set_labels = mu_calc_set_df.pop('labels')
+
+        # valid_df = valid_df.copy()
+        # valid_df["weights"] = valid_weights
+        # valid_df["labels"] = valid_labels
+
+        # valid_df = postprocess(valid_df)
+
+        # valid_weights = valid_df.pop('weights')
+        # valid_labels = valid_df.pop('labels')
+
+
+
 
         self.train_df = train_df
 
@@ -517,18 +530,18 @@ class Model():
         comb_llr = comb_llr - np.amin(comb_llr)
 
 
-        if (mu_scan[np.where((comb_llr <= 1.0) & (comb_llr >= 0.0))].size == 0):
+        if (mu_scan[np.where((comb_llr <= 9.0) & (comb_llr >= 0.0))].size == 0):
             p16 = 0
             p84 = 0
             mu = 0
         else:
-            p16 = min(mu_scan[np.where((comb_llr <= 1.0) & (comb_llr >= 0.0))])
-            p84 = max(mu_scan[np.where((comb_llr <= 1.0) & (comb_llr >= 0.0))]) 
+            p16 = min(mu_scan[np.where((comb_llr <= 9.0) & (comb_llr >= 0.0))])
+            p84 = max(mu_scan[np.where((comb_llr <= 9.0) & (comb_llr >= 0.0))]) 
             mu = mu_scan[np.argmin(comb_llr)]
 
-        mu = mu + self.force_correction_term
-        p16 = p16 + self.force_correction_term
-        p84 = p84 + self.force_correction_term
+        mu = mu - self.force_correction_term
+        p16 = p16 - self.force_correction_term
+        p84 = p84 - self.force_correction_term
         return mu, p16, p84
 
     def _compute_validation_result(self):
