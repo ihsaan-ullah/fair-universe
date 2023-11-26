@@ -71,7 +71,7 @@ class Model():
 
         # Intialize class variables
         self.validation_sets = None
-        self.theta_candidates = np.arange(0.0, 0.99, 0.01)
+        self.theta_candidates = np.arange(0.8, 0.99, 0.001)
         self.best_theta = 0.9
         self.scaler = StandardScaler()
         self.scaler_tes = StandardScaler()
@@ -229,24 +229,16 @@ class Model():
             valid_df_temp["weights"] = valid_weights
             valid_df_temp["labels"] = valid_labels
 
-            valid_with_systematics_temp = self.systematics(
+            valid_with_systematics = self.systematics(
                 data=valid_df_temp,
                 tes=tes
             ).data
 
-            valid_labels_temp = valid_with_systematics_temp.pop('labels')
-            valid_weights_temp = valid_with_systematics_temp.pop('weights')
-            valid_with_systematics = valid_with_systematics_temp.copy()
+            valid_with_systematics = valid_with_systematics.round(3)
 
-            self.validation_sets.append({
-                "data": valid_with_systematics,
-                "labels": valid_labels_temp,
-                "weights": valid_weights_temp,
-                "settings": self.train_set["settings"],
-                "tes": tes
-            })
-            del valid_with_systematics_temp
-            del valid_df_temp
+            self.validation_sets.append(valid_with_systematics)
+
+        self.meta_validation_set = pd.concat(self.validation_sets)
 
         train_signal_weights = train_weights[train_labels == 1].sum()
         train_background_weights = train_weights[train_labels == 0].sum()
@@ -389,34 +381,19 @@ class Model():
         '''
         return (np.sqrt(s + b)/s)
 
-    def get_meta_validation_set(self):
-
-        meta_validation_data = []
-        meta_validation_labels = []
-        meta_validation_weights = []
-
-        for valid_set in self.validation_sets:
-            meta_validation_data.append(valid_set['data'])
-            meta_validation_labels = np.concatenate((meta_validation_labels, valid_set['labels']))
-            meta_validation_weights = np.concatenate((meta_validation_weights, valid_set['weights']))
-
-        return {
-            'data': pd.concat(meta_validation_data),
-            'labels': meta_validation_labels,
-            'weights': meta_validation_weights
-        }
 
     def _choose_theta(self):
 
         print("[*] Choose best theta")
-
-        meta_validation_set = self.get_meta_validation_set()
+        meta_validation_weights = self.meta_validation_set.pop('weights')
+        meta_validation_labels = self.meta_validation_set.pop('labels')
+        meta_validation_set = self.meta_validation_set.copy()
         val_min = 1
         # Loop over theta candidates
         # try each theta on meta-validation set
         # choose best theta
         for theta in self.theta_candidates:
-            meta_validation_set_df = self.scaler.transform(meta_validation_set["data"])    
+            meta_validation_set_df = self.scaler.transform(meta_validation_set)    
             # Get predictions from trained model
 
             print(f"[*] --- theta: {theta}")
@@ -434,7 +411,7 @@ class Model():
 
 
             Y_hat_valid = self._predict(meta_validation_set_df, theta)
-            weights_valid = meta_validation_set["weights"].copy() 
+            weights_valid = meta_validation_weights.copy() 
 
             weight = weights_valid*(Y_hat_valid)
 

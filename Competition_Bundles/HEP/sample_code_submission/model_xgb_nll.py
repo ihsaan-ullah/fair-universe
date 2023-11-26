@@ -69,7 +69,7 @@ class Model():
         self.systematics = systematics
 
         # Intialize class variables
-        self.validation_sets = None
+        self.validation_set = None
         self.theta_candidates = np.linspace(0.8, 1.0, 100)
         self.best_theta = 0.8
         self.scaler = StandardScaler()
@@ -126,7 +126,8 @@ class Model():
 
         weight = weights_test*(Y_hat_test)
         # get n_roi
-        mu_hat,mu_p16,mu_p84 = self.bootstrap_results(weight)
+
+        mu_hat,mu_p16,mu_p84 = self._compute_result(weight)
         delta_mu_hat = np.abs(mu_p84 - mu_p16)
 
         print(f"[*] --- mu_hat: {mu_hat.mean()}")
@@ -161,7 +162,7 @@ class Model():
             self.train_set["data"],
             self.train_set["labels"],
             self.train_set["weights"],
-            test_size=0.05,
+            test_size=0.2,
             stratify=self.train_set["labels"]
         )
 
@@ -226,18 +227,19 @@ class Model():
             }
 
         self.validation_sets = []
-        # Loop 10 times to generate 10 validation sets
-        for i in range(0, 20):
+        for i in range(10):
+            # Loop 10 times to generate 10 validation sets
             tes = round(np.random.uniform(0.9, 1.10), 2)
             # apply systematics
             valid_df_temp = valid_df.copy()
             valid_df_temp["weights"] = valid_weights
             valid_df_temp["labels"] = valid_labels
 
-            valid_with_systematics_temp = self.systematics(
-                data=valid_df_temp,
-                tes=tes
-            ).data
+            # valid_with_systematics_temp = self.systematics(
+            #     data=valid_df_temp,
+            #     tes=tes
+            # ).data
+            valid_with_systematics_temp = postprocess(valid_df_temp)
 
             valid_labels_temp = valid_with_systematics_temp.pop('labels')
             valid_weights_temp = valid_with_systematics_temp.pop('weights')
@@ -252,6 +254,8 @@ class Model():
             })
             del valid_with_systematics_temp
             del valid_df_temp
+
+        self.validation_set = self.validation_sets[1]
 
         train_signal_weights = train_weights[train_labels == 1].sum()
         train_background_weights = train_weights[train_labels == 0].sum()
@@ -389,7 +393,7 @@ class Model():
 
         print("[*] Choose best theta")
 
-        meta_validation_set = self.get_meta_validation_set()
+        meta_validation_set = self.validation_set
         val_min = 1
         # Loop over theta candidates
         # try each theta on meta-validation set
@@ -431,13 +435,39 @@ class Model():
                 print("Uncertainity", np.sqrt(gamma_roi + beta_roi)/gamma_roi)
                 Beta_roi = beta_roi.copy()
                 Gamma_roi = gamma_roi.copy()
-
                 self.best_theta = theta
-                # hist_llr_best = hist_llr
-                self.gamma_roi = Gamma_roi
-                self.beta_roi = Beta_roi 
 
-       
+
+        theta = self.best_theta
+        # predict probabilities for holdout
+        X_holdout_sc = self.scaler.transform(self.mu_calc_set['data'])
+        w_holdout = self.mu_calc_set['weights']
+        y_holdout = self.mu_calc_set['labels']
+        y_pred = self._predict(X_holdout_sc, theta)
+        
+
+        gamma_roi = (w_holdout*(y_pred * y_holdout)).sum()
+        beta_roi = (w_holdout*(y_pred * (1-y_holdout))).sum()
+
+
+        Y_hat_valid = self._predict(meta_validation_set_df, theta)
+        weights_valid = meta_validation_set["weights"].copy() 
+
+        weight = weights_valid*(Y_hat_valid)
+
+        mu_scan = np.linspace(0, 3, 100)
+        hist_llr = self.calculate_NLL(mu_scan, weight,gamma_roi,beta_roi)
+        hist_llr = np.array(hist_llr)
+
+        val =  np.abs(mu_scan[np.argmin(hist_llr)] - 1)
+        print("val: ", val)
+        print("gamma_roi: ", gamma_roi)
+        print("beta_roi: ", beta_roi)
+        print("Uncertainity", np.sqrt(gamma_roi + beta_roi)/gamma_roi)
+        self.beta_roi = beta_roi.copy()
+        self.gamma_roi = gamma_roi.copy()
+
+        self.force_correction_term = val
         print(f"[*] --- Best theta : {self.best_theta}")
 
     def _validate(self):
@@ -495,6 +525,10 @@ class Model():
             p16 = min(mu_scan[np.where((comb_llr <= 1.0) & (comb_llr >= 0.0))])
             p84 = max(mu_scan[np.where((comb_llr <= 1.0) & (comb_llr >= 0.0))]) 
             mu = mu_scan[np.argmin(comb_llr)]
+
+        mu = mu + self.force_correction_term
+        p16 = p16 + self.force_correction_term
+        p84 = p84 + self.force_correction_term
         return mu, p16, p84
 
     def _compute_validation_result(self):

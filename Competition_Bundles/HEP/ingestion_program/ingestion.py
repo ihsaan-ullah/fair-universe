@@ -58,7 +58,7 @@ from systematics import Systematics, postprocess
 # Import Model
 # ------------------------------------------
 
-from tesax_nll import Model
+from model_xgb import Model
 
 
 class Ingestion():
@@ -159,14 +159,18 @@ class Ingestion():
         temp_df["labels"] = self.test_set["labels"]
 
         # Apply systematics to the sampled data
-        data_syst = Systematics(
-            data=temp_df,
-            tes=tes
-        ).data
+        # data_syst = Systematics(
+        #     data=temp_df,
+        #     tes=tes
+        # ).data
+
+        data_syst = postprocess(temp_df)
 
 
         # Apply weight scaling factor mu to the data
-        data_syst['weights'][temp_df["labels"]==1] *= mu
+        data_syst['weights'][data_syst["labels"]==1] *= mu
+
+        data_syst.pop("labels")
 
         prng = RandomState(seed)
         new_weights = prng.poisson(lam=data_syst['weights'])
