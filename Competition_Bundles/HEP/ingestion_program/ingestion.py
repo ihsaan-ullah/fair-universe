@@ -21,7 +21,7 @@ warnings.filterwarnings("ignore")
 module_dir = os.path.dirname(os.path.realpath(__file__))
 root_dir = os.path.dirname(module_dir)
 # Input data directory to read training and test data from
-input_dir = os.path.join("D:","Higgs_Uncertainity_challenge_input_data")
+input_dir = os.path.join("D:","Uncertainity_challenge_input_data")
 # Output data directory to write predictions to
 output_dir = os.path.join(root_dir, "sample_result_submission")
 # Program directory
@@ -58,7 +58,7 @@ from systematics import Systematics, postprocess
 # Import Model
 # ------------------------------------------
 
-from model_1bin_nll import Model
+from tesax_nll import Model
 
 
 class Ingestion():
@@ -129,7 +129,7 @@ class Ingestion():
         test_data_file = os.path.join(input_dir, 'test', 'data', 'data.csv')
         test_settings_file = os.path.join(input_dir, 'test', 'settings', "data.json")
         test_weights_file = os.path.join(input_dir, 'test', 'weights', "data.weights")
-        # test_labels_file = os.path.join(input_dir, 'test', 'labels', "data.labels")
+        test_labels_file = os.path.join(input_dir, 'test', 'labels', "data.labels")
 
         # read test data
         test_data = pd.read_csv(test_data_file)
@@ -138,13 +138,14 @@ class Ingestion():
         with open(test_settings_file) as f:
             self.test_settings = json.load(f)
 
-        # read train weights
+        # read test weights
         with open(test_weights_file) as f:
             test_weights = np.array(f.read().splitlines(), dtype=float)
-        # with open(test_labels_file) as f:
-        #     test_labels = np.array(f.read().splitlines(), dtype=float)
 
-        test_labels = np.zeros(len(test_weights))
+        # read test labels
+        with open(test_labels_file) as f:
+            test_labels = np.array(f.read().splitlines(), dtype=float)
+
         self.test_set = {
             "data": test_data,
             "weights": test_weights,

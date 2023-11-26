@@ -71,7 +71,7 @@ class Model():
 
         # Intialize class variables
         self.validation_sets = None
-        self.theta_candidates = np.arange(0.0, 0.99, 0.001)
+        self.theta_candidates = np.arange(0.0, 0.99, 0.01)
         self.best_theta = 0.9
         self.scaler = StandardScaler()
         self.scaler_tes = StandardScaler()
