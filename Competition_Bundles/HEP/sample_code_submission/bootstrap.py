@@ -29,6 +29,8 @@ def bootstrap(weights, seed=42):
 
 def bootstrap_data(data,weights,label,seed=42):
 
+    data['weights'] = weights
+    data['label'] = label
     data_bootstrap = shuffle_dataframe(data)
     del data
     prng = RandomState(seed)

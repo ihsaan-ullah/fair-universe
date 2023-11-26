@@ -21,7 +21,7 @@ warnings.filterwarnings("ignore")
 module_dir = os.path.dirname(os.path.realpath(__file__))
 root_dir = os.path.dirname(module_dir)
 # Input data directory to read training and test data from
-input_dir = os.path.join(root_dir, "input_data")
+input_dir = os.path.join("D:","Higgs_Uncertainity_challenge_input_data")
 # Output data directory to write predictions to
 output_dir = os.path.join(root_dir, "sample_result_submission")
 # Program directory
@@ -52,13 +52,13 @@ path.append(submission_dir)
 # ------------------------------------------
 # Import Systamtics
 # ------------------------------------------
-from systematics import Systematics
+from systematics import Systematics, postprocess
 
 # ------------------------------------------
 # Import Model
 # ------------------------------------------
 
-from model_sim_coun import Model
+from model_1bin_nll import Model
 
 
 class Ingestion():
@@ -129,6 +129,7 @@ class Ingestion():
         test_data_file = os.path.join(input_dir, 'test', 'data', 'data.csv')
         test_settings_file = os.path.join(input_dir, 'test', 'settings', "data.json")
         test_weights_file = os.path.join(input_dir, 'test', 'weights', "data.weights")
+        # test_labels_file = os.path.join(input_dir, 'test', 'labels', "data.labels")
 
         # read test data
         test_data = pd.read_csv(test_data_file)
@@ -140,16 +141,21 @@ class Ingestion():
         # read train weights
         with open(test_weights_file) as f:
             test_weights = np.array(f.read().splitlines(), dtype=float)
+        # with open(test_labels_file) as f:
+        #     test_labels = np.array(f.read().splitlines(), dtype=float)
 
+        test_labels = np.zeros(len(test_weights))
         self.test_set = {
             "data": test_data,
-            "weights": test_weights
+            "weights": test_weights,
+            "labels": test_labels
         }
 
     def get_bootstraped_dataset(self, mu=1.0, tes=1.0, seed=42):
 
         temp_df = deepcopy(self.test_set["data"])
         temp_df["weights"] = self.test_set["weights"]
+        temp_df["labels"] = self.test_set["labels"]
 
         # Apply systematics to the sampled data
         data_syst = Systematics(
@@ -157,8 +163,9 @@ class Ingestion():
             tes=tes
         ).data
 
+
         # Apply weight scaling factor mu to the data
-        data_syst['weights'] *= mu
+        data_syst['weights'][temp_df["labels"]==1] *= mu
 
         prng = RandomState(seed)
         new_weights = prng.poisson(lam=data_syst['weights'])

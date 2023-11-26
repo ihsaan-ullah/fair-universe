@@ -131,6 +131,10 @@ def dataGenerator(verbose=0):
     if not os.path.exists(test_settings_path):
         os.makedirs(test_settings_path)
 
+    test_label_path =  os.path.join(write_dir, 'input_data','test','labels')
+    if not os.path.exists(test_label_path):
+        os.makedirs(test_label_path)
+
 
 
     print (f"[*] --- Signal in  test set " , np.sum(test_weights[test_label==1]))
@@ -149,6 +153,10 @@ def dataGenerator(verbose=0):
     # Writing data to files
     test_df.to_csv(data_file_path, index=False)
     test_weights.to_csv(weights_file_path, index=False, header=False)
+
+    test_label_path =  os.path.join(test_label_path, 'data.labels')
+    test_label.to_csv(test_label_path, index=False, header=False)
+    
 
 
     mu = np.random.uniform(0, 3, 10)

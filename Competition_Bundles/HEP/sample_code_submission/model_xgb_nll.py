@@ -70,7 +70,7 @@ class Model():
 
         # Intialize class variables
         self.validation_sets = None
-        self.theta_candidates = np.linspace(0.0, 1.0, 500)
+        self.theta_candidates = np.linspace(0.8, 1.0, 100)
         self.best_theta = 0.8
         self.scaler = StandardScaler()
         self.scaler_tes = StandardScaler()
