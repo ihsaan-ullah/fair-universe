@@ -30,7 +30,7 @@ import base64
 # Codabench Directories
 # ------------------------------------------
 # root directory
-# root_dir = "/app"
+root_dir = "/app"
 # Directory read predictions and solutions from
 input_dir = os.path.join(root_dir, "input")
 # Directory to output computed score into
