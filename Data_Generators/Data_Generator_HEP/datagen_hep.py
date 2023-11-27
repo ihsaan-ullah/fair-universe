@@ -6,12 +6,13 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 import os
 import warnings
+import json
 warnings.filterwarnings("ignore")
 
 
 root_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.dirname(root_dir)
-write_dir = os.path.join(parent_dir, 'Datagenerator_syst')
+write_dir = os.path.join(parent_dir, 'Datagenerator')
 
 
 
@@ -44,7 +45,6 @@ def dataGenerator(verbose=0):
             print(feature)
 
     df = df.round(3)
-    weights = weights.round(4)
 
     if verbose > 0:
         print (f"[*] --- sum of weights : {np.sum(weights)}")
@@ -85,12 +85,6 @@ def dataGenerator(verbose=0):
     train_weights[train_label==1] *= total_signal_weight / subset_signal_weight
     train_weights[train_label==0] *= total_background_weight / subset_background_weight
 
-    if verbose > 1:
-        print (f"[*] --- Signal in Training set " , np.sum(train_weights[train_label==1]))
-        print (f"[*] --- Background in Training set" , np.sum(train_weights[train_label==0]))
-
-    import json
-
     train_settings = {"tes": 1.0, "ground_truth_mu": 1.0}
 
     # Specify the file path
@@ -120,131 +114,64 @@ def dataGenerator(verbose=0):
     test_weights[test_label==1] *= total_signal_weight / subset_signal_weight_test
     test_weights[test_label==0] *= total_background_weight / subset_background_weight_test
     
+    # Create directories to store the label and weight files
+    reference_settings_path =  os.path.join(write_dir, 'reference_data','settings')
+    if not os.path.exists(reference_settings_path):
+        os.makedirs(reference_settings_path)
 
-    for i in range(0, 10):
-        test_set = []
-        if i == 10:
-            break
-        # Calculate the sum of weights of signal and background for the current subset
+    test_weights_path =  os.path.join(write_dir, 'input_data','test','weights')
+    if not os.path.exists(test_weights_path):
+        os.makedirs(test_weights_path)
 
-        mu = round(np.random.uniform(0.01, 3.0), 2)
-        # mu = 1.0
-        if verbose > 1:
-            print(f'[*] --- mu = {mu}')
+    test_data_path =  os.path.join(write_dir, 'input_data','test','data')
+    if not os.path.exists(test_data_path):
+        os.makedirs(test_data_path)
 
+    test_settings_path =  os.path.join(write_dir, 'input_data','test','settings')
+    if not os.path.exists(test_settings_path):
+        os.makedirs(test_settings_path)
 
-        reference_label_path =  os.path.join(write_dir, 'reference_data',f'set_{i}','labels')
-        if not os.path.exists(reference_label_path):
-            os.makedirs(reference_label_path)
-
-        reference_settings_path =  os.path.join(write_dir, 'reference_data',f'set_{i}','settings')
-        if not os.path.exists(reference_settings_path):
-            os.makedirs(reference_settings_path)
-
-        test_weights_path =  os.path.join(write_dir, 'input_data','test',f'set_{i}','weights')
-        if not os.path.exists(test_weights_path):
-            os.makedirs(test_weights_path)
-
-        test_data_path =  os.path.join(write_dir, 'input_data','test',f'set_{i}','data')
-        if not os.path.exists(test_data_path):
-            os.makedirs(test_data_path)
-
-        tes_s = []
-        # Adjust the weights of the current subset to match the weights of the whole data
-
-        test_weights_set = test_weights.copy()
-
-        test_weights_set[test_label==1] *= mu
-
-        print (f"[*] --- mu in test set {i} : ", mu)
-        print (f"[*] --- Signal in  test set {i}" , np.sum(test_weights_set[test_label==1]))
-        print (f"[*] --- Background in  test set {i}" , np.sum(test_weights_set[test_label==0]))
-        print (f"[*] --- Total Events in  test set {i}" , np.sum(test_weights_set)) 
-
-        print (f"[*] --- avegare weight of signal in test set : ", np.mean(test_weights_set[test_label==1]))
-        print (f"[*] --- avegare weight of background in test set : ", np.mean(test_weights_set[test_label==0]))
+    test_label_path =  os.path.join(write_dir, 'input_data','test','labels')
+    if not os.path.exists(test_label_path):
+        os.makedirs(test_label_path)
 
 
 
+    print (f"[*] --- Signal in  test set " , np.sum(test_weights[test_label==1]))
+    print (f"[*] --- Background in  test set " , np.sum(test_weights[test_label==0]))
+    print (f"[*] --- Total Events in  test set " , np.sum(test_weights)) 
 
-        for j in range(0, 100):
-
-
-
-            bootstrap_test_data = bootstrap_data(data = test_df, weights = test_weights_set, label =  test_label, n = 100_000, seed=42 + j) 
-
-            test_df_bs = bootstrap_test_data['data']
-            test_df_bs['Weight'] = bootstrap_test_data['weights']
-            test_df_bs['Label'] = bootstrap_test_data['label']
-
-
-            #adding systematics to the test set
-
-            # Extract the TES information from the JSON file
-            tes = round(np.random.uniform(0.9, 1.10), 2)
-            # tes = 1.0
-
-            tes_s.append(tes)
-
-            test_syst = test_df_bs
-
-            data_syst = Systematics(
-            data=test_syst,
-            verbose=verbose,
-            tes=tes
-            ).data
-
-            test_weights_bs = data_syst.pop('Weight')
-            test_label_bs = data_syst.pop('Label')
-
-
-            data_syst = data_syst.round(3)
-
-            # Save the current subset as a CSV file
-            data_file_path = os.path.join(test_data_path, f'data_{j}.csv')
-            weights_file_path = os.path.join(test_weights_path, f'data_{j}.weights')
-            labels_file_path = os.path.join(reference_label_path, f'data_{j}.labels')
-
-            # Writing data to files
-            data_syst.to_csv(data_file_path, index=False)
-            test_weights_bs.to_csv(weights_file_path, index=False, header=False)
-            test_label_bs.to_csv(labels_file_path, index=False, header=False)
-
-            test_background_weight = np.sum(test_weights_bs[test_label_bs==0])
-            test_signal_weight = np.sum(test_weights_bs[test_label_bs==1])
-
-
-            test_set_info = {
-                "signal_weight": test_signal_weight,
-                "background_weight": test_background_weight,
-                "tes": tes
-            }
-
-            test_set.append(test_set_info)
-
-            del data_syst
-            del test_syst
-
-        test_set = pd.DataFrame(test_set)
-        if verbose > 1:
-
-
-            print (f"[*] --- Shape of test set : ",np.shape(test_df))
-            print (f"[*] --- Signal in  test set {i}" , np.mean(test_set['signal_weight']))
-            print (f"[*] --- Background in  test set {i}" , np.mean(test_set['background_weight']))
-            print (f"[*] --- Total Events in  test set {i}" ,   np.mean(test_set['signal_weight']) + np.mean(test_set[:]['background_weight']))
-        
-        # Save the mu and TES information to a JSON file
-        test_settings = {"tes": tes_s, "ground_truth_mu": mu}
-        Settings_file_path = os.path.join(reference_settings_path, 'data.json')
-        with open(Settings_file_path, 'w') as json_file:
-            json.dump(test_settings, json_file, indent=4)
-
-
-    # Save the training set as a CSV file
+    print (f"[*] --- avegare weight of signal in test set : ", np.mean(test_weights[test_label==1]))
+    print (f"[*] --- avegare weight of background in test set : ", np.mean(test_weights[test_label==0]))
 
 
 
+    # Save the current subset as a CSV file
+    data_file_path = os.path.join(test_data_path, f'data.csv')
+    weights_file_path = os.path.join(test_weights_path, f'data.weights')
+
+    # Writing data to files
+    test_df.to_csv(data_file_path, index=False)
+    test_weights.to_csv(weights_file_path, index=False, header=False)
+
+    test_label_path =  os.path.join(test_label_path, 'data.labels')
+    test_label.to_csv(test_label_path, index=False, header=False)
+    
+
+
+    mu = np.random.uniform(0, 3, 10)
+    mu = np.round(mu, 3)
+    mu_list = mu.tolist()
+    print (f"[*] --- mu in test set : ", mu_list)
+
+    test_settings = {"ground_truth_mus": mu_list}
+    Settings_file_path = os.path.join(reference_settings_path, 'data.json')
+    with open(Settings_file_path, 'w') as json_file:
+        json.dump(test_settings, json_file, indent=4)
+
+    Settings_file_path = os.path.join(test_settings_path, 'data.json')
+    with open(Settings_file_path, 'w') as json_file:
+        json.dump(test_settings, json_file, indent=4)
 
 def dataSimulator(n=1000, verbose=0, tes=1.0, mu=1.0):
     '''

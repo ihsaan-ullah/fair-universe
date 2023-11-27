@@ -18,7 +18,7 @@ import base64
 # # Directory to output computed score into
 # output_dir = os.path.join(root_dir, "scoring_output")
 # # reference data (test labels)
-# reference_dir = os.path.join(root_dir, "reference_data")
+# reference_dir = os.path.join(root_dir,"reference_data")
 # # submitted/predicted lables
 # prediction_dir = os.path.join(root_dir, "sample_result_submission")
 # # score file to write score into
@@ -30,7 +30,7 @@ import base64
 # Codabench Directories
 # ------------------------------------------
 # root directory
-root_dir = "/app"
+# root_dir = "/app"
 # Directory read predictions and solutions from
 input_dir = os.path.join(root_dir, "input")
 # Directory to output computed score into
