@@ -165,9 +165,8 @@ class Ingestion():
             tes=tes
         ).data
 
-
         # Apply weight scaling factor mu to the data
-        data_syst['weights'][data_syst["labels"]==1] *= mu
+        data_syst['weights'][data_syst["labels"] == 1] *= mu
 
         data_syst.pop("labels")
 
