@@ -8,7 +8,9 @@ import pandas as pd
 from datetime import datetime as dt
 import json
 from itertools import product
+from numpy.random import RandomState
 import warnings
+from copy import deepcopy
 warnings.filterwarnings("ignore")
 
 
@@ -19,7 +21,7 @@ warnings.filterwarnings("ignore")
 module_dir = os.path.dirname(os.path.realpath(__file__))
 root_dir = os.path.dirname(module_dir)
 # Input data directory to read training and test data from
-input_dir = os.path.join(root_dir, "sample_data")
+input_dir = os.path.join(root_dir,"sample_data")
 # Output data directory to write predictions to
 output_dir = os.path.join(root_dir, "sample_result_submission")
 # Program directory
@@ -37,7 +39,7 @@ path.append(submission_dir)
 # ------------------------------------------
 # Import Systamtics
 # ------------------------------------------
-from systematics import Systematics
+from systematics import Systematics, postprocess
 
 # ------------------------------------------
 # Import Model
@@ -55,7 +57,6 @@ class Ingestion():
         self.end_time = None
         self.model = None
         self.train_set = None
-        self.test_sets = []
 
     def start_timer(self):
         self.start_time = dt.now()
@@ -109,20 +110,61 @@ class Ingestion():
             "weights": train_weights
         }
 
-    def load_test_set(self, set_index, test_set_index):
+    def load_test_set(self):
+        print("[*] Loading Test data")
 
-        test_data_file = os.path.join(input_dir, 'test', 'set_'+str(set_index), 'data', 'data_'+str(test_set_index)+'.csv')
+        test_data_file = os.path.join(input_dir, 'test', 'data', 'data.csv')
+        test_settings_file = os.path.join(input_dir, 'test', 'settings', "data.json")
+        test_weights_file = os.path.join(input_dir, 'test', 'weights', "data.weights")
+        test_labels_file = os.path.join(input_dir, 'test', 'labels', "data.labels")
+
+        # read test data
         test_data = pd.read_csv(test_data_file)
 
-        test_weights_file = os.path.join(input_dir, 'test', 'set_'+str(set_index), 'weights', 'data_'+str(test_set_index)+'.weights')
+        # read test settings
+        with open(test_settings_file) as f:
+            self.test_settings = json.load(f)
+
+        # read test weights
         with open(test_weights_file) as f:
             test_weights = np.array(f.read().splitlines(), dtype=float)
 
-        test_set = {
+        # read test labels
+        with open(test_labels_file) as f:
+            test_labels = np.array(f.read().splitlines(), dtype=float)
+
+        self.test_set = {
             "data": test_data,
-            "weights": test_weights
+            "weights": test_weights,
+            "labels": test_labels
         }
-        return test_set
+
+    def get_bootstraped_dataset(self, mu=1.0, tes=1.0, seed=42):
+
+        temp_df = deepcopy(self.test_set["data"])
+        temp_df["weights"] = self.test_set["weights"]
+        temp_df["labels"] = self.test_set["labels"]
+
+        # Apply systematics to the sampled data
+        data_syst = Systematics(
+            data=temp_df,
+            tes=tes
+        ).data
+
+        # Apply weight scaling factor mu to the data
+        data_syst['weights'][data_syst["labels"] == 1] *= mu
+
+        data_syst.pop("labels")
+
+        prng = RandomState(seed)
+        new_weights = prng.poisson(lam=data_syst['weights'])
+
+        data_syst['weights'] = new_weights
+
+        return {
+            "data": data_syst.drop("weights", axis=1),
+            "weights": new_weights
+        }
 
     def init_submission(self):
         print("[*] Initializing Submmited Model")
@@ -139,7 +181,8 @@ class Ingestion():
         print("[*] Calling predict method of submitted model")
 
         # get set indices (0-9)
-        set_indices = np.arange(0, 10)
+        # set_indices = np.arange(0, 10)
+        set_indices = np.arange(0, 1)
         # get test set indices per set (0-99)
         test_set_indices = np.arange(0, 100)
 
@@ -150,8 +193,16 @@ class Ingestion():
 
         self.results_dict = {}
         for set_index, test_set_index in all_combinations:
+            # random tes value (one per test set)
+            tes = np.random.uniform(0.9, 1.1)
+            # create a seed
+            seed = (set_index*100) + test_set_index
+            # get mu value of set from test settings
+            set_mu = self.test_settings["ground_truth_mus"][set_index]
 
-            test_set = self.load_test_set(set_index=set_index, test_set_index=test_set_index)
+            # get bootstrapped dataset from the original test set
+            test_set = self.get_bootstraped_dataset(mu=set_mu, tes=tes, seed=seed)
+
             predicted_dict = self.model.predict(test_set)
             predicted_dict["test_set_index"] = test_set_index
 
@@ -159,14 +210,14 @@ class Ingestion():
 
             if set_index not in self.results_dict:
                 self.results_dict[set_index] = []
-
             self.results_dict[set_index].append(predicted_dict)
 
     def save_result(self):
         print("[*] Saving ingestion result")
 
         # loop over sets
-        for i in range(0, 10):
+        # for i in range(0, 10):
+        for i in range(0, 1):
             set_result = self.results_dict[i]
             set_result.sort(key=lambda x: x['test_set_index'])
             mu_hats, delta_mu_hats, p16, p84 = [], [], [], []
@@ -199,8 +250,11 @@ if __name__ == '__main__':
     # Start timer
     ingestion.start_timer()
 
-    # load test set
+    # load train set
     ingestion.load_train_set()
+
+    # load test set
+    ingestion.load_test_set()
 
     # initialize submission
     ingestion.init_submission()
