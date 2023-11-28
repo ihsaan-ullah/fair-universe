@@ -165,9 +165,8 @@ class Ingestion():
             tes=tes
         ).data
 
-
         # Apply weight scaling factor mu to the data
-        data_syst['weights'][data_syst["labels"]==1] *= mu
+        data_syst['weights'][data_syst["labels"] == 1] *= mu
 
         data_syst.pop("labels")
 
@@ -196,7 +195,8 @@ class Ingestion():
         print("[*] Calling predict method of submitted model")
 
         # get set indices (0-9)
-        set_indices = np.arange(0, 10)
+        # set_indices = np.arange(0, 10)
+        set_indices = np.arange(0, 1)
         # get test set indices per set (0-99)
         test_set_indices = np.arange(0, 100)
 
@@ -230,7 +230,8 @@ class Ingestion():
         print("[*] Saving ingestion result")
 
         # loop over sets
-        for i in range(0, 10):
+        # for i in range(0, 10):
+        for i in range(0, 1):
             set_result = self.results_dict[i]
             set_result.sort(key=lambda x: x['test_set_index'])
             mu_hats, delta_mu_hats, p16, p84 = [], [], [], []
