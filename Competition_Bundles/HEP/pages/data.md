@@ -45,4 +45,9 @@
 ## How to get Public Data?
 ***
 - Go to the "Files" tab
-- Download the "Uncertainty_Challenge_public_data"
+- Download the "Uncertainty challenge Open data"
+
+or use the following command to download using terminal
+```
+wget -O Uncertainty_challenge_open_data.zip https://www.codabench.org/datasets/download/b51439bf-9221-41d4-aca6-51a0a5a13f9c/
+```
