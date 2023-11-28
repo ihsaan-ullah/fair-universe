@@ -18,13 +18,14 @@ root_dir = os.path.dirname(module_dir)
 # Directory to output computed score into
 output_dir = os.path.join(root_dir, "scoring_output")
 # reference data (test labels)
-reference_dir = os.path.join(root_dir, "sample_data/test")
+reference_dir = os.path.join(root_dir,"sample_data/test")
 # submitted/predicted lables
 prediction_dir = os.path.join(root_dir, "sample_result_submission")
 # score file to write score into
 score_file = os.path.join(output_dir, "scores.json")
 # html file to write score and figures into
 html_file = os.path.join(output_dir, 'detailed_results.html')
+
 
 
 class Scoring:
@@ -61,18 +62,9 @@ class Scoring:
 
     def load_test_settings(self):
         print("[*] Reading test settings")
-        self.test_settings = []
-        # loop over sets (1 value of mu, total 10 sets)
-        for i in range(0, 10):
-            test_settings_per_mu = []
-            # loop over test sets, total 100 test sets
-            for j in range(0, 100):
-                settings_file = os.path.join(
-                    reference_dir, f'set_{i}', "settings", "data.json"
-                )
-                with open(settings_file) as f:
-                    test_settings_per_mu.append(json.load(f))
-            self.test_settings.append(test_settings_per_mu)
+        settings_file = os.path.join(reference_dir, "settings", "data.json")
+        with open(settings_file) as f:
+            self.test_settings = json.load(f)
 
         print("[✔]")
 
@@ -80,7 +72,8 @@ class Scoring:
         print("[*] Reading predictions")
         self.ingestion_results = []
         # loop over sets (1 value of mu, total 10 sets)
-        for i in range(0, 10):
+        # for i in range(0, 10):
+        for i in range(0, 1):
             results_file = os.path.join(prediction_dir, "result_"+str(i)+".json")
             with open(results_file) as f:
                 self.ingestion_results.append(json.load(f))
@@ -93,10 +86,8 @@ class Scoring:
         # loop over ingestion results
         rmses, maes = [], []
         all_p16s, all_p84s, all_mus = [], [], []
-        for i, (ingestion_result, test_settings) in enumerate(zip(self.ingestion_results, self.test_settings)):
+        for i, (ingestion_result, mu) in enumerate(zip(self.ingestion_results, self.test_settings["ground_truth_mus"])):
 
-            # just get the first test set mu
-            mu = test_settings[0]["ground_truth_mu"]
             mu_hats = ingestion_result["mu_hats"]
             delta_mu_hats = ingestion_result["delta_mu_hats"]
             p16s = ingestion_result["p16"]
@@ -201,6 +192,7 @@ class Scoring:
                 elif (x > one_sigma+2*sigma68):
                     out = 1 + abs((x-(one_sigma+2*sigma68))/sigma68)**3
                 return out
+
 
         coverage = Coverage(mu, p16, p84)
         interval = Interval(p16, p84)
