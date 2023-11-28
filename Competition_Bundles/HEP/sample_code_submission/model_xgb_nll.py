@@ -425,17 +425,20 @@ class Model():
             y_pred = self._predict(X_holdout_sc, theta)
             
 
-            gamma_roi = (w_holdout*(y_pred * y_holdout)).sum()
-            beta_roi = (w_holdout*(y_pred * (1-y_holdout))).sum()
+            gamma_roi_SR = (w_holdout*(y_pred * y_holdout)).sum()
+            beta_roi_SR = (w_holdout*(y_pred * (1-y_holdout))).sum()
+            gamma_roi_CR = (w_holdout*((1-y_pred) * y_holdout)).sum()
+            beta_roi_CR = (w_holdout*((1-y_pred) * (1-y_holdout))).sum()
 
 
             Y_hat_valid = self._predict(meta_validation_set_df, theta)
             weights_valid = meta_validation_set["weights"].copy() 
 
-            weight = weights_valid*(Y_hat_valid)
+            weight_SR = weights_valid*(Y_hat_valid)
+            weight_CR = weights_valid*(1-Y_hat_valid)
 
             mu_scan = np.linspace(0, 3, 100)
-            hist_llr = self.calculate_NLL(mu_scan, weight,gamma_roi,beta_roi)
+            hist_llr = self.calculate_NLL(mu_scan, weight_CR=weight_CR,weight_SR=weight_SR,use_CR=True,gamma_roi_SR=gamma_roi_SR,beta_roi_SR=beta_roi_SR,gamma_roi_CR=gamma_roi_CR,beta_roi_CR=beta_roi_CR)
             hist_llr = np.array(hist_llr)
 
             val =  np.abs(mu_scan[np.argmin(hist_llr)] - 1)
@@ -466,10 +469,11 @@ class Model():
         Y_hat_valid = self._predict(meta_validation_set_df, theta)
         weights_valid = meta_validation_set["weights"].copy() 
 
-        weight = weights_valid*(Y_hat_valid)
+        weight_SR = weights_valid*(Y_hat_valid)
+        weight_CR = weights_valid*(1-Y_hat_valid)
 
         mu_scan = np.linspace(0, 3, 100)
-        hist_llr = self.calculate_NLL(mu_scan, weight,gamma_roi,beta_roi)
+        hist_llr = self.calculate_NLL(mu_scan, weight_CR=weight_CR,weight_SR=weight_SR,use_CR=True)
         hist_llr = np.array(hist_llr)
 
         val =  np.abs(mu_scan[np.argmin(hist_llr)] - 1)
@@ -559,9 +563,10 @@ class Model():
             # del Score_valid
             weights_valid = valid_set["weights"].copy()
 
-            weight = weights_valid*(Y_hat_valid)
+            weight_SR = weights_valid*(Y_hat_valid)
+            weight_CR = weights_valid*(1-Y_hat_valid)
 
-            mu_hat,mu_p16,mu_p84 = self._compute_result(weight)
+            mu_hat,mu_p16,mu_p84 = self._compute_result(weight_SR,weight_CR)
 
 
 

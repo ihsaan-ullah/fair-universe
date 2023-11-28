@@ -31,6 +31,7 @@ def dataGenerator(verbose=0):
     flag = df.pop('Process_flag')
     label = df.pop('Label')
     weights = df.pop('Weight')
+    weights = weights * 0.09
     eventid = df.pop('EventId')
     df.pop('PRI_lep_charge')
     df.pop('PRI_had_charge')    
