@@ -430,6 +430,7 @@ class Model():
 
         self.validation_delta_mu_hats = []
         for valid_set in self.validation_sets:
+
             Y_hat_train = self.train_set["predictions"]
             Y_train = self.train_set["labels"]
             Y_hat_valid = valid_set["predictions"]
