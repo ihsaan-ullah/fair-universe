@@ -115,6 +115,7 @@ class Ingestion():
         # read train weights
         with open(train_weights_file) as f:
             train_weights = np.array(f.read().splitlines(), dtype=float)
+        train_weights = train_weights
 
         self.train_set = {
             "data": train_data,

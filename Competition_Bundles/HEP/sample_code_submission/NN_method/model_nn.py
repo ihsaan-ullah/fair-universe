@@ -3,13 +3,13 @@ from sys import path
 import numpy as np
 import pandas as pd
 from math import sqrt, log
-from xgboost import XGBClassifier
 from sklearn.utils import shuffle
 from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-from sklearn.multioutput import MultiOutputRegressor
 
+from keras.models import Sequential
+from keras.layers import Dense
 # ------------------------------
 # Absolute path to submission dir
 # ------------------------------
@@ -53,10 +53,7 @@ class Model():
         Params:
             train_set:
                 labelled train set
-
-            test_sets:
-                unlabelled test sets
-
+                
             systematics:
                 systematics class
 
@@ -69,11 +66,10 @@ class Model():
         self.systematics = systematics
 
         # Intialize class variables
-        self.validation_set = None
-        self.theta_candidates = np.linspace(0.8, 1.0, 100)
-        self.best_theta = 0.8
+        self.validation_sets = None
+        self.theta_candidates = np.arange(0.4, 0.95, 0.02)
+        self.best_theta = 0.9
         self.scaler = StandardScaler()
-        self.scaler_tes = StandardScaler()
 
     def fit(self):
         """
@@ -86,6 +82,15 @@ class Model():
         Returns:
             None
         """
+
+        self._generate_validation_sets()
+        self._init_model()
+        self._train()
+        self._choose_theta()
+        self.mu_hat_calc()
+        self._validate()
+        self._compute_validation_result()
+
 
         self._generate_validation_sets()
         self._init_model()
@@ -143,13 +148,18 @@ class Model():
         }
 
     def _init_model(self):
-        print("[*] - Intialize Baseline Model (XBM Classifier Model)")
+        print("[*] - Intialize Baseline Model (NN bases Uncertainty Estimator Model)")
 
-        self.model = XGBClassifier(
-            tree_method="hist",
-            use_label_encoder=False,
-            eval_metric=['logloss', 'auc']
-        )
+
+        n_cols = self.train_set["data"].shape[1]
+
+        self.model = Sequential()
+        self.model.add(Dense(100, input_dim=n_cols, activation='swish'))
+        self.model.add(Dense(100, activation='swish'))
+        self.model.add(Dense(100, activation='swish'))
+        self.model.add(Dense(2, activation='linear'))
+        self.model.compile(loss='mean_squared_error', optimizer='adam')
+
     def _generate_validation_sets(self):
         print("[*] - Generating Validation sets")
 
@@ -209,18 +219,6 @@ class Model():
 
         mu_calc_set_weights = mu_calc_set_df.pop('weights')
         mu_calc_set_labels = mu_calc_set_df.pop('labels')
-
-        # valid_df = valid_df.copy()
-        # valid_df["weights"] = valid_weights
-        # valid_df["labels"] = valid_labels
-
-        # valid_df = postprocess(valid_df)
-
-        # valid_weights = valid_df.pop('weights')
-        # valid_labels = valid_df.pop('labels')
-
-
-
 
         self.train_df = train_df
 
@@ -284,23 +282,63 @@ class Model():
 
     def _train(self):
 
+        tes_sets = []
 
-        weights_train = self.train_set["weights"].copy()
-        train_labels = self.train_set["labels"].copy()
-        train_data = self.train_set["data"].copy()
-        class_weights_train = (weights_train[train_labels == 0].sum(), weights_train[train_labels == 1].sum())
+        for i in range(0, 100):
+
+            tes_set = self.train_set['data'].copy()
+
+            tes_set = pd.DataFrame(tes_set)
+
+            tes_set["weights"] = self.train_set["weights"]
+            tes_set["labels"] = self.train_set["labels"]
+
+            tes_set = tes_set.sample(frac=0.01, replace=True, random_state=i).reset_index(drop=True)
+
+            # adding systematics to the tes set
+            # Extract the TES information from the JSON file
+            tes = round(np.random.uniform(0.9, 1.10), 2)
+            # tes = 1.0
+
+            syst_set = tes_set.copy()
+            data_syst = self.systematics(
+                data=syst_set,
+                verbose=0,
+                tes=tes
+            ).data
+
+            data_syst = data_syst.round(3)
+            tes_set = data_syst.copy()
+            tes_set['tes'] = (tes*10)*2
+            tes_sets.append(tes_set)
+            del data_syst
+            del tes_set
+
+        tes_sets_df = pd.concat(tes_sets)
+
+        train_tes_data = shuffle(tes_sets_df)
+
+        tes_label_1 = train_tes_data.pop('tes')
+        tes_label_2 = train_tes_data.pop('labels')
+        tes_label = [tes_label_1, tes_label_2]
+        tes_label = np.array(tes_label).T
+        tes_weights = train_tes_data.pop('weights')
+
+        weights_train = tes_weights.copy()
+
+        class_weights_train = (weights_train[tes_label_2 == 0].sum(), weights_train[tes_label_2 == 1].sum())
 
         for i in range(len(class_weights_train)):  # loop on B then S target
             # training dataset: equalize number of background and signal
-            weights_train[train_labels == i] *= max(class_weights_train) / class_weights_train[i]
+            weights_train[tes_label_2 == i] *= max(class_weights_train) / class_weights_train[i]
             # test dataset : increase test weight to compensate for sampling
 
         print("[*] --- Training Model")
-        train_data = self.scaler.fit_transform(train_data)
+        train_tes_data = self.scaler.fit_transform(train_tes_data)
 
-        print("[*] --- shape of train tes data", train_data.shape)
+        print("[*] --- shape of train tes data", train_tes_data.shape)
 
-        self._fit(train_data, train_labels, weights_train)
+        self._fit(train_tes_data, tes_label, weights_train)
 
         print("[*] --- Predicting Train set")
         self.train_set['predictions'] = (self.train_set['data'], self.best_theta)
@@ -316,10 +354,10 @@ class Model():
 
     def _fit(self, X, y, w):
         print("[*] --- Fitting Model")
-        self.model.fit(X, y, sample_weight=w)
+        self.model.fit(X, y, sample_weight=w, epochs=100, batch_size=1000, verbose=0)
 
     def _return_score(self, X):
-        y_predict = self.model.predict(X)
+        y_predict = self.model.predict(X)[:, 1]
         return y_predict
 
     def _predict(self, X, theta):
@@ -425,20 +463,17 @@ class Model():
             y_pred = self._predict(X_holdout_sc, theta)
             
 
-            gamma_roi_SR = (w_holdout*(y_pred * y_holdout)).sum()
-            beta_roi_SR = (w_holdout*(y_pred * (1-y_holdout))).sum()
-            gamma_roi_CR = (w_holdout*((1-y_pred) * y_holdout)).sum()
-            beta_roi_CR = (w_holdout*((1-y_pred) * (1-y_holdout))).sum()
+            gamma_roi = (w_holdout*(y_pred * y_holdout)).sum()
+            beta_roi = (w_holdout*(y_pred * (1-y_holdout))).sum()
 
 
             Y_hat_valid = self._predict(meta_validation_set_df, theta)
             weights_valid = meta_validation_set["weights"].copy() 
 
-            weight_SR = weights_valid*(Y_hat_valid)
-            weight_CR = weights_valid*(1-Y_hat_valid)
+            weight = weights_valid*(Y_hat_valid)
 
             mu_scan = np.linspace(0, 3, 100)
-            hist_llr = self.calculate_NLL(mu_scan, weight_CR=weight_CR,weight_SR=weight_SR,use_CR=True,gamma_roi_SR=gamma_roi_SR,beta_roi_SR=beta_roi_SR,gamma_roi_CR=gamma_roi_CR,beta_roi_CR=beta_roi_CR)
+            hist_llr = self.calculate_NLL(mu_scan, weight,gamma_roi,beta_roi)
             hist_llr = np.array(hist_llr)
 
             val =  np.abs(mu_scan[np.argmin(hist_llr)] - 1)
@@ -469,11 +504,10 @@ class Model():
         Y_hat_valid = self._predict(meta_validation_set_df, theta)
         weights_valid = meta_validation_set["weights"].copy() 
 
-        weight_SR = weights_valid*(Y_hat_valid)
-        weight_CR = weights_valid*(1-Y_hat_valid)
+        weight = weights_valid*(Y_hat_valid)
 
         mu_scan = np.linspace(0, 3, 100)
-        hist_llr = self.calculate_NLL(mu_scan, weight_CR=weight_CR,weight_SR=weight_SR,use_CR=True)
+        hist_llr = self.calculate_NLL(mu_scan, weight,gamma_roi,beta_roi)
         hist_llr = np.array(hist_llr)
 
         val =  np.abs(mu_scan[np.argmin(hist_llr)] - 1)
@@ -563,10 +597,9 @@ class Model():
             # del Score_valid
             weights_valid = valid_set["weights"].copy()
 
-            weight_SR = weights_valid*(Y_hat_valid)
-            weight_CR = weights_valid*(1-Y_hat_valid)
+            weight = weights_valid*(Y_hat_valid)
 
-            mu_hat,mu_p16,mu_p84 = self._compute_result(weight_SR,weight_CR)
+            mu_hat,mu_p16,mu_p84 = self._compute_result(weight)
 
 
 

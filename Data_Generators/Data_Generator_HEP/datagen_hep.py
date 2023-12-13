@@ -1,4 +1,4 @@
-from systematics import Systematics
+from systematics import Systematics, DER_data
 from bootstrap import bootstrap_data
 
 import pandas as pd
@@ -8,41 +8,119 @@ import os
 import warnings
 import json
 warnings.filterwarnings("ignore")
+from sklearn.utils import shuffle
+import sys
+
 
 
 root_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.dirname(root_dir)
-write_dir = os.path.join(parent_dir, 'Datagenerator')
+write_dir = os.path.join(parent_dir, 'Full_Dataset')
+
+def reweight(data, crosssection_dict):
+    # Temporary fix for the reweighting issue
+
+    crossection_list = crosssection_dict['crosssection']
+    process_list = crosssection_dict['process']
+    luminocity = 139
+
+    for process,crossection in zip(process_list, crossection_list):
+        length_process = data[data.Process_flag == process].shape[0]
+        weight_process = crossection*luminocity/length_process
+        data.loc[data.Process_flag == process, 'Weight'] = weight_process
+
+        print(f"[*] --- Process {process} has weight {weight_process} ")
+    
 
 
+            
 
+    return (data)
 
-# Load the CSV file
 def dataGenerator(verbose=0):
+
+    print("\n###################################\n")
+    print("\nData Generation Started\n")
+    print("\n###################################\n")
+
+    # Get the directory of the current script (datagen_hep.py)
 
     print('root - dir', root_dir)
     # Put reference_data.csv in the same dir as the datagen_hep.py
-    csv_file_path = os.path.join(root_dir, 'FU_challenge_2023_FullData.csv')
-    df = pd.read_csv(csv_file_path)
+    if len(sys.argv) < 2:
+        print("Please provide the filename as an argument.")
+        sys.exit(1)
+
+
+    filename = sys.argv[1]
+
+    if len(sys.argv) < 3:
+        print("Please provide the crosssection json file as an argument.")
+        sys.exit(1)
+
+    crosssection_json_file = sys.argv[2]
+
+    if len(sys.argv) < 4:
+        print("Please using default output directory")
+    else:
+        write_dir = sys.argv[3]
+
+
+    if not os.path.isfile(filename):
+        print(f"File '{filename}' does not exist.")
+        sys.exit(1)
+    if not os.path.isfile(crosssection_json_file):
+        print(f"File '{crosssection_json_file}' does not exist.")
+        sys.exit(1)
+
+    with open(crosssection_json_file) as json_file:
+        crosssection_dict = json.load(json_file)
+
+    file_size = os.path.getsize(filename)
+    print(f"The size of file '{filename}' is {file_size} bytes.")
+
+    df = pd.read_csv(filename)
 
     # Remove the "label" and "weights" columns from the data
 
+    DER_data(df)
+
+    df = shuffle(df)
+
+    reweight(df, crosssection_dict)
+    print("\n###################################\n")
+    print("Data Loading Completed")
+    print("\n###################################\n")
+
+
+
+    from datetime import datetime
+    print ("\nnow :",datetime.now())
+    print ("\nFile loaded with ",df.shape[0], " events ")
+    
+    label_weights = (df[df.Label==0].Weight.sum(), df[df.Label==1].Weight.sum() ) 
+    print("\ntotal label weights  B S =",label_weights)
+
+    label_nevents = (df[df.Label==0].shape[0], df[df.Label==1].shape[0] )
+    print ("\ntotal class number of events B S",label_nevents)
+    
+    print("\n###################################\n")
+    # Checking the consistency (no NaN)
+    print('\nNaN occurrences in Columns:')
+    print(df.isnull().sum(axis = 0))
+    
+    print("\n###################################\n")
 
     flag = df.pop('Process_flag')
     label = df.pop('Label')
     weights = df.pop('Weight')
-    eventid = df.pop('EventId')
+
     df.pop('PRI_lep_charge')
     df.pop('PRI_had_charge')    
     df.pop('PRI_jet_leading_charge')    
     df.pop('PRI_jet_subleading_charge')
 
     # Print the features of the data
-    features = df.columns.tolist()
-    if verbose > 1:
-        print ("[*] --- Features of the data")
-        for feature in features:
-            print(feature)
 
     df = df.round(3)
 
@@ -173,45 +251,9 @@ def dataGenerator(verbose=0):
     with open(Settings_file_path, 'w') as json_file:
         json.dump(test_settings, json_file, indent=4)
 
-def dataSimulator(n=1000, verbose=0, tes=1.0, mu=1.0):
-    '''
-    Simulates data for the HEP competition using reference data and systematics.
-
-    Args:
-        n (int): Number of samples to simulate. Default is 1000.
-        verbose (int): Verbosity level. Default is 0.
-        tes (float): TES (Trigger Efficiency Scale Factor) value. Default is 1.0.
-        mu (float): Mu (Signal Strength) value. Default is 1.0.
-
-    Returns:
-        pandas.DataFrame: Simulated data with systematics and weights.
-    '''
-
-    # Get the directory of the current script (datagen_temp.py)
-    module_dir = os.path.dirname(os.path.realpath(__file__))
-    
-    # Construct the absolute path to reference_data.csv
-    csv_file_path = os.path.join(module_dir, 'reference_data.csv')
-    df = pd.read_csv(csv_file_path)
-
-    # Sample n rows from the reference data
-    data = df.sample(n=n, replace=True)
-
-    # Apply systematics to the sampled data
-    data_syst = Systematics(
-        data=data,
-        verbose=verbose,
-        tes=tes
-    ).data
-
-    # Apply weight scaling factor mu to the data
-    data_syst['Weight'] *= mu
-
-    return data_syst
-
-
-
-    
+    print("\n###################################\n")
+    print("\nData Generation Completed\n")
+    print("\n###################################\n")
 
 
 if __name__ == "__main__":
