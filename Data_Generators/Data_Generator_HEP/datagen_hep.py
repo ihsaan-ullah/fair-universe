@@ -9,6 +9,8 @@ import warnings
 import json
 warnings.filterwarnings("ignore")
 from sklearn.utils import shuffle
+import sys
+
 
 
 root_dir = os.path.dirname(os.path.realpath(__file__))
@@ -41,15 +43,15 @@ def dataGenerator(verbose=0):
     file_size = os.path.getsize(filename)
     print(f"The size of file '{filename}' is {file_size} bytes.")
 
-    dfall = pd.read_csv(filename)
+    df = pd.read_csv(filename)
 
     # Remove the "label" and "weights" columns from the data
 
-    DER_data(dfall)
+    DER_data(df)
 
-    dfall = shuffle(dfall)
+    df = shuffle(df)
 
-    reweight(dfall)
+    reweight(df)
     print("\n###################################\n")
     print("\nData Loading Completed\n")
     print("\n###################################\n")
@@ -58,18 +60,18 @@ def dataGenerator(verbose=0):
 
     from datetime import datetime
     print ("\nnow :",datetime.now())
-    print ("\nFile loaded with ",dfall.shape[0], " events ")
+    print ("\nFile loaded with ",df.shape[0], " events ")
     
-    label_weights = (dfall[dfall.Label==0].Weight.sum(), dfall[dfall.Label==1].Weight.sum() ) 
+    label_weights = (df[df.Label==0].Weight.sum(), df[df.Label==1].Weight.sum() ) 
     print("\ntotal label weights  B S =",label_weights)
 
-    label_nevents = (dfall[dfall.Label==0].shape[0], dfall[dfall.Label==1].shape[0] )
+    label_nevents = (df[df.Label==0].shape[0], df[df.Label==1].shape[0] )
     print ("\ntotal class number of events B S",label_nevents)
     
     print("\n###################################\n")
     # Checking the consistency (no NaN)
     print('\nNaN occurrences in Columns:')
-    print(dfall.isnull().sum(axis = 0))
+    print(df.isnull().sum(axis = 0))
     
     print("\n###################################\n")
 
