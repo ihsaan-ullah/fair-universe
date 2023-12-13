@@ -21,7 +21,9 @@ warnings.filterwarnings("ignore")
 module_dir = os.path.dirname(os.path.realpath(__file__))
 root_dir = os.path.dirname(module_dir)
 # Input data directory to read training and test data from
-input_dir = os.path.join(root_dir,"sample_data")
+# input_dir = os.path.join(root_dir,"input_data")
+input_dir = os.path.join("D:", 'UA_input_data')
+
 # Output data directory to write predictions to
 output_dir = os.path.join(root_dir, "sample_result_submission")
 # Program directory
@@ -29,6 +31,19 @@ program_dir = os.path.join(root_dir, "ingestion_program")
 # Directory to read submitted submissions from
 submission_dir = os.path.join(root_dir, "sample_code_submission")
 
+# ------------------------------------------
+# Codabench Directories
+# ------------------------------------------
+# # Root directory
+# root_dir = "/app"
+# # Input data directory to read training and test data from
+# input_dir = os.path.join(root_dir, "input_data")
+# # Output data directory to write predictions to
+# output_dir = os.path.join(root_dir, "output")
+# # Program directory
+# program_dir = os.path.join(root_dir, "program")
+# # Directory to read submitted submissions from
+# submission_dir = os.path.join(root_dir, "ingested_program")
 
 path.append(input_dir)
 path.append(output_dir)
@@ -45,7 +60,8 @@ from systematics import Systematics, postprocess
 # Import Model
 # ------------------------------------------
 
-from model import Model
+from model_histogram import Model
+import multiprocessing
 
 
 class Ingestion():
@@ -151,8 +167,9 @@ class Ingestion():
             tes=tes
         ).data
 
+
         # Apply weight scaling factor mu to the data
-        data_syst['weights'][data_syst["labels"] == 1] *= mu
+        data_syst['weights'][data_syst["labels"]==1] *= mu
 
         data_syst.pop("labels")
 
@@ -177,12 +194,36 @@ class Ingestion():
         print("[*] Calling fit method of submitted model")
         self.model.fit()
 
+
+    # ...
+
+
+    def process_combination(self,combination):
+        set_index, test_set_index = combination
+        # random tes value (one per test set)
+        tes = np.random.uniform(0.9, 1.1)
+        # create a seed
+        seed = (set_index*100) + test_set_index
+        # get mu value of set from test settings
+        set_mu = self.test_settings["ground_truth_mus"][set_index]
+
+        # get bootstrapped dataset from the original test set
+        test_set = self.get_bootstraped_dataset(mu=set_mu, tes=tes, seed=seed)
+
+        predicted_dict = self.model.predict(test_set)
+        predicted_dict["test_set_index"] = test_set_index
+
+        print(f"[*] - mu_hat: {predicted_dict['mu_hat']} - delta_mu_hat: {predicted_dict['delta_mu_hat']} - p16: {predicted_dict['p16']} - p84: {predicted_dict['p84']}")
+
+        if set_index not in self.results_dict:
+            self.results_dict[set_index] = []
+        self.results_dict[set_index].append(predicted_dict)
+
     def predict_submission(self):
         print("[*] Calling predict method of submitted model")
 
         # get set indices (0-9)
-        # set_indices = np.arange(0, 10)
-        set_indices = np.arange(0, 1)
+        set_indices = np.arange(0, 10)
         # get test set indices per set (0-99)
         test_set_indices = np.arange(0, 100)
 
@@ -192,32 +233,20 @@ class Ingestion():
         np.random.shuffle(all_combinations)
 
         self.results_dict = {}
-        for set_index, test_set_index in all_combinations:
-            # random tes value (one per test set)
-            tes = np.random.uniform(0.9, 1.1)
-            # create a seed
-            seed = (set_index*100) + test_set_index
-            # get mu value of set from test settings
-            set_mu = self.test_settings["ground_truth_mus"][set_index]
+        num_processes = 4
+        pool = multiprocessing.Pool(processes=num_processes)
 
-            # get bootstrapped dataset from the original test set
-            test_set = self.get_bootstraped_dataset(mu=set_mu, tes=tes, seed=seed)
 
-            predicted_dict = self.model.predict(test_set)
-            predicted_dict["test_set_index"] = test_set_index
+        pool.map(self.process_combination, all_combinations)
+        pool.close()
+        pool.join()
 
-            print(f"[*] - mu_hat: {predicted_dict['mu_hat']} - delta_mu_hat: {predicted_dict['delta_mu_hat']} - p16: {predicted_dict['p16']} - p84: {predicted_dict['p84']}")
-
-            if set_index not in self.results_dict:
-                self.results_dict[set_index] = []
-            self.results_dict[set_index].append(predicted_dict)
 
     def save_result(self):
         print("[*] Saving ingestion result")
 
         # loop over sets
-        # for i in range(0, 10):
-        for i in range(0, 1):
+        for i in range(0, 10):
             set_result = self.results_dict[i]
             set_result.sort(key=lambda x: x['test_set_index'])
             mu_hats, delta_mu_hats, p16, p84 = [], [], [], []

@@ -30,19 +30,19 @@ html_file = os.path.join(output_dir, 'detailed_results.html')
 # Codabench Directories
 # ------------------------------------------
 # root directory
-# root_dir = "/app"
-# # Directory read predictions and solutions from
-# input_dir = os.path.join(root_dir, "input")
-# # Directory to output computed score into
-# output_dir = os.path.join(root_dir, "output")
-# # reference data (test labels)
-# reference_dir = os.path.join(input_dir, 'ref')  # Ground truth data
-# # submitted/predicted labels
-# prediction_dir = os.path.join(input_dir, 'res')
-# # score file to write score into
-# score_file = os.path.join(output_dir, 'scores.json')
-# # html file to write score and figures into
-# html_file = os.path.join(output_dir, 'detailed_results.html')
+root_dir = "/app"
+# Directory read predictions and solutions from
+input_dir = os.path.join(root_dir, "input")
+# Directory to output computed score into
+output_dir = os.path.join(root_dir, "output")
+# reference data (test labels)
+reference_dir = os.path.join(input_dir, 'ref')  # Ground truth data
+# submitted/predicted labels
+prediction_dir = os.path.join(input_dir, 'res')
+# score file to write score into
+score_file = os.path.join(output_dir, 'scores.json')
+# html file to write score and figures into
+html_file = os.path.join(output_dir, 'detailed_results.html')
 
 
 class Scoring:
@@ -89,7 +89,8 @@ class Scoring:
         print("[*] Reading predictions")
         self.ingestion_results = []
         # loop over sets (1 value of mu, total 10 sets)
-        for i in range(0, 10):
+        # for i in range(0, 10):
+        for i in range(0, 1):
             results_file = os.path.join(prediction_dir, "result_"+str(i)+".json")
             with open(results_file) as f:
                 self.ingestion_results.append(json.load(f))
