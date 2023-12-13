@@ -1,6 +1,33 @@
 # Data
 ***
 
+The dataset is created using the particle physics simulation tools Pythia 8.2 and Delphes 3.5.0. The proton-proton collision events are generated with a center of mass energy of 13 TeV using Pythia8. Subsequently, these events undergo the Delphes tool to produce simulated detector measurements. We used an ATLAS-like detector description to make the dataset closer to experimental data. The events are divided into two groups: 
+1. Higgs signal ($H \rightarrow \tau \tau$)
+2. $Z$ boson background ($Z \rightarrow \tau \tau$) 
+
+### Higgs Signal: 
+The Higgs bosons are produced with all possible production modes and decay into two tau leptons. The taus leptons are further allowed to decay into all possible final states. 
+
+### Z boson Background: 
+Only background events coming from Z boson are included in this challenge. While simulating the process, interference effects between Z boson and Photon are included. Similar to signal events, only the tau-tau decay mode of the Z boson is included in the dataset.
+
+ 
+> **NOTE**   
+> 
+> The training events have weights.
+>
+> **Event Weights:**
+>
+> The challenge is considering a scenario of analyzing $139 ~\textrm{fb} ^{-1}$ of proton-proton collision data collected by the ATLAS experiment during the Run-II phase (2015-2018) of the LHC.
+>   
+> Event weights are defined as:
+>
+> $ w = \frac{\textrm{Cross-Section} ~ \times ~ \textrm{Luminosity}}{\textrm{Total number of generated events}} $
+
+
+
+
+---
 
 **The following are the features in this data set.**
 
@@ -37,12 +64,17 @@
 | 29. | PRI_jet_subleading_eta       | The pseudorapidity $\eta$ of the subleading jet (undefined if PRI_jet_num ≤ 1).                  |
 | 30. | PRI_jet_subleading_phi       | The azimuth angle $\phi$ of the subleading jet (undefined if PRI_jet_num ≤ 1).                   |
 | 31. | PRI_jet_all_pt               | The scalar sum of the transverse momentum of all the jets of the events.                          |
-| 32. | Weight                       | The event weight $w_i$.  {should **NOT** be used for training}                                                                         |
-| 33. | Label                        | The event label $y_i \in \{1,0\}$ (1 for signal, 0 for background). {should **NOT** be used for training}                               |
+| 32. | Weight                       | The event weight $w_i$.                                                                                  |
+| 33. | Label                        | The event label $y_i \in \{1,0\}$ (1 for signal, 0 for background). {should **NOT** be used as a  training feature}                    |
 
 
 
 ## How to get Public Data?
 ***
 - Go to the "Files" tab
-- Download the "Uncertainty_Challenge_public_data"
+- Download the "Uncertainty challenge Open data"
+
+or use the following command to download using terminal
+```
+wget -O Uncertainty_challenge_open_data.zip https://www.codabench.org/datasets/download/b51439bf-9221-41d4-aca6-51a0a5a13f9c/
+```

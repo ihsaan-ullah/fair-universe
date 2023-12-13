@@ -175,7 +175,7 @@ class Scoring:
 
         def Interval(p16, p84):
             """Compute the average of the intervals defined by vectors p16 and p84."""
-            return np.mean(p84 - p16)
+            return np.mean(np.abs(p84 - p16))
 
         def Coverage(mu, p16, p84):
             """Compute the fraction of times scalar mu is within intervals defined by vectors p16 and p84."""
