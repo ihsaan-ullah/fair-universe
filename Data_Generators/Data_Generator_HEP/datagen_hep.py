@@ -15,9 +15,26 @@ import sys
 
 root_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.dirname(root_dir)
-write_dir = os.path.join(parent_dir, 'Datagenerator')
+write_dir = os.path.join(parent_dir, 'Full_Dataset')
 
-def reweight(data):
+def reweight(data, crosssection_dict):
+    # Temporary fix for the reweighting issue
+
+    crossection_list = crosssection_dict['crosssection']
+    process_list = crosssection_dict['process']
+    luminocity = 139
+
+    for process,crossection in zip(process_list, crossection_list):
+        length_process = data[data.Process_flag == process].shape[0]
+        weight_process = crossection*luminocity/length_process
+        data.loc[data.Process_flag == process, 'Weight'] = weight_process
+
+        print(f"[*] --- Process {process} has weight {weight_process} ")
+    
+
+
+            
+
     return (data)
 
 def dataGenerator(verbose=0):
@@ -34,11 +51,30 @@ def dataGenerator(verbose=0):
         print("Please provide the filename as an argument.")
         sys.exit(1)
 
+
     filename = sys.argv[1]
+
+    if len(sys.argv) < 3:
+        print("Please provide the crosssection json file as an argument.")
+        sys.exit(1)
+
+    crosssection_json_file = sys.argv[2]
+
+    if len(sys.argv) < 4:
+        print("Please using default output directory")
+    else:
+        write_dir = sys.argv[3]
+
 
     if not os.path.isfile(filename):
         print(f"File '{filename}' does not exist.")
         sys.exit(1)
+    if not os.path.isfile(crosssection_json_file):
+        print(f"File '{crosssection_json_file}' does not exist.")
+        sys.exit(1)
+
+    with open(crosssection_json_file) as json_file:
+        crosssection_dict = json.load(json_file)
 
     file_size = os.path.getsize(filename)
     print(f"The size of file '{filename}' is {file_size} bytes.")
@@ -51,9 +87,9 @@ def dataGenerator(verbose=0):
 
     df = shuffle(df)
 
-    reweight(df)
+    reweight(df, crosssection_dict)
     print("\n###################################\n")
-    print("\nData Loading Completed\n")
+    print("Data Loading Completed")
     print("\n###################################\n")
 
 
