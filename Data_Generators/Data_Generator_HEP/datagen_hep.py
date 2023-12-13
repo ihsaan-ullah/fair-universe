@@ -9,13 +9,32 @@ import warnings
 import json
 warnings.filterwarnings("ignore")
 from sklearn.utils import shuffle
+import sys
+
 
 
 root_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.dirname(root_dir)
-write_dir = os.path.join(parent_dir, 'Datagenerator')
+write_dir = os.path.join(parent_dir, 'Full_Dataset')
 
-def reweight(data):
+def reweight(data, crosssection_dict):
+    # Temporary fix for the reweighting issue
+
+    crossection_list = crosssection_dict['crosssection']
+    process_list = crosssection_dict['process']
+    luminocity = 139
+
+    for process,crossection in zip(process_list, crossection_list):
+        length_process = data[data.Process_flag == process].shape[0]
+        weight_process = crossection*luminocity/length_process
+        data.loc[data.Process_flag == process, 'Weight'] = weight_process
+
+        print(f"[*] --- Process {process} has weight {weight_process} ")
+    
+
+
+            
+
     return (data)
 
 def dataGenerator(verbose=0):
@@ -32,44 +51,63 @@ def dataGenerator(verbose=0):
         print("Please provide the filename as an argument.")
         sys.exit(1)
 
+
     filename = sys.argv[1]
+
+    if len(sys.argv) < 3:
+        print("Please provide the crosssection json file as an argument.")
+        sys.exit(1)
+
+    crosssection_json_file = sys.argv[2]
+
+    if len(sys.argv) < 4:
+        print("Please using default output directory")
+    else:
+        write_dir = sys.argv[3]
+
 
     if not os.path.isfile(filename):
         print(f"File '{filename}' does not exist.")
         sys.exit(1)
+    if not os.path.isfile(crosssection_json_file):
+        print(f"File '{crosssection_json_file}' does not exist.")
+        sys.exit(1)
+
+    with open(crosssection_json_file) as json_file:
+        crosssection_dict = json.load(json_file)
 
     file_size = os.path.getsize(filename)
     print(f"The size of file '{filename}' is {file_size} bytes.")
 
-    dfall = pd.read_csv(filename)
+    df = pd.read_csv(filename)
 
     # Remove the "label" and "weights" columns from the data
 
-    DER_data(dfall)
+    DER_data(df)
 
-    dfall = shuffle(dfall)
+    df = shuffle(df)
 
-    reweight(dfall)
+    reweight(df, crosssection_dict)
     print("\n###################################\n")
-    print("\nData Loading Completed\n")
+    print("Data Loading Completed")
     print("\n###################################\n")
 
 
 
     from datetime import datetime
     print ("\nnow :",datetime.now())
-    print ("\nFile loaded with ",dfall.shape[0], " events ")
+    print ("\nFile loaded with ",df.shape[0], " events ")
     
-    label_weights = (dfall[dfall.Label==0].Weight.sum(), dfall[dfall.Label==1].Weight.sum() ) 
+    label_weights = (df[df.Label==0].Weight.sum(), df[df.Label==1].Weight.sum() ) 
     print("\ntotal label weights  B S =",label_weights)
 
-    label_nevents = (dfall[dfall.Label==0].shape[0], dfall[dfall.Label==1].shape[0] )
+    label_nevents = (df[df.Label==0].shape[0], df[df.Label==1].shape[0] )
     print ("\ntotal class number of events B S",label_nevents)
     
     print("\n###################################\n")
     # Checking the consistency (no NaN)
     print('\nNaN occurrences in Columns:')
-    print(dfall.isnull().sum(axis = 0))
+    print(df.isnull().sum(axis = 0))
     
     print("\n###################################\n")
 
