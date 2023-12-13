@@ -1,13 +1,14 @@
 # Data Generator HEP
 
-This folder contains data generator to generate HEP datasets.
+This folder contains the data generator (`datagen_hep.py`) to generate HEP Competition datasets. and a data simulator (`data_simulator.py`) which lets you generate different datasets with and without bootstraping. 
 
-To run the scrip put `reference_data.csv` in the same folder i.e. `Data_Generator_HEP` and run the following command
-
+To run the `datagen_hep.py` script use the following code
+```
+python datagen_hep.py <input_file> <crosssection_json_file> <output_file_location>
 
 ```
-python datagen_hep.py
+In case you didn't specify the output file the out will be in `fair-universe/Data_Generators/Full_Dataset/' 
 
-```
+This will generate train and test sets. 
 
-This will generate train and test sets. Note that the test sets are combined as sets of 100 test sets. E.g. `set_0` is a folder with 100 test sets with different values of systematics and one value of $\mu$. 
+The `data_simulator.py` is a module and hence can be imported into your codes. 
