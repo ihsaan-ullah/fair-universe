@@ -262,7 +262,8 @@ if __name__ == '__main__':
     # Add submission directory to path
     if len(sys.argv) > 1:
         submission_dir = sys.argv[1]
-        path.append(submission_dir)
+    
+    path.append(submission_dir)
 
     print(f"[*] Submission directory: {submission_dir}")
 
