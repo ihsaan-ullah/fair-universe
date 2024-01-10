@@ -22,7 +22,7 @@ warnings.filterwarnings("ignore")
 module_dir = os.path.dirname(os.path.realpath(__file__))
 root_dir = os.path.dirname(module_dir)
 # Input data directory to read training and test data from
-input_dir = os.path.join("/global/cfs/cdirs/m4287/hep/nominal_dataset/Merged_dataset/Full_dataset_19_12_2023","input_data")
+input_dir = os.path.join("/home/chakkappai/Work/Fair-Universe/Full_dataset_21_12_2023","input_data")
 # input_dir = os.path.join(root_dir, "input_data")
 # Output data directory to write predictions to
 output_dir = os.path.join(root_dir, "sample_result_submission")
