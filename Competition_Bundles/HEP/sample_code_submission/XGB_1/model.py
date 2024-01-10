@@ -71,7 +71,7 @@ class Model():
         # Intialize class variables
         self.validation_sets = None
         self.theta_candidates = np.arange(0.5, 0.99, 0.01)
-        self.best_theta = 0.5
+        self.best_theta = 0.85
         self.scaler = StandardScaler()
         self.scaler_tes = StandardScaler()
 
@@ -125,18 +125,18 @@ class Model():
         print(f"[*] --- total weight mu_cals_set: {self.mu_calc_set['weights'].sum()}")
 
         # get n_roi
-        n_roi = self.N_calc_2(weights_test[Y_hat_test == 1])
+        n_roi = (weights_test[Y_hat_test == 1]).sum()
 
         mu_hat = (n_roi - self.beta_roi)/self.gamma_roi
 
-        sigma_mu_hat = np.std(mu_hat)
+        sigma_mu_hat = np.sqrt(n_roi)/self.gamma_roi
 
         delta_mu_hat = 2*sigma_mu_hat
 
-        mu_p16 = np.percentile(mu_hat, 16) - 2*delta_mu_hat
-        mu_p84 = np.percentile(mu_hat, 84) + 2*delta_mu_hat
+        mu_p16 = mu_hat - sigma_mu_hat
+        mu_p84 = mu_hat + sigma_mu_hat
 
-        print(f"[*] --- mu_hat: {mu_hat.mean()}")
+        print(f"[*] --- mu_hat: {mu_hat}")
         print(f"[*] --- delta_mu_hat: {delta_mu_hat}")
         print(f"[*] --- p16: {mu_p16}")
         print(f"[*] --- p84: {mu_p84}")
@@ -181,6 +181,23 @@ class Model():
             stratify=train_labels
         )
 
+
+        # Calculate the sum of weights for signal and background in the training and validation sets
+        train_signal_weights = train_weights[train_labels == 1].sum()
+        train_background_weights = train_weights[train_labels == 0].sum()
+        valid_signal_weights = valid_weights[valid_labels == 1].sum()
+        valid_background_weights = valid_weights[valid_labels == 0].sum()
+        mu_calc_set_signal_weights = mu_calc_set_weights[mu_calc_set_labels == 1].sum()
+        mu_calc_set_background_weights = mu_calc_set_weights[mu_calc_set_labels == 0].sum()
+
+        # Balance the sum of weights for signal and background in the training and validation sets
+        train_weights[train_labels == 1] *= signal_weights / train_signal_weights
+        train_weights[train_labels == 0] *= background_weights / train_background_weights
+        valid_weights[valid_labels == 1] *= signal_weights / valid_signal_weights
+        valid_weights[valid_labels == 0] *= background_weights / valid_background_weights
+        mu_calc_set_weights[mu_calc_set_labels == 1] *= signal_weights / mu_calc_set_signal_weights
+        mu_calc_set_weights[mu_calc_set_labels == 0] *= background_weights / mu_calc_set_background_weights
+
         train_df = train_df.copy()
         train_df["weights"] = train_weights
         train_df["labels"] = train_labels
@@ -199,21 +216,7 @@ class Model():
         mu_calc_set_labels = mu_calc_set_df.pop('labels')
 
 
-        # Calculate the sum of weights for signal and background in the training and validation sets
-        train_signal_weights = train_weights[train_labels == 1].sum()
-        train_background_weights = train_weights[train_labels == 0].sum()
-        valid_signal_weights = valid_weights[valid_labels == 1].sum()
-        valid_background_weights = valid_weights[valid_labels == 0].sum()
-        mu_calc_set_signal_weights = mu_calc_set_weights[mu_calc_set_labels == 1].sum()
-        mu_calc_set_background_weights = mu_calc_set_weights[mu_calc_set_labels == 0].sum()
 
-        # Balance the sum of weights for signal and background in the training and validation sets
-        train_weights[train_labels == 1] *= signal_weights / train_signal_weights
-        train_weights[train_labels == 0] *= background_weights / train_background_weights
-        valid_weights[valid_labels == 1] *= signal_weights / valid_signal_weights
-        valid_weights[valid_labels == 0] *= background_weights / valid_background_weights
-        mu_calc_set_weights[mu_calc_set_labels == 1] *= signal_weights / mu_calc_set_signal_weights
-        mu_calc_set_weights[mu_calc_set_labels == 0] *= background_weights / mu_calc_set_background_weights
 
         self.train_df = train_df
 
@@ -487,9 +490,9 @@ class Model():
             print(f"[*] --- delta_mu_stat : {delta_mu_stat}")
 
             # get n_roi
-            n_roi = self.N_calc_2(weights_valid[Y_hat_valid == 1])
+            n_roi = (weights_valid[Y_hat_valid == 1]).sum()
 
-            mu_hat = ((n_roi - self.beta_roi)/self.gamma_roi).mean()
+            mu_hat = ((n_roi - self.beta_roi)/self.gamma_roi)
             # get region of interest
             nu_roi = self.beta_roi + self.gamma_roi
 

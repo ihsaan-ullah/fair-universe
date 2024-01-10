@@ -172,8 +172,6 @@ class Model():
         self.force_correction =  val
 
 
-
-
     def calculate_NLL(self, mu_scan, weight_SR,weight_CR,use_CR=False):
         train_df = self.train_set["data"].copy()
         label_train = self.train_set["labels"].copy()

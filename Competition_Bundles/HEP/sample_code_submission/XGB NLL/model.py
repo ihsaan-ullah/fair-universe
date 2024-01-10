@@ -90,7 +90,7 @@ class Model():
         self._generate_validation_sets()
         self._init_model()
         self._train()
-        self._choose_theta()
+        # self._choose_theta()
         # self.mu_hat_calc()
         self._validate()
         self._compute_validation_result()
