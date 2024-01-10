@@ -46,7 +46,6 @@ submission_dir = os.path.join(root_dir, "sample_code_submission","1 bin nll")
 # submission_dir = os.path.join(root_dir, "ingested_program")
 
 path.append(input_dir)
-path.append(output_dir)
 path.append(program_dir)
 
 
@@ -262,7 +261,10 @@ if __name__ == '__main__':
     # Add submission directory to path
     if len(sys.argv) > 1:
         submission_dir = sys.argv[1]
+    if len(sys.argv) > 2:
+        output_dir = sys.argv[2]
     
+    path.append(output_dir)
     path.append(submission_dir)
 
     print(f"[*] Submission directory: {submission_dir}")

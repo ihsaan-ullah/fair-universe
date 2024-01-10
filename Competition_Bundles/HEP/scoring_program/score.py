@@ -6,6 +6,7 @@ import numpy as np
 import json
 from datetime import datetime as dt
 import matplotlib.pyplot as plt
+import sys
 import io
 import base64
 
@@ -256,8 +257,15 @@ if __name__ == "__main__":
     print("### Scoring Program")
     print("############################################\n")
 
+    if len(sys.argv) > 1:
+        output_dir = sys.argv[1]
+    
+    if len(sys.argv) > 2:
+        prediction_dir = sys.argv[2]
+        
     # Init scoring
     scoring = Scoring()
+
 
     # Start timer
     scoring.start_timer()
