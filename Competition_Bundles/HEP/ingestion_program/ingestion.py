@@ -115,12 +115,14 @@ class Ingestion():
         train_weights = train_weights
 
         self.train_set = {
-            "data": pd.read_csv(train_data_file),
+            "data": pd.read_csv(train_data_file,dtype=np.float32),
             "labels": train_labels,
             "settings": train_settings,
             "weights": train_weights
         }
         del train_labels, train_settings, train_weights
+        print(self.train_set["data"].info(verbose=False, memory_usage="deep"))
+        print ("[*] Train data loaded successfully")
 
     def load_test_set(self):
         print("[*] Loading Test data")
@@ -148,6 +150,8 @@ class Ingestion():
             "labels": test_labels
         }
         del test_weights, test_labels
+
+        print ("[*] Test data loaded successfully")
 
     def get_bootstraped_dataset(self, mu=1.0, tes=1.0, seed=42):
 
