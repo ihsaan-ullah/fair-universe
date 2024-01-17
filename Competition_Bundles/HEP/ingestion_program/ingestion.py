@@ -22,7 +22,7 @@ import sys
 module_dir = os.path.dirname(os.path.realpath(__file__))
 root_dir = os.path.dirname(module_dir)
 # Input data directory to read training and test data from
-input_dir = os.path.join("/home/chakkappai/Work/Fair-Universe/Full_dataset_21_12_2023","input_data")
+input_dir = os.path.join("/data/atlas/chakkappai/Full_dataset_21_12_2023","input_data")
 # input_dir = os.path.join(root_dir, "input_data")
 # Output data directory to write predictions to
 output_dir = os.path.join(root_dir, "sample_result_submission")
@@ -120,6 +120,9 @@ class Ingestion():
             "settings": train_settings,
             "weights": train_weights
         }
+
+        print(self.train_set["data"].info(verbose=False, memory_usage="deep"))
+        print ("[*] Train data loaded successfully")
         del train_labels, train_settings, train_weights
         print(self.train_set["data"].info(verbose=False, memory_usage="deep"))
         print ("[*] Train data loaded successfully")
