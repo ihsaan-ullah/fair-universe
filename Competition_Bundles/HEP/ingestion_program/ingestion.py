@@ -12,7 +12,7 @@ from numpy.random import RandomState
 import warnings
 from copy import deepcopy
 import sys
-# warnings.filterwarnings("ignore")
+warnings.filterwarnings("ignore")
 
 
 # ------------------------------------------
