@@ -36,7 +36,8 @@ warnings.filterwarnings("ignore")
 # Root directory
 root_dir = "/app"
 # Input data directory to read training and test data from
-input_dir = os.path.join(root_dir, "input_data")
+# input_dir = os.path.join(root_dir, "input_data")
+input_dir = os.path.join("/home/chakkappai/Work/Fair-Universe","Uncertainty_Challenge_input_data_21_12_2023")
 # Output data directory to write predictions to
 output_dir = os.path.join(root_dir, "output")
 # Program directory
