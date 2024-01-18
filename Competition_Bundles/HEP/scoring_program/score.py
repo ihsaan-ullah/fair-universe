@@ -12,7 +12,7 @@ import base64
 
 # ------------------------------------------
 # Default Directories
-# # ------------------------------------------
+# ------------------------------------------
 # # root directory
 # module_dir = os.path.dirname(os.path.realpath(__file__))
 # root_dir = os.path.dirname(module_dir)
