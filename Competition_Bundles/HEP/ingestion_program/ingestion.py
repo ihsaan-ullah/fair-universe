@@ -11,6 +11,7 @@ from itertools import product
 from numpy.random import RandomState
 import warnings
 from copy import deepcopy
+import sys
 warnings.filterwarnings("ignore")
 
 
@@ -21,13 +22,13 @@ warnings.filterwarnings("ignore")
 # module_dir = os.path.dirname(os.path.realpath(__file__))
 # root_dir = os.path.dirname(module_dir)
 # # Input data directory to read training and test data from
-# input_dir = os.path.join(root_dir,"input_data")
+# input_dir = os.path.join(root_dir, "input_data")
 # # Output data directory to write predictions to
 # output_dir = os.path.join(root_dir, "sample_result_submission")
 # # Program directory
 # program_dir = os.path.join(root_dir, "ingestion_program")
 # # Directory to read submitted submissions from
-# submission_dir = os.path.join(root_dir, "sample_code_submission")
+# submission_dir = os.path.join(root_dir, "sample_code_submission","1 bin nll")
 
 # ------------------------------------------
 # Codabench Directories
@@ -44,9 +45,7 @@ program_dir = os.path.join(root_dir, "program")
 submission_dir = os.path.join(root_dir, "ingested_program")
 
 path.append(input_dir)
-path.append(output_dir)
 path.append(program_dir)
-path.append(submission_dir)
 
 
 # ------------------------------------------
@@ -58,7 +57,7 @@ from systematics import Systematics, postprocess
 # Import Model
 # ------------------------------------------
 
-from model import Model
+# from model import Model
 
 
 class Ingestion():
@@ -101,9 +100,6 @@ class Ingestion():
         train_settings_file = os.path.join(input_dir, 'train', 'settings', "data.json")
         train_weights_file = os.path.join(input_dir, 'train', 'weights', "data.weights")
 
-        # read train data
-        train_data = pd.read_csv(train_data_file)
-
         # read train labels
         with open(train_labels_file, "r") as f:
             train_labels = np.array(f.read().splitlines(), dtype=float)
@@ -118,11 +114,17 @@ class Ingestion():
         train_weights = train_weights
 
         self.train_set = {
-            "data": train_data,
+            "data": pd.read_csv(train_data_file,dtype=np.float32),
             "labels": train_labels,
             "settings": train_settings,
             "weights": train_weights
         }
+
+        print(self.train_set["data"].info(verbose=False, memory_usage="deep"))
+        print ("[*] Train data loaded successfully")
+        del train_labels, train_settings, train_weights
+        print(self.train_set["data"].info(verbose=False, memory_usage="deep"))
+        print ("[*] Train data loaded successfully")
 
     def load_test_set(self):
         print("[*] Loading Test data")
@@ -131,9 +133,6 @@ class Ingestion():
         test_settings_file = os.path.join(input_dir, 'test', 'settings', "data.json")
         test_weights_file = os.path.join(input_dir, 'test', 'weights', "data.weights")
         test_labels_file = os.path.join(input_dir, 'test', 'labels', "data.labels")
-
-        # read test data
-        test_data = pd.read_csv(test_data_file)
 
         # read test settings
         with open(test_settings_file) as f:
@@ -148,10 +147,13 @@ class Ingestion():
             test_labels = np.array(f.read().splitlines(), dtype=float)
 
         self.test_set = {
-            "data": test_data,
+            "data": pd.read_csv(test_data_file),
             "weights": test_weights,
             "labels": test_labels
         }
+        del test_weights, test_labels
+
+        print ("[*] Test data loaded successfully")
 
     def get_bootstraped_dataset(self, mu=1.0, tes=1.0, seed=42):
 
@@ -175,6 +177,8 @@ class Ingestion():
 
         data_syst['weights'] = new_weights
 
+        del temp_df
+
         return {
             "data": data_syst.drop("weights", axis=1),
             "weights": new_weights
@@ -186,6 +190,8 @@ class Ingestion():
             train_set=self.train_set,
             systematics=Systematics
         )
+
+        del self.train_set
 
     def fit_submission(self):
         print("[*] Calling fit method of submitted model")
@@ -250,6 +256,7 @@ class Ingestion():
             result_file = os.path.join(output_dir, "result_"+str(i)+".json")
             with open(result_file, 'w') as f:
                 f.write(json.dumps(ingestion_result_dict, indent=4))
+            
 
 
 if __name__ == '__main__':
@@ -257,6 +264,19 @@ if __name__ == '__main__':
     print("############################################")
     print("### Ingestion Program")
     print("############################################\n")
+
+    # Add submission directory to path
+    if len(sys.argv) > 1:
+        submission_dir = sys.argv[1]
+    if len(sys.argv) > 2:
+        output_dir = sys.argv[2]
+    
+    path.append(output_dir)
+    path.append(submission_dir)
+
+    print(f"[*] Submission directory: {submission_dir}")
+
+    from model import Model
 
     # Init Ingestion
     ingestion = Ingestion()
@@ -267,15 +287,15 @@ if __name__ == '__main__':
     # load train set
     ingestion.load_train_set()
 
-    # load test set
-    ingestion.load_test_set()
-
     # initialize submission
     ingestion.init_submission()
 
     # fit submission
     ingestion.fit_submission()
 
+    # load test set
+    ingestion.load_test_set()
+    
     # predict submission
     ingestion.predict_submission()
 

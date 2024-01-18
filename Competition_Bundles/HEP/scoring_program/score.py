@@ -6,6 +6,7 @@ import numpy as np
 import json
 from datetime import datetime as dt
 import matplotlib.pyplot as plt
+import sys
 import io
 import base64
 
@@ -18,7 +19,7 @@ import base64
 # # Directory to output computed score into
 # output_dir = os.path.join(root_dir, "scoring_output")
 # # reference data (test labels)
-# reference_dir = os.path.join(root_dir,"reference_data")
+# reference_dir = os.path.join(root_dir, "reference_data")
 # # submitted/predicted lables
 # prediction_dir = os.path.join(root_dir, "sample_result_submission")
 # # score file to write score into
@@ -256,8 +257,15 @@ if __name__ == "__main__":
     print("### Scoring Program")
     print("############################################\n")
 
+    if len(sys.argv) > 1:
+        output_dir = sys.argv[1]
+    
+    if len(sys.argv) > 2:
+        prediction_dir = sys.argv[2]
+        
     # Init scoring
     scoring = Scoring()
+
 
     # Start timer
     scoring.start_timer()

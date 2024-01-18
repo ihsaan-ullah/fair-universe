@@ -22,14 +22,16 @@ def reweight(data, crosssection_dict):
 
     crossection_list = crosssection_dict['crosssection']
     process_list = crosssection_dict['process']
+    number_of_events = crosssection_dict['number']
     luminocity = 139
 
-    for process,crossection in zip(process_list, crossection_list):
-        length_process = data[data.Process_flag == process].shape[0]
-        weight_process = crossection*luminocity/length_process
+    for process,crossection,number in zip(process_list, crossection_list, number_of_events):
+        weight_process = crossection*luminocity/number
         data.loc[data.Process_flag == process, 'Weight'] = weight_process
+        weight_process_sum = data.loc[data.Process_flag == process, 'Weight'].sum()
 
-        print(f"[*] --- Process {process} has weight {weight_process} ")
+        print(f"[*] --- Process {process} has weight {weight_process} and sum {weight_process_sum}")
+
     
 
 
@@ -114,7 +116,7 @@ def dataGenerator(verbose=0):
     flag = df.pop('Process_flag')
     label = df.pop('Label')
     weights = df.pop('Weight')
-
+    df.pop('entry')
     df.pop('PRI_lep_charge')
     df.pop('PRI_had_charge')    
     df.pop('PRI_jet_leading_charge')    

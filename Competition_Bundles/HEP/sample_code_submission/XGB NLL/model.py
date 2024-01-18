@@ -90,7 +90,7 @@ class Model():
         self._generate_validation_sets()
         self._init_model()
         self._train()
-        self._choose_theta()
+        # self._choose_theta()
         # self.mu_hat_calc()
         self._validate()
         self._compute_validation_result()
@@ -127,7 +127,11 @@ class Model():
         weight = weights_test*(Y_hat_test)
         # get n_roi
 
-        mu_hat,mu_p16,mu_p84 = self._compute_result(weight)
+        weight_SR = weight[test_df["DER_deltar_lep_had"]>3.5]
+        weight_CR = weight[test_df["DER_deltar_lep_had"]<=3.5]
+
+
+        mu_hat,mu_p16,mu_p84 = self._compute_result(weight_SR,weight_CR)
         delta_mu_hat = np.abs(mu_p84 - mu_p16)
 
         print(f"[*] --- mu_hat: {mu_hat.mean()}")
@@ -421,68 +425,78 @@ class Model():
             # predict probabilities for holdout
             X_holdout_sc = self.scaler.transform(self.mu_calc_set['data'])
             w_holdout = self.mu_calc_set['weights']
-            y_holdout = self.mu_calc_set['labels']
             y_pred = self._predict(X_holdout_sc, theta)
             
-
-            gamma_roi_SR = (w_holdout*(y_pred * y_holdout)).sum()
-            beta_roi_SR = (w_holdout*(y_pred * (1-y_holdout))).sum()
-            gamma_roi_CR = (w_holdout*((1-y_pred) * y_holdout)).sum()
-            beta_roi_CR = (w_holdout*((1-y_pred) * (1-y_holdout))).sum()
-
+            weight_holdoff = w_holdout*(y_pred)
 
             Y_hat_valid = self._predict(meta_validation_set_df, theta)
             weights_valid = meta_validation_set["weights"].copy() 
 
-            weight_SR = weights_valid*(Y_hat_valid)
-            weight_CR = weights_valid*(1-Y_hat_valid)
+            weight_SR = weights_valid[meta_validation_set_df["DER_deltar_lep_had"]>3.5]
+            weight_CR = weights_valid[meta_validation_set_df["DER_deltar_lep_had"]<=3.5]
 
             mu_scan = np.linspace(0, 3, 100)
-            hist_llr = self.calculate_NLL(mu_scan, weight_CR=weight_CR,weight_SR=weight_SR,use_CR=True,gamma_roi_SR=gamma_roi_SR,beta_roi_SR=beta_roi_SR,gamma_roi_CR=gamma_roi_CR,beta_roi_CR=beta_roi_CR)
+            hist_llr = self.calculate_NLL(mu_scan, weight_holdoff=weight_holdoff ,weight_CR=weight_CR,weight_SR=weight_SR,use_CR=True)
             hist_llr = np.array(hist_llr)
 
             val =  np.abs(mu_scan[np.argmin(hist_llr)] - 1)
 
             if val < val_min:
-                val_min = val
                 print("val: ", val)
-                print("gamma_roi: ", gamma_roi)
-                print("beta_roi: ", beta_roi)
-                print("Uncertainity", np.sqrt(gamma_roi + beta_roi)/gamma_roi)
-                Beta_roi = beta_roi.copy()
-                Gamma_roi = gamma_roi.copy()
+                print("gamma_roi SR: ", gamma_roi_SR)
+                print("beta_roi SR: ", beta_roi_SR) 
+                print("gamma_roi CR: ", gamma_roi_CR)
+                print("beta_roi CR: ", beta_roi_CR)
+
+                print("Uncertainity", np.sqrt(gamma_roi_SR + beta_roi_SR)/gamma_roi_SR, np.sqrt(gamma_roi_CR + beta_roi_CR)/gamma_roi_CR)
+                val_min = val
                 self.best_theta = theta
 
 
         theta = self.best_theta
         # predict probabilities for holdout
         X_holdout_sc = self.scaler.transform(self.mu_calc_set['data'])
+        holdoff_df = self.mu_calc_set['data'].copy()
         w_holdout = self.mu_calc_set['weights']
         y_holdout = self.mu_calc_set['labels']
         y_pred = self._predict(X_holdout_sc, theta)
         
-
-        gamma_roi = (w_holdout*(y_pred * y_holdout)).sum()
-        beta_roi = (w_holdout*(y_pred * (1-y_holdout))).sum()
-
+        weight_holdoff = w_holdout*(y_pred)
 
         Y_hat_valid = self._predict(meta_validation_set_df, theta)
         weights_valid = meta_validation_set["weights"].copy() 
 
-        weight_SR = weights_valid*(Y_hat_valid)
-        weight_CR = weights_valid*(1-Y_hat_valid)
+        weight_SR = weights_valid[meta_validation_set_df["DER_deltar_lep_had"]>3.5] * Y_hat_valid[meta_validation_set_df["DER_deltar_lep_had"]>3.5]
+        weight_CR = weights_valid[meta_validation_set_df["DER_deltar_lep_had"]<=3.5] * Y_hat_valid[meta_validation_set_df["DER_deltar_lep_had"]<=3.5]
 
         mu_scan = np.linspace(0, 3, 100)
-        hist_llr = self.calculate_NLL(mu_scan, weight_CR=weight_CR,weight_SR=weight_SR,use_CR=True)
+        hist_llr = self.calculate_NLL(mu_scan, weight_holdoff=weight_holdoff ,weight_CR=weight_CR,weight_SR=weight_SR,use_CR=True)
         hist_llr = np.array(hist_llr)
+
+
+        weight_SR_holdoff = weight_holdoff[holdoff_df['DER_deltar_lep_had']>3.5]
+        label_SR_holdoff = y_holdout[holdoff_df['DER_deltar_lep_had']>3.5]
+
+        gamma_roi_SR = weight_SR_holdoff[label_SR_holdoff==1].sum()
+        beta_roi_SR = weight_SR_holdoff[label_SR_holdoff==0].sum()
+
+        weight_CR_holdoff = weight_holdoff[holdoff_df['DER_deltar_lep_had']<3.5]
+        label_CR_holdoff = y_holdout[holdoff_df['DER_deltar_lep_had']<3.5]
+        
+        gamma_roi_CR = weight_CR_holdoff[label_CR_holdoff==1].sum()
+        beta_roi_CR = weight_CR_holdoff[label_CR_holdoff==0].sum()
+
 
         val =  np.abs(mu_scan[np.argmin(hist_llr)] - 1)
         print("val: ", val)
-        print("gamma_roi: ", gamma_roi)
-        print("beta_roi: ", beta_roi)
-        print("Uncertainity", np.sqrt(gamma_roi + beta_roi)/gamma_roi)
-        self.beta_roi = beta_roi.copy()
-        self.gamma_roi = gamma_roi.copy()
+        print("gamma_roi SR: ", gamma_roi_SR)
+        print("beta_roi SR: ", beta_roi_SR) 
+        print("gamma_roi CR: ", gamma_roi_CR)
+        print("beta_roi CR: ", beta_roi_CR)
+
+        print("Uncertainity", np.sqrt(gamma_roi_SR + beta_roi_SR)/gamma_roi_SR, np.sqrt(gamma_roi_CR + beta_roi_CR)/gamma_roi_CR)
+        self.beta_roi_CR = beta_roi_CR.copy()
+        self.gamma_roi_CR = gamma_roi_CR.copy()
 
         self.force_correction_term = val
         print(f"[*] --- Best theta : {self.best_theta}")
@@ -494,41 +508,80 @@ class Model():
             valid_set['score'] = self._return_score(valid_set['data'])
 
 
-    def calculate_NLL( self,mu_scan, weight_data,gamma_roi,beta_roi):
-        def _sigma_asimov_SR(mu):
-            return mu*gamma_roi + beta_roi
+    def calculate_NLL(self, mu_scan,weight_holdoff, weight_SR,weight_CR,use_CR=False):
+        holdoff_df = self.mu_calc_set["data"].copy()
+        label_holdoff = self.mu_calc_set["labels"].copy()
 
-        sum_data_total_SR = weight_data.sum()
-        comb_llr = []
-        for i, mu in enumerate(mu_scan):
+        def _sigma_asimov_SR(mu):
+            weight_SR_holdoff = weight_holdoff[holdoff_df['DER_deltar_lep_had']>3.5]
+            label_SR_holdoff = label_holdoff[holdoff_df['DER_deltar_lep_had']>3.5]
+
+            gamma_roi_SR = weight_SR_holdoff[label_SR_holdoff==1].sum()
+            beta_roi_SR = weight_SR_holdoff[label_SR_holdoff==0].sum()
+
+            return mu*gamma_roi_SR + beta_roi_SR
+        def _sigma_asimov_CR(mu):
+            weight_CR_holdoff = weight_holdoff[holdoff_df['DER_deltar_lep_had']<3.5]
+            label_CR_holdoff = label_holdoff[holdoff_df['DER_deltar_lep_had']<3.5]
+            
+            gamma_roi_CR = weight_CR_holdoff[label_CR_holdoff==1].sum()
+            beta_roi_CR = weight_CR_holdoff[label_CR_holdoff==0].sum()
+
+            return mu*gamma_roi_CR + beta_roi_CR
+
+
+        comb_llr = 0
+        sum_data_total_SR = weight_SR.sum()
+        sum_data_total_CR = weight_CR.sum()
+
+        for mu in (mu_scan):
             hist_llr = (
                 -2
                 * sum_data_total_SR
                 * np.log((_sigma_asimov_SR(mu) / _sigma_asimov_SR(1.0)))
             ) + (2 * (_sigma_asimov_SR(mu) - _sigma_asimov_SR(1.0)))
 
-            comb_llr.append(hist_llr )
+            if use_CR:
+                hist_llr_CR = (
+                    -2
+                    * sum_data_total_CR
+                    * np.log((_sigma_asimov_CR(mu) / _sigma_asimov_CR(1.0)))
+                    ) + (2 * (_sigma_asimov_CR(mu) - _sigma_asimov_CR(1.0)))
+            else:
+                hist_llr_CR=0                #print("do not use CR")    
 
-        comb_llr = np.array(comb_llr)
+            comb_llr = (hist_llr + hist_llr_CR)
+
         comb_llr = comb_llr - np.amin(comb_llr)
 
         return comb_llr
 
     
     def _sigma_asimov_SR(self,mu):
-        return mu*self.gamma_roi + self.beta_roi
+        return mu*self.gamma_roi_SR + self.beta_roi_SR
+    
+    def _sigma_asimov_CR(self,mu):
+        return mu*self.gamma_roi_CR + self.beta_roi_CR
 
-    def _compute_result(self,weights):
+    def _compute_result(self,weights_SR,weights_CR,use_CR=False):
         mu_scan = np.linspace(0, 5, 100)
-        sum_data_total_SR = weights.sum()
+        sum_data_total_SR = weights_SR.sum()
+        sum_data_total_CR = weights_CR.sum()
         comb_llr = []
-        for i, mu in enumerate(mu_scan):
+        for  mu in mu_scan:
             hist_llr = (
                 -2
                 * sum_data_total_SR
                 * np.log((self._sigma_asimov_SR(mu) / self._sigma_asimov_SR(1.0)))
             ) + (2 * (self._sigma_asimov_SR(mu) - self._sigma_asimov_SR(1.0)))
-            comb_llr.append(hist_llr)
+
+            if use_CR:
+                hist_llr_CR = (
+                    -2
+                    * sum_data_total_CR
+                    * np.log((self._sigma_asimov_CR(mu) / self._sigma_asimov_CR(1.0)))
+                    ) + (2 * (self._sigma_asimov_CR(mu) - self._sigma_asimov_CR(1.0)))
+                comb_llr.append(hist_llr_CR + hist_llr)  
 
         comb_llr = np.array(comb_llr)
         comb_llr = comb_llr - np.amin(comb_llr)
@@ -563,8 +616,10 @@ class Model():
             # del Score_valid
             weights_valid = valid_set["weights"].copy()
 
-            weight_SR = weights_valid*(Y_hat_valid)
-            weight_CR = weights_valid*(1-Y_hat_valid)
+
+            weight_SR = weights_valid[valid_set["DER_deltar_lep_had"]>3.5] * Y_hat_valid[valid_set["DER_deltar_lep_had"]>3.5]
+            weight_CR = weights_valid[valid_set["DER_deltar_lep_had"]<=3.5] * Y_hat_valid[valid_set["DER_deltar_lep_had"]<=3.5]
+
 
             mu_hat,mu_p16,mu_p84 = self._compute_result(weight_SR,weight_CR)
 
