@@ -7,6 +7,7 @@ import numpy as np
 from sklearn.preprocessing import StandardScaler
 from systematics import postprocess
 from tqdm import tqdm
+import matplotlib.pyplot as plt
 
 
 # ------------------------------
@@ -17,6 +18,7 @@ root_dir = os.path.dirname(module_dir)
 path.append(root_dir)
 from bootstrap import bootstrap
 import multiprocessing
+import numpy as np
 
 
 # ------------------------------
@@ -25,63 +27,25 @@ import multiprocessing
 EPSILON = np.finfo(float).eps
 
 
-def _sigma_asimov(mu,weight_train,label_train):
-
-    gamma_roi = weight_train[label_train==1].sum()
-    beta_roi = weight_train[label_train==0].sum()
-
+def _sigma_asimov(mu,gamma_roi,beta_roi):
     return mu*gamma_roi + beta_roi
 
+def calculate_comb_llr(mu,train_signal_hist,train_background_hist,test_hist):
 
+    sigma_asimov_mu = _sigma_asimov(mu,train_signal_hist,train_background_hist)
+    sigma_asimov_mu0 = _sigma_asimov(1.0,train_signal_hist,train_background_hist)
 
-def calculate_comb_llr(args):
-    i, arg_dict = args
-    mu = arg_dict["mu"]
-    width = arg_dict["width"]
-    weight_train = arg_dict["weight_train"]
-    label_train = arg_dict["label_train"]
-    weight_test= arg_dict["weight_test"]
-    train_df = arg_dict["train_df"]
-    test_df = arg_dict["test_df"]
-    use_CR = arg_dict["use_CR"]
+    sum_data_total = test_hist
 
-    weight_CR_train = weight_train[(train_df['DER_deltar_lep_had']>=i*width) & (train_df['DER_deltar_lep_had']<(i+1)*width)]
-    label_CR_train = label_train[(train_df['DER_deltar_lep_had']>=i*width) & (train_df['DER_deltar_lep_had']<(i+1)*width)]
-    sum_data_total_CR = (weight_test[(test_df['DER_deltar_lep_had']>=i*width) & (test_df['DER_deltar_lep_had']<(i+1)*width)]).sum()
-
-
-    weight_SR_train = weight_train[(train_df['DER_deltar_lep_had']>=(i+1)*width) & (train_df['DER_deltar_lep_had']<(i+2)*width)]
-    label_SR_train = label_train[(train_df['DER_deltar_lep_had']>=(i+1)*width) & (train_df['DER_deltar_lep_had']<(i+2)*width)]
-    sum_data_total_SR = (weight_test[(test_df['DER_deltar_lep_had']>=(i+1)*width) & (test_df['DER_deltar_lep_had']<(i+2)*width)]).sum()
-
-    sigma_asimov_SR_mu = _sigma_asimov(mu,weight_SR_train,label_SR_train)
-    sigma_asimov_SR_mu0 = _sigma_asimov(1.0,weight_SR_train,label_SR_train)
-    sigma_asimov_CR_mu = _sigma_asimov(mu,weight_CR_train,label_CR_train)
-    sigma_asimov_CR_mu0 = _sigma_asimov(1.0,weight_CR_train,label_CR_train)
-
-    # print(f"[*] ---- sigma_asimov_SR_mu: {sigma_asimov_SR_mu}")
-    # print(f"[*] ---- sigma_asimov_SR_mu0: {sigma_asimov_SR_mu0}")
-    # print(f"[*] ---- sigma_asimov_CR_mu: {sigma_asimov_CR_mu}")
-    # print(f"[*] ---- sigma_asimov_CR_mu0: {sigma_asimov_CR_mu0}")
-
-    hist_llr = 0
-    hist_llr_SR = (
+    hist_llr = (
         -2
-        * sum_data_total_SR
-        * np.log((sigma_asimov_SR_mu / sigma_asimov_SR_mu0))
-    ) + (2 * (sigma_asimov_SR_mu - sigma_asimov_SR_mu0))
+        * sum_data_total
+        * np.log((sigma_asimov_mu / sigma_asimov_mu0))
+    ) + (2 * (sigma_asimov_mu - sigma_asimov_mu0))
 
-    if use_CR:
-        hist_llr_CR = (
-            -2
-            * sum_data_total_CR
-            * np.log((sigma_asimov_CR_mu / sigma_asimov_CR_mu0))
-        ) + (2 * (sigma_asimov_CR_mu - sigma_asimov_CR_mu0))
-    else:
-        hist_llr_CR = 0
-    hist_llr = hist_llr_SR + hist_llr_CR
     # print(f"[*] ---- hist_llr: {hist_llr}")
-    return hist_llr
+
+    return hist_llr.sum()
 
 
 
@@ -216,55 +180,58 @@ class Model():
         self.force_correction =  val
 
 
-    def calculate_NLL(self,weights_test,test_df,mu_scan,use_CR=False):
-        comb_llr = 0
-        num_bins = 10
-        full_width = self.train_set["data"]['DER_deltar_lep_had'].max() - self.train_set["data"]['DER_deltar_lep_had'].min()
-        width = full_width/(num_bins+2)
+    def calculate_NLL(self,weights_test,test_df,mu_scan):
+        print("[*] --- Calculating NLL")
+        bins = 10
 
-        print(f"[*] --- width: {width}")
-        print(f"[*] --- full_width: {full_width}")
-        print(f"[*] --- num_bins: {num_bins}")
+        print(f"[*] --- num_bins: {bins}")
 
         comb_llr_mu_list = []
+
+        train_df = self.train_set["data"].copy()
+        weights_train = self.train_set["weights"].copy()
+        label_train = self.train_set["labels"].copy()
+
+
+        train_val = train_df['DER_deltar_lep_had']
+
+        weights_train_signal = weights_train[label_train == 1]
+        weights_train_background = weights_train[label_train == 0]
+
+        train_signal_hist ,bins = np.histogram(train_val[label_train == 1],
+                    bins=bins, density=False, weights=weights_train_signal)
+        
+        train_background_hist ,bins = np.histogram(train_val[label_train == 0],
+                    bins=bins, density=False, weights=weights_train_background)
+
+        test_hist ,bins = np.histogram(test_df['DER_deltar_lep_had'],
+                    bins=bins, density=False, weights=weights_test)
+
         for mu in tqdm(mu_scan):
 
-            arg_dict = {
-                "mu": mu,
-                "width": width,
-                "weight_train": self.train_set["weights"].copy(),
-                "label_train": self.train_set["labels"].copy(),
-                "weight_test": weights_test.copy(),
-                "train_df":self.train_set["data"],
-                "test_df": test_df,
-                "use_CR": use_CR
-            }
-            arg_list = [(i, arg_dict) for i in range(num_bins)]
-            comb_llr_bin = []
+            comb_llr_mu = (calculate_comb_llr(mu,train_signal_hist,train_background_hist,test_hist))
 
-            for i in (range(num_bins)):
-                comb_llr_bin.append(calculate_comb_llr(arg_list[i]))
-            
-            comb_llr_bin = np.array(comb_llr_bin)
-            comb_llr_mu = comb_llr_bin.sum()
             comb_llr_mu_list.append(comb_llr_mu)
 
-            print(f"[*] --- comb_llr_mu: {comb_llr_bin}")
+            # print(f"[*] --- comb_llr_mu: {comb_llr_mu_list}")
 
         comb_llr = np.array(comb_llr_mu_list)
 
         # comb_llr = comb_llr/num_bins
         comb_llr = comb_llr - np.amin(comb_llr)
 
+        plt.plot(mu_scan,comb_llr)
+        plt.show()
+
         return comb_llr
 
     
     def _compute_result(self,weights_test,test_df):
-        mu_scan = np.linspace(0, 4, 3)
-        nll = self.calculate_NLL(weights_test,test_df,mu_scan,use_CR=True)
-        hist_llr = np.array(nll)
-        print(f"[*] --- hist_llr: {hist_llr}")
-        print(f"[*] --- mu_scan: {mu_scan}")
+        mu_scan = np.linspace(0, 3.92, 50)
+        hist_llr = self.calculate_NLL(weights_test,test_df,mu_scan)
+
+        # print(f"[*] --- hist_llr: {hist_llr}")
+        # print(f"[*] --- mu_scan: {mu_scan}")
         if (mu_scan[np.where((hist_llr <= 1.0) & (hist_llr >= 0.0))].size == 0):
             p16 = 0
             p84 = 0
