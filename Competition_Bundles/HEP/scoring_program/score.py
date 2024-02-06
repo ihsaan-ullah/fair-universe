@@ -20,7 +20,7 @@ root_dir = os.path.dirname(module_dir)
 output_dir = os.path.join(root_dir, "scoring_output")
 # reference data (test labels)
 # reference_dir = os.path.join(root_dir, "reference_data")
-reference_dir = os.path.join("/home/chakkappai/Work/Fair-Universe","Uncertainty_Challenge_reference_data_21_12_2023")
+reference_dir = os.path.join("/home/chakkappai/Work/Fair-Universe","Full_dataset_21_12_2023","reference_data")
 # submitted/predicted lables
 prediction_dir = os.path.join(root_dir, "sample_result_submission")
 # score file to write score into

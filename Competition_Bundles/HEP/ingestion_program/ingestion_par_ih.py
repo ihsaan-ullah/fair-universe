@@ -12,6 +12,7 @@ from numpy.random import RandomState
 import warnings
 from copy import deepcopy
 import sys
+import concurrent.futures
 warnings.filterwarnings("ignore")
 
 
@@ -115,17 +116,17 @@ class Ingestion():
         train_weights = train_weights
 
         self.train_set = {
-            "data": pd.read_csv(train_data_file,dtype=np.float32),
+            "data": pd.read_csv(train_data_file, dtype=np.float32),
             "labels": train_labels,
             "settings": train_settings,
             "weights": train_weights
         }
 
         print(self.train_set["data"].info(verbose=False, memory_usage="deep"))
-        print ("[*] Train data loaded successfully")
+        print("[*] Train data loaded successfully")
         del train_labels, train_settings, train_weights
         print(self.train_set["data"].info(verbose=False, memory_usage="deep"))
-        print ("[*] Train data loaded successfully")
+        print("[*] Train data loaded successfully")
 
     def load_test_set(self):
         print("[*] Loading Test data")
@@ -154,7 +155,7 @@ class Ingestion():
         }
         del test_weights, test_labels
 
-        print ("[*] Test data loaded successfully")
+        print("[*] Test data loaded successfully")
 
     def get_bootstraped_dataset(self, mu=1.0, tes=1.0, seed=42):
 
@@ -233,6 +234,51 @@ class Ingestion():
                 self.results_dict[set_index] = []
             self.results_dict[set_index].append(predicted_dict)
 
+    def predict_submission_parallel(self):
+        print("[*] Calling predict method of submitted model (parallel)")
+
+        # get set indices (0-9)
+        # set_indices = np.arange(0, 10)
+        set_indices = np.arange(0, 1)
+        # get test set indices per set (0-99)
+        test_set_indices = np.arange(0, 100)
+
+        # create a product of set and test set indices all combinations of tuples
+        all_combinations = list(product(set_indices, test_set_indices))
+        # randomly shuffle all combinations of indices
+        np.random.shuffle(all_combinations)
+
+        self.results_dict = {}
+
+        num_cores = os.cpu_count() - 2
+
+        with concurrent.futures.ProcessPoolExecutor(max_workers=num_cores) as executor:  # You can use ThreadPoolExecutor for threading
+            futures = {executor.submit(self.predict_set, set_index, test_set_index): (set_index, test_set_index) for set_index, test_set_index in all_combinations}
+
+            for future in concurrent.futures.as_completed(futures):
+                set_index, test_set_index = futures[future]
+                try:
+                    predicted_dict = future.result()
+                    if set_index not in self.results_dict:
+                        self.results_dict[set_index] = []
+                    self.results_dict[set_index].append(predicted_dict)
+                except Exception as e:
+                    print(f"Error occurred for set_index {set_index}, test_set_index {test_set_index}: {e}")
+
+    def predict_set(self, set_index, test_set_index):
+        tes = np.random.uniform(0.9, 1.1)
+        seed = (set_index * 100) + test_set_index
+        set_mu = self.test_settings["ground_truth_mus"][set_index]
+        test_set = self.get_bootstraped_dataset(mu=set_mu, tes=tes, seed=seed)
+
+        predicted_dict = self.model.predict(test_set)
+        predicted_dict["test_set_index"] = test_set_index
+
+        print(f"[*] - mu_hat: {predicted_dict['mu_hat']} - delta_mu_hat: {predicted_dict['delta_mu_hat']} - p16: {predicted_dict['p16']} - p84: {predicted_dict['p84']}")
+
+        return predicted_dict
+
+
     def save_result(self):
         print("[*] Saving ingestion result")
 
@@ -296,9 +342,10 @@ if __name__ == '__main__':
 
     # load test set
     ingestion.load_test_set()
-    
+
     # predict submission
     ingestion.predict_submission()
+    # ingestion.predict_submission_parallel()
 
     # save result
     ingestion.save_result()

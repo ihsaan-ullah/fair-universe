@@ -13,37 +13,38 @@ import warnings
 from copy import deepcopy
 import sys
 warnings.filterwarnings("ignore")
+import multiprocess
 
 
 # ------------------------------------------
 # Default Directories
 # ------------------------------------------
-# Root directory
-module_dir = os.path.dirname(os.path.realpath(__file__))
-root_dir = os.path.dirname(module_dir)
-# Input data directory to read training and test data from
+# # Root directory
+# module_dir = os.path.dirname(os.path.realpath(__file__))
+# root_dir = os.path.dirname(module_dir)
+# # Input data directory to read training and test data from
 # input_dir = os.path.join(root_dir, "input_data")
-input_dir = os.path.join("/home/chakkappai/Work/Fair-Universe","Full_dataset_21_12_2023","input_data")
-# Output data directory to write predictions to
-output_dir = os.path.join(root_dir, "sample_result_submission")
-# Program directory
-program_dir = os.path.join(root_dir, "ingestion_program")
-# Directory to read submitted submissions from
-submission_dir = os.path.join(root_dir, "sample_code_submission","1 bin nll")
+# # Output data directory to write predictions to
+# output_dir = os.path.join(root_dir, "sample_result_submission")
+# # Program directory
+# program_dir = os.path.join(root_dir, "ingestion_program")
+# # Directory to read submitted submissions from
+# submission_dir = os.path.join(root_dir, "sample_code_submission","1 bin nll")
 
 # ------------------------------------------
 # Codabench Directories
 # ------------------------------------------
-# # Root directory
-# root_dir = "/app"
-# # Input data directory to read training and test data from
+# Root directory
+root_dir = "/app"
+# Input data directory to read training and test data from
 # input_dir = os.path.join(root_dir, "input_data")
-# # Output data directory to write predictions to
-# output_dir = os.path.join(root_dir, "output")
-# # Program directory
-# program_dir = os.path.join(root_dir, "program")
-# # Directory to read submitted submissions from
-# submission_dir = os.path.join(root_dir, "ingested_program")
+input_dir = os.path.join("/home/chakkappai/Work/Fair-Universe","Full_dataset_21_12_2023","input_data")
+# Output data directory to write predictions to
+output_dir = os.path.join(root_dir, "output")
+# Program directory
+program_dir = os.path.join(root_dir, "program")
+# Directory to read submitted submissions from
+submission_dir = os.path.join(root_dir, "ingested_program")
 
 path.append(input_dir)
 path.append(program_dir)
@@ -54,12 +55,47 @@ path.append(program_dir)
 # ------------------------------------------
 from systematics import Systematics, postprocess
 
+
+def get_bootstraped_dataset( mu=1.0, tes=1.0, seed=42,test_dict=None):
+
+    temp_df = deepcopy(test_dict["data"])
+    temp_df["weights"] = test_dict["weights"]
+    temp_df["labels"] = test_dict["labels"]
+
+    # Apply systematics to the sampled data
+    data_syst = Systematics(
+        data=temp_df,
+        tes=tes
+    ).data
+
+
+    # Apply weight scaling factor mu to the data
+    data_syst['weights'][data_syst["labels"] == 1] *= mu
+
+    data_syst.pop("labels")
+
+    prng = RandomState(seed)
+    new_weights = prng.poisson(lam=data_syst['weights'])
+
+    data_syst['weights'] = new_weights
+
+    new_df = data_syst[data_syst["weights"] > 0]
+    new_weights = new_df["weights"]
+
+    del temp_df
+
+    return {
+        "data": new_df.drop("weights", axis=1),
+        "weights": new_weights
+    }
+
+
+
 # ------------------------------------------
 # Import Model
 # ------------------------------------------
 
 # from model import Model
-
 
 class Ingestion():
 
@@ -112,7 +148,6 @@ class Ingestion():
         # read train weights
         with open(train_weights_file) as f:
             train_weights = np.array(f.read().splitlines(), dtype=float)
-        train_weights = train_weights
 
         self.train_set = {
             "data": pd.read_csv(train_data_file,dtype=np.float32),
@@ -156,34 +191,6 @@ class Ingestion():
 
         print ("[*] Test data loaded successfully")
 
-    def get_bootstraped_dataset(self, mu=1.0, tes=1.0, seed=42):
-
-        temp_df = deepcopy(self.test_set["data"])
-        temp_df["weights"] = self.test_set["weights"]
-        temp_df["labels"] = self.test_set["labels"]
-
-        # Apply systematics to the sampled data
-        data_syst = Systematics(
-            data=temp_df,
-            tes=tes
-        ).data
-
-        # Apply weight scaling factor mu to the data
-        data_syst['weights'][data_syst["labels"] == 1] *= mu
-
-        data_syst.pop("labels")
-
-        prng = RandomState(seed)
-        new_weights = prng.poisson(lam=data_syst['weights'])
-
-        data_syst['weights'] = new_weights
-
-        del temp_df
-
-        return {
-            "data": data_syst.drop("weights", axis=1),
-            "weights": new_weights
-        }
 
     def init_submission(self):
         print("[*] Initializing Submmited Model")
@@ -198,12 +205,35 @@ class Ingestion():
         print("[*] Calling fit method of submitted model")
         self.model.fit()
 
+
+    def process_combination(self,combination):
+        # predict = args["predict"]
+        # test_set = args["test_set"]
+        test_settings = self.test_settings
+        set_index, test_set_index = combination
+        # random tes value (one per test set)
+        tes = np.random.uniform(0.9, 1.1)
+        # create a seed
+        seed = (set_index*100) + test_set_index
+        # get mu value of set from test settings
+        set_mu = test_settings["ground_truth_mus"][set_index]
+
+        # get bootstrapped dataset from the original test set
+        test_set = get_bootstraped_dataset(mu=set_mu, tes=tes, seed=seed, test_dict=self.test_set)
+
+        predicted_dict = self.model.predict(test_set)
+        predicted_dict["test_set_index"] = test_set_index
+
+        print(f"[*] - mu_hat: {predicted_dict['mu_hat']} - delta_mu_hat: {predicted_dict['delta_mu_hat']} - p16: {predicted_dict['p16']} - p84: {predicted_dict['p84']}")
+
+        return predicted_dict
+
+
     def predict_submission(self):
         print("[*] Calling predict method of submitted model")
 
         # get set indices (0-9)
-        # set_indices = np.arange(0, 10)
-        set_indices = np.arange(0, 1)
+        set_indices = np.arange(0, 10)
         # get test set indices per set (0-99)
         test_set_indices = np.arange(0, 100)
 
@@ -213,25 +243,21 @@ class Ingestion():
         np.random.shuffle(all_combinations)
 
         self.results_dict = {}
-        for set_index, test_set_index in all_combinations:
-            # random tes value (one per test set)
-            tes = np.random.uniform(0.9, 1.1)
-            # create a seed
-            seed = (set_index*100) + test_set_index
-            # get mu value of set from test settings
-            set_mu = self.test_settings["ground_truth_mus"][set_index]
+        num_processes = 1
+        pool = multiprocess.Pool(processes=num_processes)
+        total_num = len(all_combinations)
 
-            # get bootstrapped dataset from the original test set
-            test_set = self.get_bootstraped_dataset(mu=set_mu, tes=tes, seed=seed)
+        for i in range(0, int(total_num/num_processes)):
+            some_combinations = all_combinations[i:num_processes+i]
 
-            predicted_dict = self.model.predict(test_set)
-            predicted_dict["test_set_index"] = test_set_index
+            predicted_dicts = multiprocess.Manager().list(pool.map(self.process_combination, some_combinations))
+            for combination in some_combinations:
+                set_index, _ = combination
+                predicted_dict = predicted_dicts[set_index]
 
-            print(f"[*] - mu_hat: {predicted_dict['mu_hat']} - delta_mu_hat: {predicted_dict['delta_mu_hat']} - p16: {predicted_dict['p16']} - p84: {predicted_dict['p84']}")
-
-            if set_index not in self.results_dict:
-                self.results_dict[set_index] = []
-            self.results_dict[set_index].append(predicted_dict)
+                if set_index not in self.results_dict:
+                    self.results_dict[set_index] = []
+                self.results_dict[set_index].append(predicted_dict)
 
     def save_result(self):
         print("[*] Saving ingestion result")
