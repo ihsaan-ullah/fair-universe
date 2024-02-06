@@ -40,7 +40,7 @@ from itertools import product
 root_dir = "/app"
 # Input data directory to read training and test data from
 # input_dir = os.path.join(root_dir, "input_data")
-input_dir = os.path.join("/data/atlas/chakkappai","Full_dataset_21_12_2023","input_data")
+input_dir = os.path.join("/home/chakkappai/Work/Fair-Universe","Full_dataset_21_12_2023","input_data")
 # Output data directory to write predictions to
 output_dir = os.path.join(root_dir, "output")
 # Program directory
@@ -222,7 +222,7 @@ class Ingestion():
 
         # get set indices (0-9)
         # set_indices = np.arange(0, 10)
-        set_indices = np.arange(0, 1)
+        set_indices = np.arange(0, 10)
         # get test set indices per set (0-99)
         test_set_indices = np.arange(0, 100)
 
@@ -259,7 +259,9 @@ class Ingestion():
         # Create a multiprocessing pool with 5 processes
           # List to hold the pools
         total_num = len(all_combinations)
-        num_processes = 20
+        num_processes = 3
+
+        reminder = total_num % num_processes
         for i in range(0, int(total_num/num_processes)):
             some_combinations = all_combinations[i*num_processes: (i+1)*num_processes]
             pools = []
@@ -277,6 +279,22 @@ class Ingestion():
         
             pool.close()
 
+        if reminder > 0:
+            some_combinations = all_combinations[-reminder:]
+            pools = []
+            for combination in some_combinations:
+                pool = Process(target=process_combination, args= (combination, return_dict))
+                pool.start()
+                print(f"[*] Started process for combination: {combination}")
+                pools.append(pool)
+                
+
+            # for combination in all_combinations:
+            #     process_combination(combination)
+            for pool in pools:
+                pool.join()
+        
+            pool.close()
 
         for set_index in set_indices:
             for test_set_index in test_set_indices:
@@ -296,8 +314,8 @@ class Ingestion():
         print("[*] Saving ingestion result")
 
         # loop over sets
-        # for i in range(0, 10):
-        for i in range(0, 1):
+        for i in range(0, 10):
+        # for i in range(0, 1):
             set_result = self.results_dict[i]
             set_result.sort(key=lambda x: x['test_set_index'])
             mu_hats, delta_mu_hats, p16, p84 = [], [], [], []

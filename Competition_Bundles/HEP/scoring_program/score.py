@@ -91,8 +91,8 @@ class Scoring:
         print("[*] Reading predictions")
         self.ingestion_results = []
         # loop over sets (1 value of mu, total 10 sets)
-        # for i in range(0, 10):
-        for i in range(0, 1):
+        for i in range(0, 10):
+        # for i in range(0, 1):
             results_file = os.path.join(prediction_dir, "result_"+str(i)+".json")
             with open(results_file) as f:
                 self.ingestion_results.append(json.load(f))
@@ -264,6 +264,11 @@ if __name__ == "__main__":
     if len(sys.argv) > 2:
         prediction_dir = sys.argv[2]
         
+    # score file to write score into
+    score_file = os.path.join(output_dir, "scores.json")
+    # html file to write score and figures into
+    html_file = os.path.join(output_dir, 'detailed_results.html')
+
     # Init scoring
     scoring = Scoring()
 
