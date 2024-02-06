@@ -40,7 +40,7 @@ from itertools import product
 root_dir = "/app"
 # Input data directory to read training and test data from
 # input_dir = os.path.join(root_dir, "input_data")
-input_dir = os.path.join("/home/chakkappai/Work/Fair-Universe","Full_dataset_21_12_2023","input_data")
+input_dir = os.path.join("/data/atlas/chakkappai","Full_dataset_21_12_2023","input_data")
 # Output data directory to write predictions to
 output_dir = os.path.join(root_dir, "output")
 # Program directory
@@ -234,7 +234,7 @@ class Ingestion():
         manager = Manager()
         return_dict = manager.dict()
 
-        self.results_dict = {i: [] for i in set_indices}
+        self.results_dict = {}
         
         # Define a function to process each combination in parallel
         def process_combination(combination, return_dict):
@@ -259,9 +259,9 @@ class Ingestion():
         # Create a multiprocessing pool with 5 processes
           # List to hold the pools
         total_num = len(all_combinations)
-        num_processes = 2
+        num_processes = 20
         for i in range(0, int(total_num/num_processes)):
-            some_combinations = all_combinations[i:num_processes+i]
+            some_combinations = all_combinations[i*num_processes: (i+1)*num_processes]
             pools = []
             for combination in some_combinations:
                 pool = Process(target=process_combination, args= (combination, return_dict))
@@ -281,6 +281,8 @@ class Ingestion():
         for set_index in set_indices:
             for test_set_index in test_set_indices:
                 seed = (set_index*100) + test_set_index
+                if set_index not in self.results_dict:
+                    self.results_dict[set_index] = []
                 self.results_dict[set_index].append(return_dict[seed])
 
 
