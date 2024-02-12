@@ -25,6 +25,7 @@ from itertools import product
 # root_dir = os.path.dirname(module_dir)
 # # Input data directory to read training and test data from
 # input_dir = os.path.join(root_dir, "input_data")
+# input_dir = os.path.join("/home/chakkappai/Work/Fair-Universe","Full_dataset_21_12_2023","input_data")
 # # Output data directory to write predictions to
 # output_dir = os.path.join(root_dir, "sample_result_submission")
 # # Program directory
@@ -38,8 +39,7 @@ from itertools import product
 # Root directory
 root_dir = "/app"
 # Input data directory to read training and test data from
-# input_dir = os.path.join(root_dir, "input_data")
-input_dir = os.path.join("/home/chakkappai/Work/Fair-Universe","Full_dataset_21_12_2023","input_data")
+input_dir = os.path.join(root_dir, "input_data")
 # Output data directory to write predictions to
 output_dir = os.path.join(root_dir, "output")
 # Program directory
