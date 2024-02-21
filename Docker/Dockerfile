@@ -1,16 +1,20 @@
-# Use a base image with minimal OS
-# FROM nvidia/cuda:12.1.0-cudnn8-devel-ubuntu22.04
-FROM nvidia/cuda:12.3.1-devel-ubuntu20.04
+# image with depracation notice
+# FROM nvidia/cuda:12.1.0-cudnn8-devel-ubuntu22.04 # deprecated
+# image with problem with tf and cuda drivers
+FROM nvidia/cuda:12.3.1-devel-ubuntu20.04 
 RUN apt-get update && apt-get install -y python3 python3-pip
 # Install Python packages
 RUN pip3 install --upgrade pip && \
     pip3 install numpy pandas matplotlib xgboost scikit-learn nflows lightgbm seaborn iminuit
 # Install TensorFlow and PyTorch
-RUN pip3 install tensorflow keras
+RUN pip3 install keras
+RUN pip3 install tensorflow[and-cuda] 
 RUN pip3 install torch==2.0.1 torchvision==0.15.2 torchaudio==2.0.2 --index-url https://download.pytorch.org/whl/cu118
+
 # Install CUDNN
-#RUN pip3 install nvidia-pyindex
-#RUN pip3 install nvidia-cudnn
+# RUN pip3 install nvidia-pyindex
+# RUN pip3 install nvidia-cudnn
+
 # Set the default command to Python3
 CMD ["python3"]
 
